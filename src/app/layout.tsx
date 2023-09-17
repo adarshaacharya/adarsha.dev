@@ -6,6 +6,7 @@ import { Header } from "./components/header";
 import { ThemeProvider } from "./components/theme-provider";
 import { cn } from "@/lib/utils";
 import { TailwindIndicator } from "./components/tailwind-indicator";
+import { Footer } from "./components/footer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -38,6 +39,7 @@ export default function RootLayout({
           <main className="mx-4 mt-10 px-2 md:px-0 lg:mx-auto">
             <Header />
             {children}
+            <Footer />
           </main>
           <TailwindIndicator />
         </ThemeProvider>
