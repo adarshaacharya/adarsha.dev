@@ -1,4 +1,7 @@
 import Image from "next/image";
+import { SOCIALS } from "./data";
+import { SocialLink } from "./components/social-link";
+import { BriefcaseIcon } from "./components/icons/social";
 
 export default function Home() {
   return (
@@ -6,14 +9,14 @@ export default function Home() {
       <div className="py-5">
         <Image
           src="/_static/adarsha.jpeg"
-          width={100}
-          height={100}
+          width={80}
+          height={80}
           alt="avatar"
           className="rounded-full hover:grayscale-0	dark:grayscale "
           priority
         />
 
-        <h1 className="mt-4 text-3xl font-bold">Aadarsha Acharya</h1>
+        <h1 className="mt-5 text-3xl font-bold">Aadarsha Acharya</h1>
 
         <p className="mt-4">
           I used to consider myself a software engineer, but the reality is that
@@ -27,8 +30,22 @@ export default function Home() {
           of my social handles.
         </p>
       </div>
+      <ul className="flex space-x-4">
+        {SOCIALS.map((social) => (
+          <SocialLink
+            key={social.label}
+            aria-label={`Follow on ${social.label}`}
+            href={social.href}
+            icon={social.icon}
+          />
+        ))}
+      </ul>
+      <div className="mt-7 flex items-end space-x-3 align-bottom">
+        <SocialLink href={"dajkdas"} icon={BriefcaseIcon} />
+        <span>View Resume</span>
+      </div>
        
-      <div className="my-8">
+      <div className="my-5">
         <h2 className="mb-5 text-2xl font-bold">Recent Posts</h2>
         <div className="flex w-full flex-col space-y-4">
           {Array(3)
@@ -56,7 +73,6 @@ export default function Home() {
                 </div>
               </a>
             ))}
-
         </div>
         <button>View all posts</button>
       </div>
