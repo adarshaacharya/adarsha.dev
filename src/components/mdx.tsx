@@ -44,7 +44,8 @@ export function Mdx({ code }: { code: string }) {
   const MDXComponent = useMDXComponent(code);
 
   return (
-    <article className="prose prose-quoteless prose-neutral dark:prose-invert">
+    <article className="prose prose-neutral dark:prose-invert prose-quoteless">
+      {/* @ts-expect-error */}
       <MDXComponent components={components} />
     </article>
   );

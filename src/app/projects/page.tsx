@@ -1,9 +1,9 @@
 "use client";
+import { GitHubIcon } from "@/components/icons/social";
+import { SocialLink } from "@/components/social-link";
+import { PROJECTS } from "@/data";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { GitHubIcon } from "../components/icons/social";
-import { PROJECTS } from "../data";
-import { SocialLink } from "../components/social-link";
 
 interface Props {
   project: (typeof PROJECTS)[0];
@@ -48,9 +48,11 @@ export const ProjectCard = ({ project }: Props) => {
           ))}
         </p>
         <p className="flex items-center">
-          <SocialLink icon={GitHubIcon} 
-          href={project.link.href}
-          className="h-6 w-6 flex-none" />
+          <SocialLink
+            icon={GitHubIcon}
+            href={project.link.href}
+            className="h-6 w-6 flex-none"
+          />
         </p>
       </div>
     </div>

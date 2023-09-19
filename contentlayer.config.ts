@@ -54,6 +54,8 @@ export default makeSource({
         rehypePrettyCode,
         {
           theme: "one-dark-pro",
+          keepBackground: false,
+
           onVisitHighlightedLine(node: LineElement) {
             if (
               node.properties.className &&

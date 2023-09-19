@@ -1,14 +1,16 @@
-import clsx from "clsx";
-import "./globals.css";
+import "./global.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { Header } from "./components/header";
-import { ThemeProvider } from "./components/theme-provider";
 import { cn } from "@/lib/utils";
-import { TailwindIndicator } from "./components/tailwind-indicator";
-import { Footer } from "./components/footer";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
+import { TailwindIndicator } from "@/components/tailwind-indicator";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://adarshaacharya.com.np"),

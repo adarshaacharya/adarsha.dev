@@ -1,7 +1,7 @@
 import Image from "next/image";
-import { SOCIALS } from "./data";
-import { SocialLink } from "./components/social-link";
-import { BriefcaseIcon } from "./components/icons/social";
+import { SOCIALS } from "../data";
+import { SocialLink } from "@/components/social-link";
+import { BriefcaseIcon } from "@/components/icons/social";
 
 export default function Home() {
   return (
@@ -74,7 +74,6 @@ export default function Home() {
               </a>
             ))}
         </div>
-        <button>View all posts</button>
       </div>
     </>
   );

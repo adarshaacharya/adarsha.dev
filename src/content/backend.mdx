@@ -198,3 +198,50 @@ You can create tables by assembling a list of words and dividing them with hyphe
 ## Strikethrough
 
 Any word wrapped with two tildes (like `~~this~~`) will appear ~~crossed out~~.
+
+```js
+console.log({ hi: 23423 });
+```
+
+lorem100
+
+```tsx
+Hello, World!`;
+
+const homePage = `export default function Page() {
+  return (
+    <section>
+      <h1 className="font-bold text-2xl mb-8 tracking-tighter">my portfolio</h1>
+      <p className="prose prose-neutral dark:prose-invert">
+        This is your new portfolio.
+      </p>
+    </section>
+  );
+}
+```
+
+## Vanilla CSS
+
+Like most, I started web development with vanilla CSS. All you need is a single HTML and CSS file. Pretty simple.
+
+```html title="index.html"
+<h1 class="header">Welcome</h1>
+```
+
+```css title="index.css"
+.header {
+  font-size: 32px;
+}
+```
+
+# Other
+
+I added [absolute Imports and module path aliases](https://nextjs.org/docs/advanced-features/module-path-aliases) to improve the readability of nested imports inside files. Here's a before and after example:
+
+```jsx
+// Before
+import db from "../../lib/db-admin";
+
+// After
+import db from "lib/db-admin";
+```
