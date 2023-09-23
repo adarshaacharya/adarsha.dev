@@ -3,7 +3,7 @@ import {
   InstagramIcon,
   LinkedInIcon,
   TwitterIcon,
-} from "../components/icons/social";
+} from "../components/icons";
 
 export const PROJECTS = [
   {

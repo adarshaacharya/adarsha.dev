@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { SOCIALS } from "../data";
 import { SocialLink } from "@/components/social-link";
-import { BriefcaseIcon } from "@/components/icons/social";
+import { BriefcaseIcon } from "@/components/icons";
 import { allBlogs } from "contentlayer/generated";
 import { BlogCard } from "@/components/blog-card";
 import { generatePageMetadata } from "./seo";
@@ -32,14 +32,14 @@ export default function Home() {
 
         <p className="mt-4">
           I used to consider myself a software engineer, but the reality is that
-          I simply enjoy creating things. If you&pos;d like to get in touch, send me
-          an email.
+          I simply enjoy creating things. If you&pos;d like to get in touch,
+          send me an email.
         </p>
 
         <p>
-          I'm always looking to work on interesting projects with interesting
-          people. If you have something in mind, feel free to reach out on any
-          of my social handles.
+          I&pos;m always looking to work on interesting projects with
+          interesting people. If you have something in mind, feel free to reach
+          out on any of my social handles.
         </p>
       </div>
       <ul className="flex space-x-4">
