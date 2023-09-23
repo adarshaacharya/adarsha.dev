@@ -11,8 +11,8 @@ const navItems = {
   "/": {
     name: "Home",
   },
-  "/blogs": {
-    name: "Blogs",
+  "/blog": {
+    name: "Blog",
   },
   "/projects": {
     name: "Projects",
@@ -21,8 +21,8 @@ const navItems = {
 
 export function Header() {
   let pathname = usePathname() || "/";
-  if (pathname.includes("/blogs/")) {
-    pathname = "/blogs";
+  if (pathname.includes("/blog/")) {
+    pathname = "/blog";
   }
 
   return (

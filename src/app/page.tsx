@@ -2,8 +2,20 @@ import Image from "next/image";
 import { SOCIALS } from "../data";
 import { SocialLink } from "@/components/social-link";
 import { BriefcaseIcon } from "@/components/icons/social";
+import { allBlogs } from "contentlayer/generated";
+import { BlogCard } from "@/components/blog-card";
+import { generatePageMetadata } from "./seo";
+
+export const metadata = generatePageMetadata({ title: "Home" });
 
 export default function Home() {
+  const blogs = allBlogs.sort((a, b) => {
+    if (new Date(a.publishedAt) > new Date(b.publishedAt)) {
+      return -1;
+    }
+    return 1;
+  });
+
   return (
     <>
       <div className="py-5">
@@ -20,7 +32,7 @@ export default function Home() {
 
         <p className="mt-4">
           I used to consider myself a software engineer, but the reality is that
-          I simply enjoy creating things. If you'd like to get in touch, send me
+          I simply enjoy creating things. If you&pos;d like to get in touch, send me
           an email.
         </p>
 
@@ -47,33 +59,13 @@ export default function Home() {
        
       <div className="my-5">
         <h2 className="mb-5 text-2xl font-bold">Recent Posts</h2>
-        <div className="flex w-full flex-col space-y-4">
-          {Array(3)
-            .fill(0)
-            .map((_, i) => (
-              <a
-                href={`/blog/$xyz`}
-                className="flex w-full items-center justify-between  rounded border border-neutral-200 bg-neutral-50 px-3 py-4 dark:border-neutral-700 dark:bg-neutral-900"
-                key={i}
-              >
-                <div className="flex flex-col">
-                  <p className="font-bold text-neutral-900 dark:text-neutral-100">
-                    Story of Heroku
-                  </p>
-                  <p>
-                    Lorem, ipsum dolor sit amet consectetur adipisicing elit.
-                    Corrupti incidunt aut praesentium ab iure! Ipsa cum fuga eos
-                  </p>
-                  <p className="text-neutral-700 dark:text-neutral-300">
-                    2021-09-09
-                  </p>
-                </div>
-                <div className="text-neutral-700 dark:text-neutral-300">
-                  {"->"}
-                </div>
-              </a>
-            ))}
-        </div>
+        <ul>
+          {blogs.map((blog) => (
+            <li key={blog.slug} className="py-2">
+              <BlogCard blog={blog} key={blog.slug} />
+            </li>
+          ))}
+        </ul>
       </div>
     </>
   );

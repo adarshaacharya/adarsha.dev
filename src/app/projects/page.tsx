@@ -4,19 +4,18 @@ import { SocialLink } from "@/components/social-link";
 import { PROJECTS } from "@/data";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { generatePageMetadata } from "../seo";
 
 interface Props {
   project: (typeof PROJECTS)[0];
 }
 
+export const metadata = generatePageMetadata({ title: "Projects" });
+
 export const ProjectCard = ({ project }: Props) => {
   return (
     <div
-      className="flex   cursor-pointer
-          flex-col 
-          rounded-xl
-        transition
-         hover:bg-zinc-50 hover:dark:bg-zinc-800/50"
+      className="flex cursor-pointer flex-col rounded-xl transition hover:bg-zinc-50 hover:dark:bg-zinc-800/50"
       key={project.title}
     >
       <div className="bg-cover bg-no-repeat">

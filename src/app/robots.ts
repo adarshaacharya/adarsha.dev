@@ -1,11 +1,13 @@
-export default function robots() {
+import { siteMetadata } from "@/data/siteMetadata";
+import { MetadataRoute } from "next";
+
+export default function robots(): MetadataRoute.Robots {
   return {
-    rules: [
-      {
-        userAgent: "*",
-      },
-    ],
-    sitemap: "https://adarshaacharya.com.np/sitemap.xml",
-    host: "https://adarshaacharya.com.np",
+    rules: {
+      userAgent: "*",
+      allow: "/",
+    },
+    sitemap: `${siteMetadata.siteUrl}/sitemap.xml`,
+    host: siteMetadata.siteUrl,
   };
 }
