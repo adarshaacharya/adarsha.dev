@@ -1,7 +1,6 @@
 import Image from "next/image";
 import { SOCIALS } from "../data";
 import { SocialLink } from "@/components/social-link";
-import { BriefcaseIcon } from "@/components/icons";
 import { allBlogs } from "contentlayer/generated";
 import { BlogCard } from "@/components/blog-card";
 import { generatePageMetadata } from "./seo";
@@ -18,45 +17,61 @@ export default function Home() {
 
   return (
     <>
-      <div className="py-5">
+      <section className="mb-5">
         <Image
           src="/_static/adarsha.jpeg"
-          width={80}
-          height={80}
+          width={50}
+          height={50}
           alt="avatar"
-          className="rounded-full hover:grayscale-0	dark:grayscale "
+          className="rounded-full hover:grayscale-0	dark:grayscale mb-5"
           priority
         />
-
-        <h1 className="mt-5 text-3xl font-bold">Aadarsha Acharya</h1>
+        <h1 className="text-2xl font-bold ">Aadarsha Acharya</h1>
 
         <p className="mt-4">
-          I used to consider myself a software engineer, but the reality is that
-          I simply enjoy creating things. If you&pos;d like to get in touch,
-          send me an email.
+          I’m a software engineer specializing in building scalable, accessible
+          applications having rich user interface using javascript.
+        </p>
+        <p className="mt-4 mb-4">
+          Over the years I&apos;ve worked on multiple projects on different
+          domains and have actively contributed to many various open source
+          projects. Currently, I&apos;m building iGaming solutions at &nbsp;
+          <a
+            href="https://mindworks.xyz/"
+            target="_blank"
+            className="border-b inline-block"
+          >
+            mindworks.xyz
+          </a>
+          .
         </p>
 
-        <p>
-          I&pos;m always looking to work on interesting projects with
-          interesting people. If you have something in mind, feel free to reach
-          out on any of my social handles.
+        <p className="mb-4">
+          If you&apos;d like to collaborate, please&nbsp;
+          <a
+            href="mailto:adarshaofficial@gmail.com"
+            className="border-b inline-block"
+          >
+            send me an email
+          </a>
+          &nbsp;or reach out on any of my social handles.
         </p>
-      </div>
-      <ul className="flex space-x-4">
-        {SOCIALS.map((social) => (
-          <SocialLink
-            key={social.label}
-            aria-label={`Follow on ${social.label}`}
-            href={social.href}
-            icon={social.icon}
-          />
-        ))}
-      </ul>
-      <div className="mt-7 flex items-end space-x-3 align-bottom">
-        <SocialLink href={"dajkdas"} icon={BriefcaseIcon} />
-        <span>View Resume</span>
-      </div>
-       
+
+        <div className="flex space-x-4 mb-2 mt-4">
+          {SOCIALS.map((social) => (
+            <SocialLink
+              key={social.label}
+              aria-label={`Follow on ${social.label}`}
+              href={social.href}
+              icon={social.icon}
+            />
+          ))}
+        </div>
+        <p className="mt-4 border-b inline-block">View Resume</p>
+      </section>
+
+      <div className="my-8 w-full border-t border-gray-200 dark:border-gray-800" />
+
       <div className="my-5">
         <h2 className="mb-5 text-2xl font-bold">Recent Posts</h2>
         <ul>

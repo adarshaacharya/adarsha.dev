@@ -9,11 +9,11 @@ type BlogCardProps = {
 
 export function BlogCard({ blog }: { blog: BlogCardProps }) {
   return (
-    <article className="space-y-2">
+    <article className="space-y-2 cursor-pointer transition hover:bg-zinc-50 hover:dark:bg-zinc-800/50 p-4 rounded-lg">
       <dl>
         <dt className="sr-only">Published on</dt>
         <dd className="text-base font-medium leading-6 text-gray-500 dark:text-gray-400">
-          <time dateTime={blog.publishedAt}>August 20, 2020</time>
+          <time dateTime={blog.publishedAt}></time>
         </dd>
       </dl>
       <h3 className="text-2xl font-bold leading-8 tracking-tight text-gray-900 dark:text-gray-100">

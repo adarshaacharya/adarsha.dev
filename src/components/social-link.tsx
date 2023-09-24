@@ -12,7 +12,7 @@ export interface Props {
 
 export function SocialLink({ className, href, children, icon: Icon }: Props) {
   return (
-    <li className={cn(className, "flex")}>
+    <div className={cn(className, "flex")}>
       <Link
         href={href}
         className="hover:text-primary group flex text-sm font-medium text-zinc-800 transition dark:text-zinc-200"
@@ -20,6 +20,6 @@ export function SocialLink({ className, href, children, icon: Icon }: Props) {
         <Icon className="group-hover:fill-primary h-6 w-6 flex-none fill-zinc-500 transition" />
         {children && <span className="ml-4">{children}</span>}
       </Link>
-    </li>
+    </div>
   );
 }

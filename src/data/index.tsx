@@ -4,6 +4,7 @@ import {
   LinkedInIcon,
   TwitterIcon,
 } from "../components/icons";
+import { siteMetadata } from "./siteMetadata";
 
 export const PROJECTS = [
   {
@@ -75,7 +76,7 @@ export const SOCIALS = [
   },
   {
     label: "LinkedIn",
-    href: "https://www.linkedin.com/in/adarshaacharya/",
+    href: "https://www.linkedin.com/in/adarshaacharya",
     icon: LinkedInIcon,
   },
   {

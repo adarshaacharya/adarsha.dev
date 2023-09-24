@@ -7,10 +7,14 @@ import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { TailwindIndicator } from "@/components/tailwind-indicator";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
+import { Space_Grotesk } from 'next/font/google'
+
+const space_grotesk = Space_Grotesk({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-space-grotesk',
+})
+
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://adarshaacharya.com.np"),
@@ -29,7 +33,7 @@ export default function RootLayout({
       <body
         className={cn(
           "mx-auto min-h-screen max-w-3xl antialiased dark:bg-zinc-950 dark:text-gray-100",
-          inter.className,
+          space_grotesk.className,
         )}
       >
         <ThemeProvider
@@ -38,6 +42,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+  
           <main className="mx-4 mt-10 px-2 md:px-0 lg:mx-auto">
             <Header />
             {children}
