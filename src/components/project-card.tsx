@@ -1,6 +1,6 @@
 import { GitHubIcon } from "@/components/icons";
 import { SocialLink } from "@/components/social-link";
-import { PROJECTS } from "@/data";
+import { PROJECTS } from "@/data/projects";
 import Image from "next/image";
 
 type Props = {
@@ -14,7 +14,7 @@ export const ProjectCard = ({ project }: Props) => {
       key={project.title}
     >
       <Image
-        src={project.imgSrc}
+        src={project.thumbnail}
         alt={`Logo of ${project.title}`}
         className="h-50 w-full rounded-t-lg object-cover bg-no-repeat"
         width={0}
@@ -22,10 +22,7 @@ export const ProjectCard = ({ project }: Props) => {
         unoptimized
       />
       <div className="p-4">
-        <a
-          className="text-base font-semibold tracking-tight text-zinc-800 dark:text-zinc-100"
-          href={project.link.href}
-        >
+        <a className="text-base font-semibold tracking-tight text-zinc-800 dark:text-zinc-100">
           {project.title}
         </a>
         <div className=" z-10 mt-2 text-sm">{project.description}</div>
@@ -42,7 +39,7 @@ export const ProjectCard = ({ project }: Props) => {
         <div className="flex items-center">
           <SocialLink
             icon={GitHubIcon}
-            href={project.link.href}
+            href={project.repo}
             className="h-6 w-6 flex-none"
           />
         </div>

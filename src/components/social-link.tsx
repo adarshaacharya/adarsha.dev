@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils";
-import clsx from "clsx";
 import Link from "next/link";
 import React from "react";
 
@@ -15,6 +14,7 @@ export function SocialLink({ className, href, children, icon: Icon }: Props) {
     <div className={cn(className, "flex")}>
       <Link
         href={href}
+        target="_blank"
         className="hover:text-primary group flex text-sm font-medium text-zinc-800 transition dark:text-zinc-200"
       >
         <Icon className="group-hover:fill-primary h-6 w-6 flex-none fill-zinc-500 transition" />

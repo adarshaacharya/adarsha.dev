@@ -1,4 +1,4 @@
-import { SOCIALS } from "@/data";
+import { SOCIALS } from "@/data/socials";
 import { SocialLink } from "./social-link";
 import { siteMetadata } from "@/data/siteMetadata";
 

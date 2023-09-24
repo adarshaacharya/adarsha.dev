@@ -1,14 +1,11 @@
 import Image from "next/image";
-import { SOCIALS } from "../data";
+import { SOCIALS } from "../data/socials";
 import { SocialLink } from "@/components/social-link";
 import { allBlogs } from "contentlayer/generated";
 import { BlogCard } from "@/components/blog-card";
-import { generatePageMetadata } from "./seo";
-
-export const metadata = generatePageMetadata({ title: "Home" });
 
 export default function Home() {
-  const blogs = allBlogs.sort((a, b) => {
+  const blogs = allBlogs.slice(0, 2).sort((a, b) => {
     if (new Date(a.publishedAt) > new Date(b.publishedAt)) {
       return -1;
     }
@@ -34,8 +31,8 @@ export default function Home() {
         </p>
         <p className="mt-4 mb-4">
           Over the years I&apos;ve worked on multiple projects on different
-          domains and have actively contributed to many various open source
-          projects. Currently, I&apos;m building iGaming solutions at &nbsp;
+          domains and have actively contributed to various open source projects.
+          Currently, I&apos;m building iGaming solutions at &nbsp;
           <a
             href="https://mindworks.xyz/"
             target="_blank"
@@ -67,7 +64,15 @@ export default function Home() {
             />
           ))}
         </div>
-        <p className="mt-4 border-b inline-block">View Resume</p>
+        <p className="mt-4 border-b inline-block cursor-pointer">
+          <a
+            href="https://drive.google.com/file/d/1iw6y7FUeCABgEY1nCuyxd1Bz0LAX-ICq/view"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View Resume
+          </a>
+        </p>
       </section>
 
       <div className="my-8 w-full border-t border-gray-200 dark:border-gray-800" />

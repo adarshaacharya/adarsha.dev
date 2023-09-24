@@ -16,7 +16,6 @@ export default function Blog() {
   return (
     <section>
       <h1 className="mb-4 text-2xl font-bold tracking-tighter">Blog.</h1>
-
       <ul>
         {blogs.map((blog) => (
           <li
