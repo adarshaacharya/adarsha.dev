@@ -3,7 +3,10 @@ import { allBlogs } from "contentlayer/generated";
 import { Metadata } from "next";
 import { generatePageMetadata } from "../seo";
 
-export const metadata = generatePageMetadata({ title: "Blog" });
+export const metadata = generatePageMetadata({
+  title: "Blog",
+  description: "Read my blogs on web development, design and more.",
+});
 
 export default function Blog() {
   const blogs = allBlogs.sort((a, b) => {

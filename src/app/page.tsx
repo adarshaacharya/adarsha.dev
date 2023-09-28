@@ -3,6 +3,7 @@ import { SOCIALS } from "../data/socials";
 import { SocialLink } from "@/components/social-link";
 import { allBlogs } from "contentlayer/generated";
 import { BlogCard } from "@/components/blog-card";
+import React from "react";
 
 export default function Home() {
   const blogs = allBlogs.slice(0, 2).sort((a, b) => {
@@ -13,7 +14,7 @@ export default function Home() {
   });
 
   return (
-    <>
+    <React.Fragment>
       <section className="mb-5">
         <Image
           src="/_static/adarsha.jpeg"
@@ -27,12 +28,13 @@ export default function Home() {
 
         <p className="mt-4">
           I’m a software engineer specializing in building scalable, accessible
-          applications having rich user interface using javascript.
+          web applications having rich user interface using javascript.
         </p>
         <p className="mt-4 mb-4">
-          Over the years I&apos;ve worked on multiple projects on different
-          domains and have actively contributed to various open source projects.
-          Currently, I&apos;m building iGaming solutions at &nbsp;
+          Over the years, I&apos;ve worked on multiple projects in insurance,
+          game-tech, and video streaming domains, and have actively contributed
+          to various open source projects. Currently, I&apos;m building iGaming
+          solutions at &nbsp;
           <a
             href="https://mindworks.xyz/"
             target="_blank"
@@ -87,6 +89,6 @@ export default function Home() {
           ))}
         </ul>
       </div>
-    </>
+    </React.Fragment>
   );
 }

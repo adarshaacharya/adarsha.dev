@@ -5,7 +5,11 @@ import { PROJECTS, PROJECT_TOOLS } from "@/data/projects";
 import { SocialLink } from "@/components/social-link";
 import { GitHubIcon, LinkIcon } from "@/components/icons";
 
-export const metadata = generatePageMetadata({ title: "Projects" });
+export const metadata = generatePageMetadata({
+  title: "Projects",
+  description:
+    "View some of my notable open source web apps, npm packages, cli tools and more.",
+});
 
 export default function Projects() {
   return (
@@ -34,7 +38,7 @@ export default function Projects() {
               rounded-xl transition hover:bg-zinc-50 hover:dark:bg-zinc-800/50 p-3"
             >
               <p>{project.title}</p>
- 
+
               <p>{project.description}</p>
 
               <div className="flex space-x-2 self-end">
