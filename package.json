@@ -6,8 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "format": "prettier --write .",
+    "type-check": "tsc --noEmit"
   },
+  "packageManager": "pnpm@8.8.0",
   "dependencies": {
     "@types/node": "20.6.0",
     "@types/react": "18.2.21",

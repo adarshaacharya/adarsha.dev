@@ -8,7 +8,7 @@
 
 <p align="center">
   Personal website and blog 
-  built with <a href="https://www.gatsbyjs.org/" target="_blank">Gatsby</a>
+  built with <a href="https://www.nextjs.org/" target="_blank">Next.js</a>
 </p>
 
 <div align="center">
@@ -54,38 +54,18 @@
    gatsby develop
    ```
 
-## 🚀 Building and Running for Production
-
-1. Generate a full static production build
-
-   ```sh
-   gatsby build
-   ```
-
-1. Preview the site as it will appear once deployed
-
-   ```sh
-   gatsby serve
-   ```
-
 ## 🖨️ Templating Project
 
 If you want to use this project code as your own portfolio , you can go ahead. Please give me credit by mentioning original repo link somewhere in README.
 
-**Note**: The source for this site was not created to be a template or theme, but for my own use so it may not fit your needs. Feel free to tweak as per your need or you can check [Gatsby starters](https://www.gatsbyjs.org/starters/) for awesome themes.
+**Note**: The source for this site was not created to be a template or theme, but for my own use so it may not fit your needs. Feel free to tweak as per your need.
 
 ## 👤 Author
 
 - Website: https://adarshaacharya.com.np/
-- Twitter: [@adarshatweets](https://twitter.com/adarshatweets)
+- Twitter: [@adarshatweets](https://twitter.com/adarsha_ach)
 - Github: [@adarshaacharya](https://github.com/adarshaacharya)
 - LinkedIn: [@adarshaacharya](https://linkedin.com/in/adarshaacharya)
-
-## 🤝 Contributing
-
-Contributions, issues and feature requests are welcome!<br />Feel free to check [issues page](https://github.com/gatsbyjs/gatsby/issues). You can also take a look at the [contributing guide](https://github.com/adarshaacharya/adarshaacharya.com.np/blob/master/CONTRIBUTING.md).
-
-## 👏🏻 Show your support
 
 Give a ⭐️ if you like the project!
 
@@ -93,9 +73,3 @@ Give a ⭐️ if you like the project!
 
 Copyright © 2020 [Aadarsha Acharya](https://github.com/adarshaacharya).<br />
 This project is [MIT](https://github.com/adarshaacharya/adarshaacharya.com.np/blob/master/LICENSE) licensed.
-
----
-
-**Depoly on your own Netlify Instance**
-
-[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/adarshaacharya/adarshaacharya.com.np)
