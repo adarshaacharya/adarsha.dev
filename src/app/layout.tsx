@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { TailwindIndicator } from "@/components/tailwind-indicator";
-
+import { Analytics } from "@vercel/analytics/react";
 import { Space_Grotesk } from "next/font/google";
 import { siteMetadata } from "@/data/siteMetadata";
 import Head from "./head";
@@ -78,6 +78,7 @@ export default function RootLayout({
           </main>
           <TailwindIndicator />
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
