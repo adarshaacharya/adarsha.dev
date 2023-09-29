@@ -4,6 +4,7 @@ import { allBlogs } from "contentlayer/generated";
 import Balancer from "react-wrap-balancer";
 import { Mdx } from "@/components/mdx";
 import { siteMetadata } from "@/data/siteMetadata";
+import NotFound from "@/app/not-found";
 
 export async function generateStaticParams() {
   const paths = allBlogs.map((blog) => ({ slug: blog.slug }));
@@ -46,7 +47,7 @@ export default async function Blog({ params }: { params: { slug: string } }) {
   const blog = allBlogs.find((blog) => blog.slug === params.slug);
 
   if (!blog) {
-    return;
+    return <NotFound />;
   }
 
   return (

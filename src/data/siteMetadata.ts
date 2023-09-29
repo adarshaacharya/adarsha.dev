@@ -2,7 +2,6 @@ export const siteMetadata = {
   title: "Aadarsha Acharya",
   author: "Aadarsha Acharya",
   siteUrl: "https://adarshaacharya.com.np",
-  siteLogo: "/_static/logo.png",
   socialBanner: "/_static/social-card.png",
   description:
     "Personal website of Aadarsha Acharya - Fullstack developer passionate about creating and sharing things on internet",
