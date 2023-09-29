@@ -9,6 +9,7 @@ import { TailwindIndicator } from "@/components/tailwind-indicator";
 
 import { Space_Grotesk } from "next/font/google";
 import { siteMetadata } from "@/data/siteMetadata";
+import Head from "./head";
 
 const space_grotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -57,6 +58,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <Head />
       <body
         className={cn(
           "mx-auto min-h-screen max-w-3xl antialiased dark:bg-zinc-950 dark:text-gray-100",

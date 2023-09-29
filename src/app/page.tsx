@@ -21,7 +21,7 @@ export default function Home() {
           width={50}
           height={50}
           alt="avatar"
-          className="rounded-full hover:grayscale-0	dark:grayscale mb-5"
+          className="rounded-full cursor-pointer hover:grayscale mb-5"
           priority
         />
         <h1 className="text-2xl font-bold ">Aadarsha Acharya</h1>
