@@ -5,6 +5,7 @@ import Balancer from "react-wrap-balancer";
 import { Mdx } from "@/components/mdx";
 import { siteMetadata } from "@/data/siteMetadata";
 import NotFound from "@/app/not-found";
+import { formatDate } from "@/lib/utils";
 
 export async function generateStaticParams() {
   const paths = allBlogs.map((blog) => ({ slug: blog.slug }));
@@ -57,7 +58,7 @@ export default async function Blog({ params }: { params: { slug: string } }) {
       </h1>
       <div className="mb-8 mt-2 flex max-w-[650px] items-center justify-between text-sm">
         <p className="text-sm text-neutral-600 dark:text-neutral-400">
-          {blog.publishedAt}
+          {formatDate(blog.publishedAt)}
         </p>
       </div>
       <Mdx code={blog.body.code} />

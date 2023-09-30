@@ -39,7 +39,9 @@ export default function Projects() {
             >
               <p>{project.title}</p>
 
-              <p>{project.description}</p>
+              <p className="text-gray-500 dark:text-gray-400">
+                {project.description}
+              </p>
 
               <div className="flex space-x-2 self-end">
                 <SocialLink

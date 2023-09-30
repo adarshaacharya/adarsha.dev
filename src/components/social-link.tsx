@@ -15,9 +15,9 @@ export function SocialLink({ className, href, children, icon: Icon }: Props) {
       <Link
         href={href}
         target="_blank"
-        className="hover:text-primary group flex text-sm font-medium text-zinc-800 transition dark:text-zinc-200"
+        className="group flex text-sm font-medium transition"
       >
-        <Icon className="group-hover:fill-primary h-6 w-6 flex-none fill-zinc-500 transition" />
+        <Icon className="group-hover:fill-primary h-6 w-6 flex-none fill-zinc-500 hover:fill-zinc-200 transition " />
         {children && <span className="ml-4">{children}</span>}
       </Link>
     </div>

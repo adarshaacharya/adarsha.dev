@@ -26,7 +26,7 @@ export function Header() {
   }
 
   return (
-    <header className="mb-16 tracking-tight">
+    <header className="mb-16 tracking-tight mt-10">
       <div className=" lg:sticky lg:top-20">
         <LayoutGroup>
           <nav

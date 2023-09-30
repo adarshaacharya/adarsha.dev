@@ -26,35 +26,38 @@ export default function Home() {
         />
         <h1 className="text-2xl font-bold ">Aadarsha Acharya</h1>
 
-        <p className="mt-4">
-          I’m a software engineer specializing in building scalable, accessible
-          web applications having rich user interface using javascript.
-        </p>
-        <p className="mt-4 mb-4">
-          Over the years, I&apos;ve worked on multiple projects in insurance,
-          game-tech, and video streaming domains, and have actively contributed
-          to various open source projects. Currently, I&apos;m building iGaming
-          solutions at &nbsp;
-          <a
-            href="https://mindworks.xyz/"
-            target="_blank"
-            className="border-b inline-block"
-          >
-            mindworks.xyz
-          </a>
-          .
-        </p>
+        <div className="text-gray-700 dark:text-gray-300">
+          <p className="mt-4">
+            I’m a software engineer specializing in building scalable,
+            accessible web applications having rich user interface using
+            javascript.
+          </p>
+          <p className="mt-4 mb-4">
+            Over the years, I&apos;ve worked on multiple projects in insurance,
+            game-tech, and video streaming domains, and have actively
+            contributed to various open source projects. Currently, I&apos;m
+            building iGaming solutions at &nbsp;
+            <a
+              href="https://mindworks.xyz/"
+              target="_blank"
+              className="border-b inline-block"
+            >
+              mindworks.xyz
+            </a>
+            .
+          </p>
 
-        <p className="mb-4">
-          If you&apos;d like to collaborate, please&nbsp;
-          <a
-            href="mailto:adarshaofficial@gmail.com"
-            className="border-b inline-block"
-          >
-            send me an email
-          </a>
-          &nbsp;or reach out on any of my social handles.
-        </p>
+          <p className="mb-4">
+            If you&apos;d like to collaborate, please&nbsp;
+            <a
+              href="mailto:adarshaofficial@gmail.com"
+              className="border-b inline-block"
+            >
+              send me an email
+            </a>
+            &nbsp;or reach out on any of my social handles.
+          </p>
+        </div>
 
         <div className="flex space-x-4 mb-2 mt-4">
           {SOCIALS.map((social) => (

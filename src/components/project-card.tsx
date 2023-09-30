@@ -25,7 +25,9 @@ export const ProjectCard = ({ project }: Props) => {
         <a className="text-base font-semibold tracking-tight text-zinc-800 dark:text-zinc-100">
           {project.title}
         </a>
-        <div className=" z-10 mt-2 text-sm">{project.description}</div>
+        <div className=" z-10 mt-2 text-sm text-gray-500 dark:text-gray-400">
+          {project.description}
+        </div>
         <div className="z-10 mb-6 mt-6 flex flex-wrap gap-1 ">
           {project.tags.map((techStackItem) => (
             <p

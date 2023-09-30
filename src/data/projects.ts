@@ -12,7 +12,7 @@ export const PROJECTS = [
     repo: "https://github.com/adarshaacharya/CsOverflow",
     thumbnail: "/_static/projects/csoverflow.png",
     description:
-      "Q/A forum for Computer Science and Engineering students. Ask a question, contribute an answer and upvote your favourite one. CsOverflow gives students correct answer and derivation of all relevant computer science and engineering questions.",
+      "Q/A forum for Computer Science and Engineering students. Ask a question, contribute an answer and upvote your favourite one.",
     tags: ["Typescript", "React", "Redux", "Nodejs", "PostgreSQL"],
   },
   {
@@ -21,7 +21,7 @@ export const PROJECTS = [
     demo: "https://passmanager.vercel.app/",
     thumbnail: "/_static/projects/passman.png",
     description:
-      "Cloud based password manager where user can login using GitHub account, create vault for personal and business purpose and store the credentials of different type. Credentials are hashed using AES256 algorithm, and one way hashing is done using Scrypt algorithm.",
+      "Cloud based password manager, create vault for personal and business purpose and store the credentials of different type. Credentials are hashed using AES256 algorithm, and one way hashing is done using Scrypt algorithm.",
     tags: ["Next.js", "Next Auth", "Prisma", "Docker", "Chakra UI"],
   },
   {
