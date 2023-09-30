@@ -4,6 +4,7 @@ import { SocialLink } from "@/components/social-link";
 import { allBlogs } from "contentlayer/generated";
 import { BlogCard } from "@/components/blog-card";
 import React from "react";
+import { LINKS } from "@/lib/constants";
 
 export default function Home() {
   const blogs = allBlogs.slice(0, 2).sort((a, b) => {
@@ -70,11 +71,7 @@ export default function Home() {
           ))}
         </div>
         <p className="mt-4 border-b inline-block cursor-pointer">
-          <a
-            href="https://drive.google.com/file/d/1iw6y7FUeCABgEY1nCuyxd1Bz0LAX-ICq/view"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <a href={LINKS.RESUME} target="_blank" rel="noopener noreferrer">
             View Resume
           </a>
         </p>
