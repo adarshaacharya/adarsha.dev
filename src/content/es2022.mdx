@@ -187,14 +187,15 @@ RegExp Match Indices provide additional information about the start and end indi
 In the below example we find all the indices of the switch reserved keyword present in out code.
 
 ```js
-const statement = 'const switch = 0';
-const regex = /(switch)/gd;
+const statement = "const switch = 0";
+const regex = /(switch)/dg;
 
 const matches = [...statement.matchAll(regex)];
 
-console.log(matches)
+console.log(matches);
+
 /**
-Result :
+ * Result :
 [
   "switch",
   "switch",
@@ -208,8 +209,7 @@ Result :
   input: "const switch = 0",
   length: 2,
 ]
- * /
-
+ */
 ```
 
 Most of the above features are already available in modern browsers, and Node.js environment, but for production use we might need to polyfill for target environment.
@@ -223,5 +223,3 @@ If you see any kind of mistake/typo on above post [edit it on GitHub](https://gi
 ⭐ Follow me on [Twitter](https://twitter.com/adarsha_ach) for more updates.
 
 ⭐ View my projects on [GitHub](https://github.com/adarshaacharya).
-
-Subscribe to my newsletter if you want upcoming blogs directly in your inbox. 👇

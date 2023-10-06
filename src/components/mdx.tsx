@@ -2,6 +2,7 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useMDXComponent } from "next-contentlayer/hooks";
+import { BlogComments } from "./blog-comments";
 
 function CustomLink(props: { href: string; children: React.ReactNode }) {
   const { href, ...rest } = props;
@@ -40,13 +41,18 @@ const components = {
   Callout,
 };
 
+
+
 export function Mdx({ code }: { code: string }) {
   const MDXComponent = useMDXComponent(code);
 
   return (
-    <article className="prose prose-neutral dark:prose-invert prose-quoteless">
-      {/* @ts-expect-error */}
-      <MDXComponent components={components} />
-    </article>
+    <React.Fragment>
+      <article className="prose prose-neutral dark:prose-invert prose-quoteless">
+        {/* @ts-expect-error */}
+        <MDXComponent components={components} />
+      </article>
+      <BlogComments />
+    </React.Fragment>
   );
 }
