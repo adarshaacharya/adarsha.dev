@@ -1,0 +1,9 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "semanticCommits": "enabled",
+  "rebaseWhen": "conflicted",
+  "labels": ["dependencies"],
+  "updateInternalDeps": true,
+  "rangeStrategy": "bump",
+  "schedule": ["every weekend"]
+}

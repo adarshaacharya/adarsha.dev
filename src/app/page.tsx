@@ -5,6 +5,7 @@ import { allBlogs } from "contentlayer/generated";
 import { BlogCard } from "@/components/blog-card";
 import React from "react";
 import { LINKS } from "@/lib/constants";
+import Link from "next/link";
 
 export default function Home() {
   const blogs = allBlogs.slice(0, 2).sort((a, b) => {
@@ -34,10 +35,10 @@ export default function Home() {
             javascript.
           </p>
           <p className="mt-4 mb-4">
-            Over the years, I&apos;ve worked on multiple projects in insurance,
-            game-tech, and video streaming domains, and have actively
-            contributed to various open source projects. Currently, I&apos;m
-            building iGaming solutions at &nbsp;
+            Over the years, I&apos;ve worked on multiple startups to build
+            end-to-end products in insurance, game-tech, and video streaming
+            domains, and have actively contributed to various open source
+            projects. Currently, I&apos;m building iGaming solutions at &nbsp;
             <a
               href="https://mindworks.xyz/"
               target="_blank"
@@ -84,7 +85,9 @@ export default function Home() {
         <ul>
           {blogs.map((blog) => (
             <li key={blog.slug} className="py-2">
-              <BlogCard blog={blog} key={blog.slug} />
+              <Link href={`/blog/${blog.slug}`}>
+                <BlogCard blog={blog} key={blog.slug} />
+              </Link>
             </li>
           ))}
         </ul>
