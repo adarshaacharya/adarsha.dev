@@ -23,7 +23,7 @@ export async function generateMetadata({
     return;
   }
 
-  const ogImage = `${siteMetadata.siteUrl}/og?title=${blog.title}`;
+  const ogImage = `${siteMetadata.siteUrl}/api/og?title=${blog.title}`;
 
   return {
     title: blog.title,
