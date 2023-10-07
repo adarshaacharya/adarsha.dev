@@ -23,6 +23,8 @@ export async function generateMetadata({
     return;
   }
 
+  const ogImage = `${siteMetadata.siteUrl}/og?title=${blog.title}`;
+
   return {
     title: blog.title,
     description: blog.summary,
@@ -35,11 +37,20 @@ export async function generateMetadata({
       publishedTime: blog.publishedAt,
       url: "./",
       authors: siteMetadata.author,
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: blog.title,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: blog.title,
       description: blog.summary,
+      images: [ogImage],
     },
   };
 }
