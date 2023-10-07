@@ -18,14 +18,14 @@ export default function Home() {
     <React.Fragment>
       <section className="mb-5">
         <Image
-          src="/_static/adarsha.jpeg"
-          width={50}
-          height={50}
+          src="/_static/me.jpg"
+          width={100}
+          height={100}
           alt="avatar"
           className="rounded-full cursor-pointer hover:grayscale mb-5"
           priority
         />
-        <h1 className="text-2xl font-bold ">Aadarsha Acharya</h1>
+        <h1 className="text-2xl font-bold">Aadarsha Acharya</h1>
 
         <div className="text-gray-700 dark:text-gray-300">
           <p className="mt-4">

@@ -1,4 +1,4 @@
-export const PROJECTS = [
+export const WEB_APPS = [
   {
     title: "Mentor Labs",
     tags: ["Typescript", "React", "Redux Toolkit", "Nodejs", "PostgreSQL"],
@@ -58,7 +58,7 @@ export const PROJECTS = [
   },
 ] as const;
 
-export const PROJECT_TOOLS = [
+export const TOOLS = [
   {
     title: "states-nepal",
     repo: "https://github.com/adarshaacharya/states-nepal",

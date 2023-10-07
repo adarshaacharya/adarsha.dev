@@ -2,6 +2,7 @@ import { BlogCard } from "@/components/blog-card";
 import { allBlogs } from "contentlayer/generated";
 import { Metadata } from "next";
 import { generatePageMetadata } from "../seo";
+import Link from "next/link";
 
 export const metadata = generatePageMetadata({
   title: "Blog",
@@ -25,7 +26,9 @@ export default function Blog() {
             key={blog.slug}
             className="py-4 divide-y divide-gray-200 dark:divide-gray-700"
           >
-            <BlogCard blog={blog} />
+            <Link href={`/blog/${blog.slug}`}>
+              <BlogCard blog={blog} />
+            </Link>
           </li>
         ))}
       </ul>
