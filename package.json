@@ -10,7 +10,7 @@
     "format": "prettier --write .",
     "type-check": "tsc --noEmit"
   },
-  "packageManager": "pnpm@8.8.0",
+  "packageManager": "pnpm@8.11.0",
   "dependencies": {
     "@giscus/react": "^2.3.0",
     "@types/node": "20.8.6",
