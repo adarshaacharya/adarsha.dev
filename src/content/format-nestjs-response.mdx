@@ -1,11 +1,10 @@
 ---
 title: "Format Nest.js Response using Interceptors"
-summary: "Learn how to format Nest.js response and make standard response for every api response using Interceptors."
+summary: "Learn how to format and make the standardarized response in Nest.js using Interceptors."
 type: Blog
 publishedAt: 2024-04-28
 ---
 
-In this article we will learn how to format the response in Nest.js using Interceptors. 
 
 
 Normally when we try to return a response from a controller, we return the response as it is. But sometimes we need to format the response before sending it to the client. For example, we may need to add some metadata to the response, or we may need to modify the response structure.
@@ -354,6 +353,7 @@ Now the message `User data fetched successfully` will be passed to the intercept
     "data": {
         "id": "2af04f53-d85a-4135-a5b3-ee8bfd150fbb",
         "email":  "user@gmail.com",
+        "password": "$2a$10$pi9qWbtwMp9yDryrshClN.crw0ZvyTNuk5.z2n1E10p0uCdxwsMZO",
         "role": "Client",
         "createdAt": "2024-04-28T07:29:55.450Z",
         "updatedAt": "2024-04-28T07:29:55.450Z",

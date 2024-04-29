@@ -84,7 +84,7 @@ export default function Home() {
         <h2 className="mb-5 text-2xl font-bold">Recent Posts</h2>
         <ul>
           {blogs.map((blog) => (
-            <li key={blog.slug} className="py-2">
+            <li key={blog.slug} className="py-1">
               <Link href={`/blog/${blog.slug}`}>
                 <BlogCard blog={blog} key={blog.slug} />
               </Link>

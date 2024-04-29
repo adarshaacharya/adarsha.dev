@@ -24,7 +24,7 @@ export default function Blog() {
         {blogs.map((blog) => (
           <li
             key={blog.slug}
-            className="py-4 divide-y divide-gray-200 dark:divide-gray-700"
+            className="py-1 divide-y divide-gray-200 dark:divide-gray-700"
           >
             <Link href={`/blog/${blog.slug}`}>
               <BlogCard blog={blog} />

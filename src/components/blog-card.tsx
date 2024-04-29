@@ -18,7 +18,7 @@ export function BlogCard({ blog }: { blog: BlogCardProps }) {
           </time>
         </dd>
       </dl>
-      <h3 className="text-2xl font-bold leading-8 tracking-tight text-gray-900 dark:text-gray-100">
+      <h3 className="text-xl font-bold leading-8 tracking-tight text-gray-900 dark:text-gray-100">
         {blog.title}
       </h3>
       <p className="prose max-w-none text-gray-500 dark:text-gray-400">
