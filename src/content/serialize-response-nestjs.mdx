@@ -1,0 +1,314 @@
+---
+title: "Serialize Nest.js API Response using class-transformer and class-validator"
+summary: "Learn how to serialize Nest.js API response using class-transformer and class-validator"
+type: Blog
+publishedAt: 2024-04-30
+---
+
+
+This is the second part of the series where we will learn to transform and serialize api response.
+In the previous article I've covered how to make uniform/standard response structure for api response in Nest.js if you haven't checked [you can read here](https://www.adarshaacharya.com.np/blog/format-nestjs-response).
+
+
+Final outcome was like this:
+
+
+```json
+{
+    "status": true,
+    "path": "/api/v1/users/2af04f53-d85a-4135-a5b3-ee8bfd150fbb",
+    "message": "User data fetched successfully",
+    "statusCode": 200,
+    "data": {
+        "id": "2af04f53-d85a-4135-a5b3-ee8bfd150fbb",
+        "email":  "user@gmail.com",
+        "password": "$2a$10$pi9qWbtwMp9yDryrshClN.crw0ZvyTNuk5.z2n1E10p0uCdxwsMZO",
+        "role": "Client",
+        "createdAt": "2024-04-28T07:29:55.450Z",
+        "updatedAt": "2024-04-28T07:29:55.450Z",
+    },
+    "timestamp": "2024-04-28 17:50:37"
+}
+```
+
+But the problem is that we are sending the password in the response which is not good practice. We need to omit the password field from the response.
+
+We can manually omit it but it for large response it's not feasible. 
+
+Instead we will use technique called [serialization](https://docs.nestjs.com/techniques/serialization) creating a interceptor to transform the response as per the DTO defined.
+
+
+## Serialize Response
+
+First we need to install the required packages.
+
+```bash
+npm install class-transformer class-validator
+```
+
+
+Now lets create interceptor for the response object.
+
+`serialize.interceptor.ts`
+```ts
+import { NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { plainToClass } from 'class-transformer';
+
+export interface ClassContrustor {
+  new (...args: any[]): object;
+}
+
+export class SerializeInterceptor implements NestInterceptor {
+  constructor(private dto: ClassContrustor) {}
+  intercept(context: ExecutionContext, handler: CallHandler): Observable<any> {
+    // run something before a request is handled by the request handler
+
+    return handler.handle().pipe(
+      map((data: ClassContrustor) => {
+        // Run something before the response is sent out
+
+        return plainToClass(this.dto, data, {
+          excludeExtraneousValues: true, // remove fields that are not in the DTO
+          exposeUnsetFields: false, // remove fields with value of undefined
+        });
+      }),
+    );
+  }
+}
+```
+
+Most of the part of above code is fairly simple, just simply how interceptor are build in Nest.js applications.
+Two things to notice is that we have used:
+
+
+- `plainToClass` method from `class-transformer`, will take the expected DTO takes `@Expose` decorator into account 
+ (which we will later define in response DTO) , takes required response data to be transfomed and will only expose the fields that are decorated with it and the fields that are not decorated with it will be omitted.
+
+
+- `excludeExtraneousValues` and `exposeUnsetFields` options to remove the fields that are not in the DTO and remove fields with value of undefined respectively.
+
+
+
+Now lets create a response DTO for the user response.
+
+`user-response.dto.ts`
+
+```ts
+import { Expose } from 'class-transformer';
+
+export class UserResponseDto {
+  @Expose()
+  id: string;
+
+  @Expose()
+  email: string;
+
+  @Expose()
+  role: string;
+
+  @Expose()
+  createdAt: Date;
+
+  @Expose()
+  updatedAt: Date;
+}
+```
+
+In above code we have used `@Expose` decorator from `class-transformer` to expose the fields that are decorated with it and the fields that are not decorated with it will be omitted. 
+Notice we  have removed password field from the response DTO.
+
+
+Now lets use above DTO and interceptors in the controller.
+
+`user.controller.ts`
+
+```ts
+import { Controller, Get, Param, UseInterceptors } from '@nestjs/common';
+
+import { Serialize } from './serialize.decorator';
+import { UserResponseDto } from './user-response.dto';
+
+@Controller('users')
+export class UserController {
+  @Get(':id')
+     @UseInterceptors(SerializeInterceptor)
+    getUser(@Param('id') id: string) {
+       return this.userService.getUser(id);
+    }
+}
+```
+
+In the above code we have used `@UseInterceptors` decorator to use the interceptor we created earlier and `@Serialize` decorator to use the response DTO we created earlier.
+
+This will result in the response like below:
+
+```json
+{
+    "status": true,
+    "path": "/api/v1/users/2af04f53-d85a-4135-a5b3-ee8bfd150fbb",
+    "message": "User data fetched successfully",
+    "statusCode": 200,
+    "data": {
+        "id": "2af04f53-d85a-4135-a5b3-ee8bfd150fbb",
+        "email":  "user@email.com",
+        "role": "Client",
+        "createdAt": "2024-04-28T07:29:55.450Z",
+        "updatedAt": "2024-04-28T07:29:55.450Z",
+    },
+    "timestamp": "2024-04-28 17:50:37"
+}
+```
+
+
+## Create Serialize Decorator
+
+To make the code more cleaner and reusable we can create a decorator for the serialization instead of using `@UseInterceptors` and `@Serialize` decorator in the controller.
+
+
+`serialize.decorator.ts`
+```ts
+import { UseInterceptors } from '@nestjs/common';
+import {
+  ClassContrustor,
+  SerializeInterceptor,
+} from './serialize.intercerptor';
+
+export function Serialize(dto: ClassContrustor) {
+  return UseInterceptors(new SerializeInterceptor(dto));
+}
+
+```
+
+Now we can use the `@Serialize` decorator in the controller like below:
+
+`user.controller.ts`
+
+```ts
+import { Controller, Get, Param } from '@nestjs/common';
+
+import { Serialize } from './serialize.decorator';
+import { UserResponseDto } from './user-response.dto';
+
+@Controller('users')
+export class UserController {
+  @Get(':id')
+  @Serialize(UserResponseDto)
+  getUser(@Param('id') id: string) {
+    return this.userService.getUser(id);
+  }
+}
+```
+
+This will result in the same response as above.
+
+
+
+## Working with Arrays / Paginated Response
+
+
+If you are working with arrays or paginated response you can use the same technique as above.
+
+Lets say we have a paginated response like below:
+
+```json
+{
+    "status": true,
+    "path": "/api/v1/users",
+    "message": "Users data fetched successfully",
+    "statusCode": 200,
+    "data": {
+        "users": [
+            {
+                "id": "2af04f53-d85a-4135-a5b3-ee8bfd150fbb",
+                "email":  "user@gmail.com",
+                "role": "Client",
+                "createdAt": "2024-04-28T07:29:55.450Z",
+                "updatedAt": "2024-04-28T07:29:55.450Z",
+            },
+            {
+                "id": "2af04f53-d85a-4135-a5b3-ee8bfd150fbb",
+                "email":  "user2@gmail.com",
+                "role": "Admin",
+                "createdAt": "2024-04-28T07:29:55.450Z",
+                "updatedAt": "2024-04-28T07:29:55.450Z",
+            }
+        ],
+        "total": 2,
+        "limit": 10,
+        "offset": 0
+    },
+    "timestamp": "2024-04-28 17:50:37"
+}
+
+```
+
+We can create a response DTO for the paginated response like below:
+
+`users-response.dto.ts`
+
+```ts
+import { Expose } from 'class-transformer';
+
+export class UserResponseDto {
+  @Expose()
+  id: string;
+
+  @Expose()
+  email: string;
+
+  @Expose()
+  role: string;
+
+  @Expose()
+  createdAt: Date;
+
+  @Expose()
+  updatedAt: Date;
+}
+
+export class UsersResponseDto {
+  @Expose()
+  users: UserResponseDto[];
+
+  @Expose()
+  total: number;
+
+  @Expose()
+  limit: number;
+
+  @Expose()
+  offset: number;
+}
+```
+
+Now lets use the above DTO in the controller.
+
+`user.controller.ts`
+
+```ts
+
+import { Controller, Get, Param } from '@nestjs/common';    
+import { Serialize } from './serialize.decorator';
+
+import { UsersResponseDto } from './users-response.dto';
+
+@Controller('users')
+export class UserController {
+  @Get()
+  @Serialize(UsersResponseDto)
+  getUsers() {
+    return this.userService.getUsers();
+  }
+}
+```
+
+
+## Conclusion
+
+In this series of articles we learned how to make uniform/standard response structure for api response in Nest.js and serialize the response using class-transformer and class-validator in Nest.js.  
+
+
+
+If you have any questions or feedback, feel free to reach out to me on [Twitter](https://twitter.com/adarsha_ach) / [Linkedin](https://www.linkedin.com/in/adarshaacharya/) or comment below.
