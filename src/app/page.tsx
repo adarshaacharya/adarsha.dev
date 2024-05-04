@@ -30,9 +30,8 @@ export default function Home() {
 
         <div className="text-gray-700 dark:text-gray-300">
           <p className="mt-4">
-            I’m a software engineer specializing in building scalable,
-            accessible web applications having rich user interface using
-            javascript.
+            I’m a fullstack software engineer specializing in building scalable
+            web applications having rich user interface using javascript.
           </p>
           <p className="mt-4 mb-4">
             Over the years, I&apos;ve worked on multiple startups to build
@@ -80,8 +79,8 @@ export default function Home() {
 
       <div className="my-8 w-full border-t border-gray-200 dark:border-gray-800" />
 
-      <div className="my-5">
-        <h2 className="mb-5 text-2xl font-bold">Recent Posts</h2>
+      <div>
+        <h2 className="mb-6 text-2xl font-bold">Latest posts</h2>
         <ul>
           {blogs.map((blog) => (
             <li key={blog.slug} className="py-1">

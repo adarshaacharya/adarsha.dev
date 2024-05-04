@@ -16,7 +16,7 @@ export function ThemeToggler() {
         }
         setTheme("dark");
       }}
-      className="rounded-xs rounded p-2 hover:bg-gray-200 hover:dark:bg-[#313131]"
+      className="rounded-xs rounded p-1 hover:bg-gray-200 hover:dark:bg-[#313131]"
     >
       {theme === "dark" ? (
         <span className="sun-icon">

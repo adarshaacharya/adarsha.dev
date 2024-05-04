@@ -6,16 +6,17 @@ import Link from "next/link";
 import { LayoutGroup, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { ThemeToggler } from "./theme-toggle";
+import React from "react";
 
 const navItems = {
   "/": {
-    name: "Home",
+    name: "home",
   },
   "/blog": {
-    name: "Blog",
+    name: "blog",
   },
   "/projects": {
-    name: "Projects",
+    name: "projects",
   },
 };
 
@@ -26,14 +27,14 @@ export function Header() {
   }
 
   return (
-    <header className="mb-16 tracking-tight mt-10">
+    <header className="mb-10 tracking-tight mt-10">
       <div className=" lg:sticky lg:top-20">
         <LayoutGroup>
           <nav
-            className="fade relative flex scroll-pr-6 flex-row items-start px-0 pb-0 md:relative md:overflow-auto"
+            className="fade relative scroll-pr-6  px-0 pb-0 md:relative md:overflow-auto"
             id="nav"
           >
-            <div className="flex w-full flex-row justify-between">
+            <div className="flex w-full flex-row justify-between items-center">
               <div className="flex flex-row justify-between">
                 {Object.entries(navItems).map(([path, { name }]) => {
                   const isActive = path === pathname;

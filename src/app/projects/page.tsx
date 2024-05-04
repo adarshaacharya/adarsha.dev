@@ -14,11 +14,11 @@ export const metadata = generatePageMetadata({
 export default function Projects() {
   return (
     <React.Fragment>
-      <section className="py-5">
-        <h1 className="mb-4 text-2xl font-bold tracking-tighter">Web Apps.</h1>
+      <section>
+        <h1 className="mb-4 text-2xl font-bold tracking-tighter">Web apps</h1>
         <div
           role="list"
-          className="mt-12 grid grid-cols-1 gap-x-12 gap-y-16 sm:grid-cols-2 "
+          className="grid grid-cols-1 gap-x-12 gap-y-16 sm:grid-cols-2 "
         >
           {WEB_APPS.map((project, idx) => (
             <ProjectCard project={project} key={idx} />
@@ -27,7 +27,7 @@ export default function Projects() {
       </section>
 
       <section className="py-10">
-        <h1 className="mb-4 text-2xl font-bold tracking-tighter">Tools.</h1>
+        <h1 className="mb-4 text-2xl font-bold tracking-tighter">Tools</h1>
 
         <div role="list" className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {TOOLS.map((project, idx) => (
