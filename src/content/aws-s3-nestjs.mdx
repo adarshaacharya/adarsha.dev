@@ -23,6 +23,7 @@ For example, you want to store user's profile picture as private and some static
 There are multiple ways to store the public and private files in AWS S3 bucket.
 - Creating separate buckets for public and private files.
 - Using different folders for public and private files in single bucket using bucket policies.
+
 ```json
 {
     "Version": "2012-10-17",
@@ -263,8 +264,7 @@ The Key is generated using the `uuidv4` method which will be unique for each obj
 Since the signed URL is valid for the limited time, we have set the expiration time to 24 hours (60 * 60 * 24 seconds).
 
 <Callout emoji="💡">
-The only way to access the private or public object is using the `key` of object. 
-Most of the times the `key` value is stored in the database eg. in case of user table we store in avatar column the `key` alongside other data.
+The only way to access the private or public object is using the `key` of object. Most of the times the `key` of object is stored in the database along side the other properties of entity. Frontend can call the API to get the URL of the object using the `key` of the object.
 </Callout>
 
 In the similar way we can create the methods to delete the object in the `DmsService` class.

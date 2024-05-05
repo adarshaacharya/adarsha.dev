@@ -41,14 +41,13 @@ const components = {
   Callout,
 };
 
-
-
 export function Mdx({ code }: { code: string }) {
   const MDXComponent = useMDXComponent(code);
 
   return (
     <React.Fragment>
-      <article className="prose prose-neutral dark:prose-invert prose-quoteless">
+      {/* https://github.com/tailwindlabs/tailwindcss-typography#overriding-max-width */}
+      <article className="prose prose-neutral dark:prose-invert prose-quoteless  max-w-none">
         {/* @ts-expect-error */}
         <MDXComponent components={components} />
       </article>

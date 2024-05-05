@@ -64,7 +64,7 @@ export default async function Blog({ params }: { params: { slug: string } }) {
 
   return (
     <section>
-      <h1 className="max-w-[650px] text-2xl font-bold tracking-tighter">
+      <h1 className="text-2xl font-bold tracking-tighter">
         <Balancer>{blog.title}</Balancer>
       </h1>
       <div className="mb-8 mt-2 flex max-w-[650px] items-center justify-between text-sm">
