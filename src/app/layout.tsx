@@ -67,7 +67,7 @@ export default function RootLayout({
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="dark" // default to dark mode, can be light, dark, system
           enableSystem
           disableTransitionOnChange
         >
