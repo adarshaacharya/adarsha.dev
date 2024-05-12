@@ -1,11 +1,10 @@
 import { formatDate } from "@/lib/utils";
+import { Blog } from "contentlayer/generated";
 
-type BlogCardProps = {
-  slug: string;
-  title: string;
-  summary: string;
-  publishedAt: string;
-};
+type BlogCardProps = Pick<
+  Blog,
+  "readingTime" | "slug" | "title" | "summary" | "publishedAt"
+>;
 
 export function BlogCard({ blog }: { blog: BlogCardProps }) {
   return (
@@ -16,6 +15,7 @@ export function BlogCard({ blog }: { blog: BlogCardProps }) {
           <time dateTime={blog.publishedAt}>
             {formatDate(blog.publishedAt)}
           </time>
+          &nbsp;— {blog.readingTime.text}
         </dd>
       </dl>
       <h3 className="text-xl font-bold leading-8 tracking-tight text-gray-900 dark:text-gray-100">

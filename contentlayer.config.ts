@@ -10,11 +10,18 @@ import rehypePrettyCode, {
 } from "rehype-pretty-code";
 import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import readingTime from "reading-time";
 
 const computedFields: ComputedFields = {
   slug: {
     type: "string",
     resolve: (doc) => doc._raw.flattenedPath.replace(/^.+?(\/)/, ""),
+  },
+  readingTime: {
+    type: "json",
+    resolve: (doc) => {
+      return readingTime(doc.body.raw);
+    },
   },
 };
 
