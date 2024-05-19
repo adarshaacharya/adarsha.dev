@@ -1,0 +1,290 @@
+---
+title: "Dissecting Four Layers of Caching in Next.js"
+summary: "In depth overview of four levels of caching mechanisms in Next.js 14 (app router): Request Memoization, Data Cache, Full Route Cache and Router Cache."
+type: Blog
+publishedAt: 2024-05-19
+---
+
+
+<Image
+  src={"/_static/blogs/nextjs-four-caching-layers/thumbnail.jpg"}
+  width={1280}
+  height={720}
+  alt="data-cache-nextjs"
+/>
+
+
+Next.js was the first meta framework to pioneer [Server Components](https://nextjs.org/docs/app/building-your-application/rendering/server-components).
+One of the topic which still troubles people using app router with Next.js is it caches everything. On the one side it helps to build the performant
+applications in Next.js, but on the other side it may leads users to see stale data if not handled properly. 
+
+
+In this article we will understand the four mechanisms of caching in Next.js in depth:
+
+- [Request Memoization](#1-request-memoization)
+- [Data Cache](#2-data-cache)
+- [Full Route Cache](#3-full-route-cache)
+- [Router Cache](#4-router-cache)
+
+## 1. Request Memoization
+
+Typically, when we need the same data in multiple components of app, previously we  need to fetch the data at the top of the component tree and 
+pass it down to the child components as props. Or another easiest way was to fetch data in each component separately, which used to 
+lead to multiple network requests for the same data. Tools like `react-query` and `swr` were used to cache the network requests.
+
+With server components, React has override the browser fetch function with its own fetch function which is memoized.
+We can make the `fetch` request in each component that needs data and duplicated request are skipped, 
+so user don't have to care about optimizing the network requests.
+
+```tsx
+export const getTodos = async () => {
+    // memoize the fetch request + response is cached
+  const res = await fetch("https://jsonplaceholder.typicode.com/todos");
+  return res.json();
+};
+
+
+// Component First
+export default async function Todos() {
+  const todos = await getTodos(); // makes network request and store reuslt in Request Memoization cache (CACHE MISS)
+  return (
+    <div>
+     ...
+    </div>
+  );
+}
+
+// Component Second
+export default async AnotherComponent() {
+  const todos = await getTodos(); // uses memoized fetch instead of calling the api again (CACHE HIT)
+  return (
+    <div>
+     ...
+    </div>
+  );
+}
+```
+
+Note that fetch should have same URL and same options to be memoized.
+
+
+
+## 2. Data Cache
+
+Request memoization might help to skip the duplicate `fetch` requests, but it does solve the problem of caching the data 
+across the multiple users using different devices. With the `Data Cache` mechanism, we can cache the data across the users,
+so every user can get the `cached` data instead of making `fetch` request to data source. The cached data will be stored in the server and all the users using the application will be be fed with cached data.
+
+
+<Callout emoji="📦">
+ With request cache we can reduce the no of request calls to the Next.js server or CDN, whereas with Data cache we reduce the requests made to our origin data source (DB, CMS, Markdown etc.) 
+</Callout>
+
+There are multiple way to store the data in the cache, we can use `force-cache`, `revalidate` or `no-store` options in the fetch function to store the data in the cache.
+
+
+<Image
+  src={"/_static/blogs/nextjs-four-caching-layers/data-cache.png"}
+  width={1280}
+  height={720}
+  alt="data-cache-nextjs"
+/>
+<p className="text-center">Image: Variants of Data Cache in Next.js </p>
+
+
+
+### Force Cache
+
+By default Next.js caches every data in server memory, if we don't pass any options to `fetch` function default will be `cache: "force-cache"` as shown below.
+
+```tsx
+
+export const getTodos = async () => {
+  const res = await fetch("https://jsonplaceholder.typicode.com/todos", {
+    cache : "force-cache"
+  }); // this will cache the data in server memory unless we build the app again
+  return res.json();
+};
+
+
+export default async function Todos() {
+  const todos = await getTodos(); // makes network request and store reuslt in Data Cache (CACHE MISS)
+  return (
+    <div>
+      {
+        todos.map(todo => <div key={todo.id}>{todo.title}</div>)
+      }
+    </div>
+  );
+}
+
+```
+
+This will cache data in Next.js server memory, accross all the request made to server the server will respond with cache data instead of hitting the data source.
+The above example might not be good as something like todos might be updated frequently, but for static data like blog posts, product details etc. this is a good approach.
+
+
+## Revalidation on Time Basis
+
+Suppose we have a data that changes frequently, we can use `revalidation` to cache the data for certain time and after that time the data will be revalidated from the data source. We can use `revalidate` option to set the time in seconds to revalidate the data.
+
+```tsx
+export const getTodos = async () => {
+  const res = await fetch("https://jsonplaceholder.typicode.com/todos", {
+    revalidate: 60 // revalidate the data after 60 seconds
+  }); 
+  return res.json();
+};
+
+```
+
+Here, the request made in first 60 secs will make th e cache hit and after 60 secs the data will be revalidated from the data source and 
+again stored in the cache. This is something like incremental static regeneration that we used to have in Next.js pages router.
+
+
+### On-demand Revalidation
+
+Instead of letting nextjs to revalidate the data after certain time, we can also let users to revalidate the server cache on demand. 
+
+
+This might be useful if we have todos list and on form submission we want to revalidate the todos list from the server.
+So that fresh data can be stored in the server cache and consequent requests will be served with fresh data.
+
+```tsx
+import { revalidateTag } from "next/cache";
+
+export const getTodos = async () => {
+  const res = await fetch("https://jsonplaceholder.typicode.com/todos", {
+    next : { tags : ['TODOS'] } // tagging the cache data as TODOS tag so later it can be used to invalidate from cache
+  }); 
+  return res.json();
+};
+
+
+export default async function Todos() {
+  const todos = await getTodos();
+
+  async function submit() {
+    'use server'
+    
+    revalidateTag('TODOS')  // revalidate the TODOS tag 
+    // ...
+  }
+
+  return (
+    <div>
+      {
+        todos.map(todo => <div key={todo.id}>{todo.title}</div>)
+      }
+      <form>
+      <button formAction={submit}>Revalidate Todos</button>
+      </form>
+    </div>
+  );
+}
+```
+
+As shown in above example, we can use server actions in the form to invoke the `revalidateTag` function to revalidate the cache data from the server.
+After the button click it will invalidate the current data, check data source  (database or cms server) and store the fresh data in the cache.
+
+
+### No cache 
+If we don't want to cache the data at all, we can use `no-store` option in fetch function. This is useful when we have data that changes frequently and we want to get the latest data every time.
+
+```tsx
+export const getTodos = async () => {
+  const res = await fetch("https://jsonplaceholder.typicode.com/todos", {
+    cache: "no-store"
+  }); 
+  return res.json();
+};
+```
+
+This will not cache the data at all, and every request made to the server will hit the data source.  
+
+Or, mark the whole page to opt out of the cache by setting it on the page level itself.
+
+```tsx
+export const dynamic = 'force-dynamic'
+
+// your page component code goes here...
+
+```
+Now, every request made to the page will hit the data source and no cache will be stored in the server memory.
+
+
+## 3. Full Route Cache
+By default Next.js tries to render and cache all the routes at build time to minimize the html build time while requesting the page.
+The build output contains the HTML + React Server Component Payload for each route which gets stored in the server/ CDN by Full Route cache.
+When the user visits the page HTML is shown immediately, RSC Payload is used to reconcile the Client and rendered Server Components tree, update the DOM
+and finally client components are hydrated.
+
+
+```tsx
+export const getTodos = async () => {
+  const res = await fetch("https://jsonplaceholder.typicode.com/todos");
+  return res.json();
+};
+
+
+// Component First
+export default async function Todos() {
+  const todos = await getTodos(); 
+  return (
+    <div>
+     ...
+    </div>
+  );
+}
+```
+
+
+The above page will be rendered at `build time`, fetching all the todos data and each route will be stored in Full Route cache ( HTML + RSCP).
+Each time user visits this page the build output will be served to user.  Even though the data changes in the data source, the build output will be same until we build the app again. So the user will see the stale data, unless we rebuild tha app again.
+The above behaviour can be noticed in production mode, in development mode the build output will be different each time we visit the page.
+
+The build output will be same throughout the time unless we build the app again or revalidate the cahce using techniques like
+`revalidatePath` or `revalidateTag` that we see earlier. This is useful for static pages like blog posts, product details etc.
+
+
+We can opt out of Full Route cache by setting  in the route level itself as shown in below.
+
+```tsx
+export const dynamic = 'force-dynamic'
+
+// or 
+
+export const revalidate = 0
+
+```
+
+Or setting the data cache to `no-store` in the `fetch` function as shown above in data-cache option.
+
+Also, if the pages uses dynamic data like `headers` , `cookies` or `url params` the Full Route cache will be disabled by default and fresh data will be served each time.
+
+## 4. Router Cache
+
+Unlike other cache mechanism this is only applicable in client side, and the cahce is stored in browser memory. 
+The client side cache stores the React Server Component Payload, splitted in terms of routes.
+
+Next.js caches visited routes, also prefetches the pages that are pointed using `<Link>` components.If the Link component is in the viewport, page it is pointing to will be pre-fetched and cached to the router cache,
+ which ensured the smooth transitions between the pages.
+
+If there are hundreds of `<Link>` components in the page, it will prefetch all the pages and store in the router cache, 
+which might lead to memory issues in the browser. 
+In that case we can opt-out of prefetching by setting `prefetch` to `false` in the `<Link>` component.
+
+```tsx
+<Link href="/todos" prefetch={false}>Todo 1</Link>
+```
+
+---
+
+## Conclusion
+
+The Next.js cache is something that is always on controversy since the first release and there is always the mixed reviews from devs about the cache mechanism.
+As per now there is no way to opt out completely   in the application level, but we can opt out in the page level itself. So, understanding 
+the cache mechanism helps to make informed decisions as per the application requirements which cache to use and which to opt out.
+
+
+If you have any questions or feedback, feel free to reach out to me on [Twitter](https://twitter.com/adarsha_ach) / [Linkedin](https://www.linkedin.com/in/adarshaacharya/) or comment below.
