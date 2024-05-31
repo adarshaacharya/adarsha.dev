@@ -27,7 +27,7 @@ If you want to use this project code as your own portfolio , you can go ahead. P
 ## Author
 
 - Website: https://adarshaacharya.com.np/
-- Twitter: [@adarsha_ach](https://twitter.com/adarsha_ach)
+- X: [@adarsha_ach](https://x.com/adarsha_ach)
 - Github: [@adarshaacharya](https://github.com/adarshaacharya)
 - LinkedIn: [@adarshaacharya](https://linkedin.com/in/adarshaacharya)
 

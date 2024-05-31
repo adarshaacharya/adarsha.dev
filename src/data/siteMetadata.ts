@@ -10,7 +10,7 @@ export const siteMetadata = {
   ],
   social: {
     email: "adarshaofficial@gmail.com",
-    x: "https://twitter.com/adarsha_ach",
+    x: "https://x.com/adarsha_ach",
     linkedinLink: `https://www.linkedin.com/in/adarshaacharya/`,
     githubLink: `https://github.com/adarshaacharya`,
   },

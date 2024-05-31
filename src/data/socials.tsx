@@ -2,7 +2,7 @@ import {
   GitHubIcon,
   InstagramIcon,
   LinkedInIcon,
-  TwitterIcon,
+  XIcon,
 } from "../components/icons";
 
 export const SOCIALS = [
@@ -12,9 +12,9 @@ export const SOCIALS = [
     icon: GitHubIcon,
   },
   {
-    label: "Twitter",
-    href: "https://twitter.com/adarsha_ach",
-    icon: TwitterIcon,
+    label: "X",
+    href: "https://x.com/adarsha_ach",
+    icon: XIcon,
   },
   {
     label: "LinkedIn",
