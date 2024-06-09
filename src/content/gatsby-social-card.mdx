@@ -5,7 +5,7 @@ publishedAt: 2020-09-25
 type: Blog
 ---
 
-So, a few months back I was building my [portfolio site](http://adarshaacharya.com.np/) which you are in right now. Almost everything was completed, integrated blog, added some SEO stuff _(although I'm very bad at it).😳_ While I was checking the preview of my site on twitter I noticed that preview wasn't that good — it was just a blank link with some meta-description. I used to think Twitter would automatically generate social cards for my site 🤪.
+So, a few months back I was building my [portfolio site](http://adarsha.dev/) which you are in right now. Almost everything was completed, integrated blog, added some SEO stuff _(although I'm very bad at it).😳_ While I was checking the preview of my site on twitter I noticed that preview wasn't that good — it was just a blank link with some meta-description. I used to think Twitter would automatically generate social cards for my site 🤪.
 
 I used to see [dev.to](https://dev.to/) articles shared quite often on social media, which previewed social cards with author name, title, social media links, neat background with focused title.
 
@@ -39,7 +39,7 @@ yarn add @jlengstorf/get-share-image
 You should also install [react-helmet](https://www.gatsbyjs.com/plugins/gatsby-plugin-react-helmet/#install) as we will be injecting cards as Seo using this plugin.
 
 > We will be using Gatsby site as the example in this project you can use it with CRA or in Next.js site too.
-> You can see the the example used in [this site source code](https://github.com/adarshaacharya/adarshaacharya.com.np/blob/master/src/components/Seo/Seo.js) and follow along.
+> You can see the the example used in [this site source code](https://github.com/adarshaacharya/adarsha.dev/blob/master/src/components/Seo/Seo.js) and follow along.
 
 ---
 
@@ -85,7 +85,7 @@ const socialImage = getShareImage({
 
 It will return the URL of website-card from cloudinary for the website pages.
 
-You can modify and add the above properties by checking the [options in the docs](https://github.com/jlengstorf/get-share-image#options) , I've added a bit more in my site [check source code here](https://github.com/adarshaacharya/adarshaacharya.com.np/blob/c229d6341ae76d0c49b5cd6e969640aee44e799c/src/components/Seo/Seo.js#L15).
+You can modify and add the above properties by checking the [options in the docs](https://github.com/jlengstorf/get-share-image#options) , I've added a bit more in my site [check source code here](https://github.com/adarshaacharya/adarsha.dev/blob/c229d6341ae76d0c49b5cd6e969640aee44e799c/src/components/Seo/Seo.js#L15).
 
 ## Social Card for Blog Post
 
@@ -107,10 +107,10 @@ const socialImage = getShareImage({
 });
 ```
 
-You can modify and add the above properties by checking the [options in the docs](https://github.com/jlengstorf/get-share-image#options) , I've added a bit more in my site check [source code here](https://github.com/adarshaacharya/adarshaacharya.com.np/blob/c229d6341ae76d0c49b5cd6e969640aee44e799c/src/components/Seo/Seo.js#L31).
+You can modify and add the above properties by checking the [options in the docs](https://github.com/jlengstorf/get-share-image#options) , I've added a bit more in my site check [source code here](https://github.com/adarshaacharya/adarsha.dev/blob/c229d6341ae76d0c49b5cd6e969640aee44e799c/src/components/Seo/Seo.js#L31).
 
 > You have notice two major object properties in above code that's title and tagline. What's that ? 🤔
-> These are dynamically generated tags & title for each blog post. Honestly, I've to make new post regarding SEO using Helmet which isn't possible in this post. You can check [source code](https://github.com/adarshaacharya/adarshaacharya.com.np/blob/c229d6341ae76d0c49b5cd6e969640aee44e799c/src/components/Seo/Seo.js) I'm pretty sure you will get it. 🧠
+> These are dynamically generated tags & title for each blog post. Honestly, I've to make new post regarding SEO using Helmet which isn't possible in this post. You can check [source code](https://github.com/adarshaacharya/adarsha.dev/blob/c229d6341ae76d0c49b5cd6e969640aee44e799c/src/components/Seo/Seo.js) I'm pretty sure you will get it. 🧠
 
 ---
 
@@ -169,4 +169,4 @@ Also, learn by reading source code, docs. Check below resources & source code of
 
 - [learnwithjason.dev source code](https://github.com/jlengstorf/learnwithjason.dev)
 
-- [adarshaacharya.com.np source code](https://github.com/adarshaacharya/portfolio-v2)
+- [adarsha.dev source code](https://github.com/adarshaacharya/portfolio-v2)

@@ -1,4 +1,4 @@
-# adarshaacharya.com.np
+# adarsha.dev
 
 This is my personal website and blog built using:
 
@@ -12,8 +12,8 @@ This is my personal website and blog built using:
 This application requires Node.js v16.13+.
 
 ```bash
-git clone https://github.com/adarshaacharya/adarshaacharya.com.np
-cd adarshaacharya.com.np
+git clone https://github.com/adarshaacharya/adarsha.dev
+cd adarsha.dev
 pnpm install
 pnpm dev
 ```
@@ -26,7 +26,7 @@ If you want to use this project code as your own portfolio , you can go ahead. P
 
 ## Author
 
-- Website: https://adarshaacharya.com.np/
+- Website: https://adarsha.dev/
 - X: [@adarsha_ach](https://x.com/adarsha_ach)
 - Github: [@adarshaacharya](https://github.com/adarshaacharya)
 - LinkedIn: [@adarshaacharya](https://linkedin.com/in/adarshaacharya)
@@ -37,4 +37,4 @@ Give a ⭐️ if you like the project!
 
 Copyright © 2020 [Aadarsha Acharya](https://github.com/adarshaacharya).<br />
 
-This project is [MIT](https://github.com/adarshaacharya/adarshaacharya.com.np/blob/master/LICENSE) licensed.
+This project is [MIT](https://github.com/adarshaacharya/adarsha.dev/blob/master/LICENSE) licensed.
