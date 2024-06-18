@@ -35,6 +35,6 @@ Give a ⭐️ if you like the project!
 
 ## License
 
-Copyright © 2020 [Aadarsha Acharya](https://github.com/adarshaacharya).<br />
+Copyright © 2020 [Adarsha Acharya](https://github.com/adarshaacharya).<br />
 
 This project is [MIT](https://github.com/adarshaacharya/adarsha.dev/blob/master/LICENSE) licensed.

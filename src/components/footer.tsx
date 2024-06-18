@@ -12,7 +12,7 @@ export function Footer() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Aadarsha Acharya.
+          Adarsha Acharya.
         </a>
         &nbsp; All rights reserved.
       </p>
