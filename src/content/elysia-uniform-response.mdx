@@ -1,0 +1,394 @@
+---
+title: "Format Uniform Response Structure in Elysia.js"
+summary: "Learn how to format the success and error response in a standard format in Elysia.js middleware to ensure consistency across the application, handle the errors gracefully, and provide the user with the necessary information."
+type: Blog
+publishedAt: 2024-07-14
+---
+
+Elysia.js provides a flexible and powerful middleware system that allows you to add custom logic to the request-response lifecycle. You can add middleware to handle authentication, logging, error handling, and more. In this article, we will learn how to format the success and error response in a standard format in Elysia.js middleware.
+Crafting the response in a standard format is important to ensure consistency across the application, handle the errors gracefully, and provide the user with the necessary information. It also helps in effective logging and debugging.
+
+## Bootstraping Elysia app
+
+Let's create a sample Elysia app that listens on port 8000 and has a single route `/users` that returns a list of users.
+
+First, create a new Elysia app using the `bun` CLI.
+
+```bash
+bun create elysia app
+```
+
+Here's the sample elysia app with users router being imported and run.
+
+`index.ts `
+
+```ts
+import { Elysia } from "elysia";
+import { usersRouter } from "./users/user.router";
+
+const app = new Elysia().use(usersRouter).listen(8000);
+
+console.log(
+  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
+);
+```
+
+## Setting up the users router
+
+Suppose we have users module whose job is to:
+
+- Get the list of users
+- Return the user if `id = 1`, otherwise return `User not found` error with 404 status code.
+
+We will only return the mocked user response for now instead of database user.
+
+`routers/users.router.ts`
+
+```ts
+import Elysia, { NotFoundError, t } from "elysia";
+
+const sampleUser = {
+  id: "1",
+  name: "John",
+  age: 20,
+};
+
+const UserSchema = t.Object({
+  id: t.String(),
+  name: t.String(),
+  age: t.Number(),
+});
+
+export const usersRouter = new Elysia({
+  name: "api.users",
+  prefix: "users",
+})
+  .get(
+    "",
+    () => {
+      return [sampleUser];
+    },
+    {
+      response: t.Array(UserSchema),
+      detail: {
+        summary: "List of users",
+      },
+    }
+  )
+  .get(
+    ":id",
+    ({ params: { id } }) => {
+      if (id !== "1") {
+        throw new NotFoundError("User not found");
+      }
+
+      return sampleUser;
+    },
+    {
+      params: t.Object({
+        id: t.String(),
+      }),
+      response: UserSchema,
+      detail: {
+        summary: "Find user by id",
+      },
+    }
+  );
+```
+
+As you might have guess, on running the above routes individually on postman,it will yeild the given responses.
+
+Response 1 : List of users : `localhost:8000/users`
+
+```ts
+[
+  {
+    id: "1",
+    name: "John",
+    age: 20,
+  },
+];
+```
+
+Response 2: Find user with id 1 : `localhost:8000/users/1`
+
+```ts
+{
+    "id": "1",
+    "name": "John",
+    "age": 20
+}
+```
+
+Response 3: Find user with id 2: `localhost:8000/users/2`
+
+Since we have written case that if id !=1 then throw `NotFoundError`.
+
+<Image width={1280} height={720} src="/_static/blogs/elysia-uniform-response/not-found-unformat.png" alt="not found error" />
+
+But the response isn't formatted in standard format, and it doesn't provide much information about the error.
+
+## Creating response mapper middleware
+
+To map the success or the error response, we need to understand about the lifecycle of Elysia.js
+
+<Image width={1280} height={720} src="/_static/blogs/elysia-uniform-response/elysia-lifecycle.webp" alt="elysia lifecycle" />
+
+You can read what each events does in their [official docs](https://elysiajs.com/essential/life-cycle.html#events)
+
+But for us, two events are important:
+
+1. After Handle:
+
+- Map returned value into a response
+- Best for adding custom headers or transform the value into a new response
+
+2. Error:
+
+- Capture error when thrown
+- Best for handling errors and returning a standard error response
+
+## Schemas for success and error response
+
+First lets create schemas for success and error.
+Defining schemas before coding middleware will help to visualisse what kind of standard response we will want in error or success case.
+
+`schemas/response.ts`
+
+```ts
+import { Static, t } from "elysia";
+
+const BaseResponseSchema = t.Object({
+  path: t.String(),
+  message: t.String(),
+  timeStamp: t.String(),
+});
+
+export const SuccessResponseSchema = t.Composite([
+  BaseResponseSchema,
+  t.Object({
+    data: t.Any(),
+    status: t.Union([t.Number(), t.String()]),
+  }),
+]);
+
+export type SuccessResponse = Static<typeof SuccessResponseSchema>;
+
+export const ErrorResponseSchema = t.Composite([
+  BaseResponseSchema,
+  t.Object({
+    data: t.Null(),
+    status: t.Number(),
+    code: t.String(),
+    message: t.String(),
+  }),
+]);
+
+export type ErrorResponse = Static<typeof ErrorResponseSchema>;
+```
+
+We have defined two schemas:
+
+1. `SuccessResponseSchema`: It contains the path, message, data, status, and timeStamp fields. The data field will contain the response data, and the status field will contain the status code of the response.
+
+2. `ErrorResponseSchema`: It contains the path, message, data, status, code, and timeStamp fields. The message field will contain the error message, and the status field will contain the status code of the response.
+
+## Middleware for response mapping
+
+Middleware is a function that takes the Elysia app instance and returns a function that will be called when the event is triggered.
+Let's create a middleware that will map the success and error response in a standard format.
+
+`middleware/response.middleware.ts`
+
+```ts
+import ElysiaApp, { error } from "elysia";
+import { ErrorResponse, SuccessResponse } from "../schemas/response";
+
+export const isJsonString = (str: string) => {
+  try {
+    JSON.parse(str);
+  } catch (e) {
+    return false;
+  }
+  return true;
+};
+
+export const useSuccessResponseMiddleware = (app: ElysiaApp) => {
+  return app.onAfterHandle(async (context): Promise<SuccessResponse> => {
+    const path = context.request.url;
+    const message = "success";
+    const response = context.response;
+    const timeStamp = new Date().toISOString();
+    const status = context.set.status ?? 200;
+
+    return {
+      path,
+      message,
+      data: response,
+      timeStamp,
+      status,
+    };
+  });
+};
+
+export const useErrorMiddleware = (app: ElysiaApp) => {
+  return app.onError(async (context): Promise<ErrorResponse> => {
+    const path = context.request.url;
+    const message = isJsonString(context.error.message)
+      ? JSON.parse(context.error.message)
+      : context.error.message;
+    const data = null;
+    const timeStamp = new Date().toISOString();
+    const status = context.set.status ?? context.error.status ?? 500;
+
+    // NOTE : You can put your error logging here
+
+    return {
+      path,
+      message,
+      data,
+      timeStamp,
+      status,
+      code: context.code,
+    };
+  });
+};
+```
+
+`onAfterHandle` event is triggered after the route handler is executed. It takes the context object as an argument, which contains the request, response, and other information about the request. We can access the response from the context object and map it to the success response schema. We also set the status code from the context object or default to 200.
+
+`onError` event is triggered when an error is thrown in the route handler. It takes the context object as an argument, which contains the error, request, and other information about the request. We can access the error object from the context and map it to the error response schema. We also set the status code from the context object or default to 500.
+
+Also, you might notice that in error message we have used `isJsonString` function to check if the error message is a valid JSON string. Since the typebox validation error message is a JSON string, we need to parse it to get the actual error message. If the error message is not a valid JSON string, we return the error message as it is.
+
+## Using the middleware in the Elysia app
+
+For that in `index.ts` we need to import the middleware and use it in the app.
+
+```ts
+import { Elysia } from "elysia";
+import { usersRouter } from "./routers/user.router";
+import {
+  useErrorMiddleware,
+  useSuccessResponseMiddleware,
+} from "./middleware/response.middleware";
+
+const app = new Elysia()
+  .use(useSuccessResponseMiddleware)
+  .use(useErrorMiddleware)
+  .use(usersRouter)
+  .listen(8000);
+
+console.log(
+  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
+);
+```
+
+Since we want to use these middlewares globally, we have used `use` method to add them to the app instance. Elysia will call these middlewares for every request and response.
+
+## Formatting the schemas
+
+Since Elysia.js is stsrict about typings and validation, we need to format the response schema to match the success and error response schema. So that while we use some client libraies like `Eden` from Elysia the types will be inferred correctly.
+
+For that we need to create a helper function that will format the response schema as per the predefined success response schema.
+
+`utils/format-response.ts`
+
+```ts
+import { Static, TSchema, t } from "elysia";
+
+export const formatResponseSchema = <SCHEMA extends TSchema>(
+  responseSchema: SCHEMA
+) => {
+  return [
+    t.Object({
+      path: t.String(),
+      message: t.Optional(t.String()),
+      data: responseSchema,
+      status: t.Union([t.Number(), t.String()]),
+      timeStamp: t.String(),
+    }),
+  ];
+};
+```
+
+Now we need to update the response schema in the routes to use the formatted response schema.
+
+`routers/users.router.ts`
+
+```ts
+import Elysia, { NotFoundError, t } from "elysia";
+import { formatResponseSchema } from "../utils/format-response";
+
+const sampleUser = {
+  id: "1",
+  name: "John",
+  age: 20,
+};
+
+const UserSchema = t.Object({
+  id: t.String(),
+  name: t.String(),
+  age: t.Number(),
+});
+
+export const usersRouter = new Elysia({
+  name: "api.users",
+  prefix: "users",
+})
+  .get(
+    "",
+    () => {
+      return [sampleUser];
+    },
+    {
+      response: formatResponseSchema(t.Array(UserSchema)),
+      detail: {
+        summary: "List of users",
+      },
+    }
+  )
+  .get(
+    ":id",
+    ({ params: { id } }) => {
+      if (id !== "1") {
+        throw new NotFoundError("User not found");
+      }
+
+      return sampleUser;
+    },
+    {
+      params: t.Object({
+        id: t.String(),
+      }),
+      response: formatResponseSchema(UserSchema), // Update the response schema
+      detail: {
+        summary: "Find user by id",
+      },
+    }
+  );
+```
+
+Every response schema is wrapped inside the `formatResponseSchema` function, which will format the response schema as per the success response schema.
+
+## Testing via Postman
+
+Now, let's test the `/users` and `/users/:id` routes using Postman.
+
+1. List of users: `localhost:8000/users`
+
+<Image width={1280} height={720} src="/_static/blogs/elysia-uniform-response/format-users.png" alt="format users" />
+
+2. Find user with id 1: `localhost:8000/users/1`
+
+<Image width={1280} height={720} src="/_static/blogs/elysia-uniform-response/format-user.png" alt="format user1" />
+
+3. Error response for user not found: `localhost:8000/users/2`
+
+<Image width={1280} height={720} src="/_static/blogs/elysia-uniform-response/error-user.png" alt="error user" />
+
+## Conclusion
+
+In this article, we learned how to format the success and error response in a standard format in Elysia.js middleware. We created a response mapper middleware that maps the success and error response to a standard format. We also created schemas for success and error response and formatted the response schema in the routes. This will help in ensuring consistency across the application, handling errors gracefully, and providing the user with the necessary information.
+
+If you have any questions or feedback, feel free to reach out to me on [X.com](https://x.com/adarsha_ach) / [Linkedin](https://www.linkedin.com/in/adarshaacharya/) or comment below.
