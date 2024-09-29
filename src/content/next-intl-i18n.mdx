@@ -1,0 +1,563 @@
+---
+title: "Typesafe Internationalization (i18n) in Next.js with next-intl"
+summary: "Comprehensive guide to internationalize your Next.js app with next-intl, typesafety for translation strings, split translations into multiple files and translate outside React components."
+type: Blog
+publishedAt: 2024-09-30
+draft: false
+---
+
+## Goals
+
+Before diving deep lets list down goal of this article:
+- Integrate next-intl in Next.js app (App router)
+- Use next-intl outside of React components
+- Split translations strings into multiple files
+- Introduce typesafety in translations
+- Use next-intl with server components
+
+## Pre-requisites
+
+Make sure you have bootstraped a Next.js app (v 13.x+) with Typescript.
+
+Also make sure you've installed `next-intl`:
+
+```bash
+npm install next-intl
+```
+
+
+## Setting up translation strings 
+
+Before starting lets make sure that we have our locales ready. For this example we will use English (en) and Nepali (ne) locales.
+
+Create a folder named `messages` in the root of your project, crate two folders `en` and `ne` inside the `messages` folder.
+
+Normally, next-intl docs recommends you to create single file for each translations, but creating multiple files will help us to manage translations for different components and features.
+and the translations won't be too large in a single file.
+
+Inside each locale folder create a json file with the name of the locale. 
+
+In our case we will create two files called `auth.json` and `users.json` inside the `en` and `es` folders.
+
+- `messages/en/auth.json`
+- `messages/en/users.json`
+- `messages/ne/auth.json`
+- `messages/ne/users.json`
+
+The sole purpose of these files is to store the translations for the auth and users modules.
+
+```json
+// messages/en/auth.json
+{
+    "auth": {
+        "login": "Login",
+        "register": "Register"
+    }
+}
+```
+
+```json
+// messages/en/users.json
+{
+    "users": {
+        "title": "Users",
+        "form" : {
+            "name": "Name",
+            "email": "Email"
+        } 
+    }
+}
+```
+
+```json
+// messages/ne/auth.json
+{
+  "auth": {
+    "login": "लगइन गर्नुहोस्",
+    "register": "दर्ता गर्नुहोस्"
+  }
+}
+
+```
+
+```json
+// messages/ne/users.json
+{
+  "users": {
+    "title": "प्रयोगकर्ताहरू",
+    "form": {
+      "name": "नाम",
+      "email": "इमेल"
+    }
+  }
+}
+```
+
+
+> 🧠 Pro tip : Use [https://translate.i18next.com/](https://translate.i18next.com/) to translate your messages to different languages.
+
+
+## Configuring routing for next-intl
+
+I highly recommend you to checkout the default [guide provided by next-intl](https://next-intl-docs.vercel.app/docs/getting-started/app-router/with-i18n-routing) before proceeding further.
+
+Here's overall structure of the project:
+
+```bash
+├── messages 
+│   ├── en
+│   │   ├── auth.json
+│   │   └── users.json
+│   ├── ne
+│   │   ├── auth.json
+│   │   └── users.json
+├── next.config.js 
+├── global.d.ts
+└── src
+    ├── i18n
+    │   ├── routing.ts 
+    │   ├── routing.ts 
+    │   └── types.ts 
+    ├── middleware.ts
+    └── app
+        └── [locale]
+            ├── components
+            │   └── LocaleSwitcher.tsx
+            ├── layout.tsx 
+            └── page.tsx 
+```
+
+
+Configure the plugin in your `next.config.js` file.
+
+```js
+// next.config.js
+const createNextIntlPlugin = require('next-intl/plugin');
+ 
+const withNextIntl = createNextIntlPlugin();
+ 
+/** @type {import('next').NextConfig} */
+const nextConfig = {};
+ 
+module.exports = withNextIntl(nextConfig);
+```
+
+
+#### Configuring routing 
+
+create a folder called `i18n` inside `src` where we put all the configuration related to next-intl and export from there.
+
+First define the routing in `src/i18n/routing.ts` file.
+
+```ts
+import { createSharedPathnamesNavigation } from "next-intl/navigation";
+import { defineRouting } from "next-intl/routing";
+
+export const routing = defineRouting({
+  locales: ["en", "ne"],
+  defaultLocale: "en",
+  pathnames: {},
+});
+
+export type Pathnames = keyof typeof routing.pathnames;
+export type Locale = (typeof routing.locales)[number];
+
+export const { Link, permanentRedirect, redirect, usePathname, useRouter } =
+  createSharedPathnamesNavigation(routing);
+```
+
+The above sample is fairly simple and we have copied it from [docs itself](https://next-intl-docs.vercel.app/docs/getting-started/app-router/with-i18n-routing#i18n-routing).
+
+
+#### Middleware setup
+
+Setup middleware to redirect to the correct locale based on the user's preferences.
+
+```ts
+// middleware.ts
+import createMiddleware from "next-intl/middleware";
+import { routing } from "./i18n/routing";
+
+export default createMiddleware(routing);
+
+export const config = {
+  matcher: [
+    // Enable a redirect to a matching locale at the root
+    "/",
+
+    // Set a cookie to remember the previous locale for
+    // all requests that have a locale prefix
+    "/(ne|en)/:path*",
+
+    // Enable redirects that add missing locales
+    // (e.g. `/pathnames` -> `/en/pathnames`)
+    "/((?!_next|_vercel|.*\\..*).*)",
+  ],
+};
+
+```
+
+#### Setup Server components configuration
+Create request-scoped configuration object to provide messages and other options based on user locale's to Server components.
+
+```ts
+// src/i18n/request.ts (make sure path is same as next-intl reads this path by default)
+import { notFound } from "next/navigation";
+import { getRequestConfig } from "next-intl/server";
+import { routing } from "./routing";
+
+export default getRequestConfig(async ({ locale }) => {
+  // Validate that the incoming `locale` parameter is valid
+  if (!routing.locales.includes(locale as any)) notFound();
+
+  return {
+    messages: {
+      ...(await import(`../../messages/${locale}/users.json`)),
+      ...(await import(`../../messages/${locale}/auth.json`)),
+    },
+  };
+});
+
+```
+
+
+#### Layout and Pages setup
+
+Setup layout with provider to provide translations to the components.
+
+```tsx
+// src/app/[locale]/layout.tsx
+
+import {NextIntlClientProvider} from 'next-intl';
+import {getMessages} from 'next-intl/server';
+ 
+export default async function LocaleLayout({
+  children,
+  params: {locale}
+}: {
+  children: React.ReactNode;
+  params: {locale: string};
+}) {
+  // Providing all messages to the client
+  // side is the easiest way to get started
+  const messages = await getMessages();
+ 
+  return (
+    <html lang={locale}>
+      <body>
+        <NextIntlClientProvider messages={messages}>
+          {children}
+        </NextIntlClientProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+Create a page component to render the layout.
+
+```tsx
+"use client";
+
+import {useTranslations} from 'next-intl';
+ 
+export default function HomePage() {
+    const i18n = useTranslations();
+
+  return (
+    <div>
+        <h1>{i18n('users.title')}</h1>
+        <h1>{i18n('auth.login')}</h1>
+    </div>
+  );
+}
+```
+
+#### Locale switcher component
+Also somewhere in the app makre sure to put the `LocaleSwitcher` component.
+Here's brief code on how to create `LocaleSwitcher` component. I've used [shadcn ui](https://ui.shadcn.com/) for components.
+
+```tsx
+// src/app/[locale]/components/LocaleSwitcher.tsx
+"use client";
+
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@components/ui/dropdown-menu";
+import { ChevronDown, Languages } from "lucide-react";
+import React, { useTransition } from "react";
+import { useSearchParams } from "next/navigation";
+import { Locale, usePathname, useRouter } from "../i18n/routing";
+import { ChevronDown, Languages } from "lucide-react";
+
+const locales = [
+  { value: "en", label: "English" },
+  { value: "ne", label: "Nepali" },
+];
+
+export function LocaleSwitcherDropdown() {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const locale = useLocale();
+
+
+  function onChange(value: string) {
+    const nextLocale = value as Locale;
+
+    startTransition(() => {
+      router.replace(`${pathname}?${new URLSearchParams(searchParams)}`, {
+        locale: nextLocale,
+      });
+      router.refresh();
+    });
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button disabled={isPending}>
+          <Languages className="size-4" />
+          <span className="uppercase">{locale}</span>
+          <ChevronDown className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuRadioGroup
+          defaultValue={locale}
+          value={locale}
+          onValueChange={onChange}
+        >
+          {locales.map((val) => (
+            <DropdownMenuRadioItem key={val.value} value={val.value}>
+              {val.label}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+```
+
+
+## Typesafety in translations
+
+By default next-intl doesn't provide typesafety in translations, that means there is high chance of typo errors in translations.
+
+eg : `i18n('users.abc')` instead of `i18n('users.title')` or we might  access the translations which are not defined in the translations file.
+
+To overcome this we can   create a global type definition file `global.d.ts` and define the types for translations.
+
+
+In root of the project create a file called `global.d.ts` and define the types for translations.
+
+```ts
+// global.d.ts
+
+type UsersMessages = typeof import("./messages/en/users.json");
+type AuthMessages = typeof import("./messages/en/auth.json");
+
+// Importing other language files ..
+
+// Create a new type by combining all message types
+type Messages = UsersMessages & AuthMessages;
+
+declare interface IntlMessages extends Messages {}
+```
+
+
+Only catch is that you need to have same translation structure for both `en` and `ne` locales since we take `en` as base for typesafety.
+
+
+Now if you try to access the translations which are not defined in the translations file, you will get typesafety error.
+
+
+<video width="1280" height="720" autoPlay controls>
+  <source src="/_static/blogs/next-intl/type-safety.mp4" type="video/mp4" />
+</video>
+
+
+Also if you are using server components and using `getTranslations` method, its equally typesafe.
+
+
+```ts
+import {getTranslations} from 'next-intl/server';
+ 
+export default async function HomePage() {
+  const i18n = await getTranslations();
+
+  return (
+    <div>
+        <h1>{i18n('users.title')}</h1>
+        <h1>{i18n('auth.login')}</h1>
+    </div>
+  )
+}
+```
+
+
+### Using translations outside of React components
+
+Till now we have seen how to use translations inside React components, but what if we want to use translations outside of React components.
+
+Infact there's blog on [How (not) to use translations outside of React components](https://next-intl-docs.vercel.app/blog/translations-outside-of-react-components) which recommends 
+not to use translations outside of React components.
+
+But sometimes things like array of objects, or in some utility functions we might need translations. Putting this inside the components 
+might not be a good idea since the components might be too larger.
+
+In that case it will be better if we can pass the translations instance as a parameter to the function and the function can use the translations.
+
+
+Before that let's create a utility type which will help to access the translations outside of React components in type-safe way.
+
+Create a file called `types.ts` inside the `i18n` folder.
+
+```ts
+// src/i18n/types.ts
+
+import { useTranslations } from "next-intl";
+
+import { ReactElement, ReactNode } from "react";
+import {
+  Formats,
+  MessageKeys,
+  NamespaceKeys,
+  NestedKeyOf,
+  NestedValueOf,
+  RichTranslationValues,
+  TranslationValues,
+} from "next-intl";
+
+export interface TFunction<
+  NestedKey extends NamespaceKeys<
+    IntlMessages,
+    NestedKeyOf<IntlMessages>
+  > = never,
+> {
+  <
+    TargetKey extends MessageKeys<
+      NestedValueOf<
+        {
+          "!": IntlMessages;
+        },
+        [NestedKey] extends [never] ? "!" : `!.${NestedKey}`
+      >,
+      NestedKeyOf<
+        NestedValueOf<
+          {
+            "!": IntlMessages;
+          },
+          [NestedKey] extends [never] ? "!" : `!.${NestedKey}`
+        >
+      >
+    >,
+  >(
+    key: TargetKey,
+    values?: TranslationValues,
+    formats?: Partial<Formats>,
+  ): string;
+  rich<
+    TargetKey extends MessageKeys<
+      NestedValueOf<
+        {
+          "!": IntlMessages;
+        },
+        [NestedKey] extends [never] ? "!" : `!.${NestedKey}`
+      >,
+      NestedKeyOf<
+        NestedValueOf<
+          {
+            "!": IntlMessages;
+          },
+          [NestedKey] extends [never] ? "!" : `!.${NestedKey}`
+        >
+      >
+    >,
+  >(
+    key: TargetKey,
+    values?: RichTranslationValues,
+    formats?: Partial<Formats>,
+  ): string | ReactElement | ReactNode;
+  raw<
+    TargetKey extends MessageKeys<
+      NestedValueOf<
+        {
+          "!": IntlMessages;
+        },
+        [NestedKey] extends [never] ? "!" : `!.${NestedKey}`
+      >,
+      NestedKeyOf<
+        NestedValueOf<
+          {
+            "!": IntlMessages;
+          },
+          [NestedKey] extends [never] ? "!" : `!.${NestedKey}`
+        >
+      >
+    >,
+  >(key: TargetKey): any;
+}
+
+```
+
+> 😵‍💫 The above type is bit confusing, you can just copy and paste 🤪, Thanks to [fitimbytyqi](https://github.com/amannn/next-intl/issues/500#issuecomment-2358249892) for providing snippet
+
+
+Now let's access the instance of translations outside of React components.
+
+```tsx
+// src/[locale]/page.tsx
+
+"use client";
+import { useTranslations } from "next-intl";
+import { TFunction } from "../i18n/types";
+
+const getNavItems = (i18n: TFunction) => [
+  { label: i18n("auth.login"), href: "/login" },
+  { label: i18n("auth.register"), href: "/signup" },
+];
+
+export default function HomePage() {
+  const i18n = useTranslations();
+
+  return (
+    <div>
+      <h1>{i18n("users.email")}</h1>
+      <ul>
+        {getNavItems(i18n).map((item) => (
+          <li key={item.href}>
+            <a href={item.href}>{item.label}</a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+```
+
+
+We pass the translations instance to the `getNavItems` function and the function can use the translations. The i18n instance is type-safe and we can't access the translations which are not defined in the translations file.
+
+    <Image 
+        src="/_static/blogs/next-intl/outside-components.png" 
+        width={1280} 
+        height={720}
+        alt="Translations outside of React components" 
+    />
+
+
+## Wrapping up
+
+Next-intl is a great library to internationalize your Next.js app. It supports most seamless way of applying internationalization to Next.js app with support for server components.
+Although there are some limitations like translations outside of React components, low typesafety in translations, but we can overcome these limitations by using some workarounds as mentioned in this article.
+
+If you have any questions or feedback, feel free to reach out to me on [X.com](https://x.com/adarsha_ach) / [Linkedin](https://www.linkedin.com/in/adarshaacharya/) or comment below.
