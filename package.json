@@ -26,7 +26,7 @@
     "eslint-config-next": "13.4.19",
     "framer-motion": "^10.16.4",
     "install": "^0.13.0",
-    "next": "13.5.6",
+    "next": "14.2.15",
     "next-contentlayer": "^0.3.4",
     "next-themes": "^0.2.1",
     "postcss": "8.4.29",
