@@ -1,0 +1,421 @@
+---
+title: "Upload Files to S3 in Next.js with tRPC: A Step-by-Step Guide"
+type: Blog
+summary: "Learn how to efficiently upload files and images to an AWS S3 bucket using tRPC and Next.js. This step-by-step guide covers setup, API integration, and best practices for seamless file storage."
+publishedAt: 2025-01-30
+draft: true
+---
+
+In this blog post, we'll walk through the process of uploading files and images to an Amazon S3 bucket using tRPC and Next.js.
+We'll cover generating presigned URLs, uploading files to S3, saving file paths in a database, and displaying the uploaded files in the frontend.
+
+# Overview of the File Upload Flow
+
+Since trpc doesn't [multipart form data](https://github.com/trpc/trpc/issues/1937) directly we have to find out way to uplaod file to s3 without going to trpc server.
+
+- Generate a Presigned URL: Create a presigned URL for uploading the file to S3 using a unique key (e.g., the file name).
+
+- Upload the File: Use the presigned URL to upload the file to S3 via a PUT request.
+
+- Save the File Path: Store the file path in your database for future reference.
+
+- Display the File: Retrieve and display the uploaded file in the frontend using the S3 URL.
+
+# Prerequisites
+
+Before we begin, ensure you have the following packages installed:
+
+```bash
+npm install --save @paralleldrive/cuid2 @aws-sdk/client-s3 @aws-sdk/s3-request-presigner zod axios
+```
+
+# Setting Up the S3 Service
+
+First, let's create a service to handle interactions with S3. This service will generate presigned URLs for file uploads and retrieve signed URLs for accessing uploaded files.
+
+```ts
+// s3/s3.service.ts
+
+import {
+  GetObjectCommand,
+  PutObjectCommand,
+  S3,
+  type S3ClientConfig,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
+export const PUT_ASSETS_EXPIRES_IN = 4 * 60; // 4 minutes
+export const GET_ASSETS_EXPIRES_IN = 4 * 60 * 60; // 4 hours
+export const FOLDER = "attachments"; // Customize this folder name as needed
+
+export interface S3DriverOptions extends S3ClientConfig {
+  bucketName: string;
+  region: string;
+}
+
+export class S3Service {
+  private s3Client: S3;
+  private bucketName: string;
+
+  constructor(options: S3DriverOptions) {
+    const { bucketName, region, ...s3Options } = options;
+
+    if (!(bucketName && region)) {
+      throw new Error("Bucket name and region are required");
+    }
+
+    this.s3Client = new S3({ ...s3Options, region });
+    this.bucketName = bucketName;
+  }
+
+  async getUrlToUpload(params: { key: string; mimeType: string }) {
+    const command = new PutObjectCommand({
+      Bucket: this.bucketName,
+      Key: `${FOLDER}/${params.key}`,
+      ContentType: params.mimeType,
+    });
+
+    const url = await getSignedUrl(this.s3Client, command, {
+      expiresIn: PUT_ASSETS_EXPIRES_IN,
+    });
+
+    return {
+      url,
+      path: `${FOLDER}/${params.key}`,
+    };
+  }
+
+  async getSignedAssetUrl(key: string) {
+    const command = new GetObjectCommand({
+      Bucket: this.bucketName,
+      Key: key,
+    });
+    return getSignedUrl(this.s3Client, command, {
+      expiresIn: GET_ASSETS_EXPIRES_IN,
+    });
+  }
+
+  async deleteSignedFile(key: string) {
+    return this.s3Client.deleteObject({
+      Bucket: this.bucketName,
+      Key: key,
+    });
+  }
+}
+```
+
+# S3 Configuration
+
+Next, configure the S3 service with your AWS credentials and bucket details.
+
+```ts
+// s3/config.ts
+import { S3Service } from "./s3.service";
+
+export const s3Driver = new S3Service({
+  region: process.env.AWS_S3_REGION,
+  endpoint: process.env.AWS_S3_ENDPOINT,
+  bucketName: process.env.AWS_S3_BUCKET_NAME,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
+  forcePathStyle: true,
+});
+```
+
+# Creating the tRPC Router for File Uploads
+
+Now, let's create a tRPC router to handle file uploads. This router will generate presigned URLs and optionally save file metadata to a database.
+
+```ts
+// attachments.ts
+import cuid2 from "@paralleldrive/cuid2";
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+import { getFileExtension } from "./utils";
+import { createTRPCRouter, publicProcedure } from "./trpc";
+import { s3Driver } from "./s3/s3-driver";
+
+export const attachmentsRouter = createTRPCRouter({
+  getPreSignedUrl: publicProcedure
+    .input(
+      z.object({
+        mimeType: z.string(),
+        fileName: z.string(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const { fileName, mimeType } = input;
+        const extension = getFileExtension(fileName);
+        const id = cuid2.createId();
+        const attachmentKey = `${id}${extension ? `.${extension}` : ""}`;
+
+        const { url, path } = await s3Driver.getUrlToUpload({
+          key: attachmentKey,
+          mimeType,
+        });
+
+        // Optional: Save file metadata to the database
+        // const [_attachment] = await db.insert(attachments).values({
+        //   fullPath: path,
+        //   mimeType: mimeType,
+        //   extension,
+        //   isPublic: true,
+        // }).returning().execute();
+
+        return {
+          presignedUrl: url,
+          path,
+        };
+      } catch (error) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Error creating presigned URL",
+        });
+      }
+    }),
+});
+```
+
+# Creating the tRPC Router for File Uploads
+
+Now, let's create a tRPC router to handle file uploads. This router will generate presigned URLs and optionally save file metadata to a database.
+
+```ts
+// attachments.ts
+import cuid2 from "@paralleldrive/cuid2";
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+import { getFileExtension } from "./utils";
+import { createTRPCRouter, publicProcedure } from "./trpc";
+import { s3Driver } from "./s3/s3-driver";
+
+export const attachmentsRouter = createTRPCRouter({
+  getPreSignedUrl: publicProcedure
+    .input(
+      z.object({
+        mimeType: z.string(),
+        fileName: z.string(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const { fileName, mimeType } = input;
+        const extension = getFileExtension(fileName);
+        const id = cuid2.createId();
+        const attachmentKey = `${id}${extension ? `.${extension}` : ""}`;
+
+        const { url, path } = await s3Driver.getUrlToUpload({
+          key: attachmentKey,
+          mimeType,
+        });
+
+        // Optional: Save file metadata to the database
+        // const [_attachment] = await db.insert(attachments).values({
+        //   fullPath: path,
+        //   mimeType: mimeType,
+        //   extension,
+        //   isPublic: true,
+        // }).returning().execute();
+
+        return {
+          presignedUrl: url,
+          path,
+        };
+      } catch (error) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Error creating presigned URL",
+        });
+      }
+    }),
+});
+```
+
+# Utility Functions
+
+Here are some utility functions to help with file extensions and S3 URL generation.
+
+```ts
+// utils.ts
+import axios from "axios";
+
+export const getFileExtension = (name: string) => {
+  return name.split(".").pop() || "";
+};
+
+const BASE_PATH = "https://your-bucket-name.s3.amazonaws.com"; // Replace with your bucket name
+
+export const generateS3Url = (path?: string | null) => {
+  if (!path) return;
+  if (path.startsWith("https:")) return path;
+  return `${BASE_PATH}/${path}`;
+};
+
+export async function uploadFileToS3({
+  presignedUrl,
+  file,
+}: {
+  presignedUrl: string;
+  file: File;
+}) {
+  try {
+    const result = await axios.put(presignedUrl, file, {
+      headers: {
+        "Content-Type": file.type,
+      },
+    });
+    return result;
+  } catch (error) {
+    console.error("Error uploading file to S3:", error);
+    return undefined;
+  }
+}
+```
+
+# Frontend Implementation
+
+For the frontend, we'll use a file uploader component to handle file selection and upload. This example uses
+[shadcn](https://ui.shadcn.com/) for UI components, but you can adapt it to your preferred library.
+
+#### File uploader component
+
+```tsx
+// components/ImageUploader.tsx
+"use client";
+
+import { api } from "@/trpc/client";
+import { generateS3Url, uploadFileToS3 } from "./utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/avatar";
+import { Button } from "@/components/button";
+import { Input } from "@/components/input";
+import { Spinner } from "@/components/spinner";
+import { cn } from "@/lib/utils";
+import { UserIcon } from "lucide-react";
+import React, { useState } from "react";
+
+type ImageUploaderProps = {
+  value?: string | null;
+  onChange?: (path: string | null) => void;
+  className?: string;
+};
+
+export function ImageUploader({
+  value,
+  onChange,
+  className,
+}: ImageUploaderProps) {
+  const [currentImage, setCurrentImage] = useState<string | undefined>(
+    value || undefined,
+  );
+  const [loading, setLoading] = useState(false);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLoading(true);
+    if (e.target.files && e.target.files.length > 0) {
+      const selectedFile = e.target.files[0];
+
+      const response = await api.attachments.getPreSignedUrl.mutate({
+        fileName: selectedFile.name,
+        mimeType: selectedFile.type,
+      });
+
+      await uploadFileToS3({
+        file: selectedFile,
+        presignedUrl: response.presignedUrl,
+      });
+
+      setCurrentImage(generateS3Url(response.path));
+      onChange?.(response.path);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className={cn("relative h-40 w-40", className)}>
+      <Avatar className="h-full w-full">
+        <AvatarImage src={currentImage} className="object-cover" />
+        <AvatarFallback className="bg-secondary">
+          <UserIcon className="h-16 w-16" />
+        </AvatarFallback>
+      </Avatar>
+
+      <Input
+        ref={inputRef}
+        type="file"
+        className="hidden"
+        onChange={handleChange}
+        accept="image/*"
+        disabled={loading}
+      />
+      <Button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        disabled={loading}
+      >
+        {loading ? <Spinner /> : "Upload Image"}
+      </Button>
+    </div>
+  );
+}
+```
+
+## Using the File Uploader in a Form
+
+Finally, integrate the `ImageUploader` component into a form.
+
+```tsx
+// components/UserForm.tsx
+"use client";
+
+import { ImageUploader } from "@/components/ImageUploader";
+import { useZodForm } from "@/hooks/use-zod-form";
+import { Button } from "@/components/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/form";
+import { Input } from "@/components/input";
+
+export const UserForm = () => {
+  const form = useZodForm({
+    schema: FormTenantSchema,
+    defaultValues: {
+      logo: null,
+    },
+  });
+
+  const handleSubmit = () => {
+    // Handle form submission
+  };
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)}>
+        <FormField
+          control={form.control}
+          name="logo"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Logo</FormLabel>
+              <FormControl>
+                <ImageUploader value={field.value} onChange={field.onChange} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <Button type="submit">Create</Button>
+      </form>
+    </Form>
+  );
+};
+```
