@@ -1,18 +1,27 @@
 ---
-title: "Upload Files to S3 in Next.js with tRPC: A Step-by-Step Guide"
+title: "Upload Files and Images to S3 with tRPC and Next.js: A Step-by-Step Guide"
 type: Blog
 summary: "Learn how to efficiently upload files and images to an AWS S3 bucket using tRPC and Next.js. This step-by-step guide covers setup, API integration, and best practices for seamless file storage."
-publishedAt: 2025-01-30
-draft: true
+publishedAt: 2025-02-02
 ---
 
 In this blog post, we'll walk through the process of uploading files and images to an Amazon S3 bucket using tRPC and Next.js.
 We'll cover generating presigned URLs, uploading files to S3, saving file paths in a database, and displaying the uploaded files in the frontend.
 
-# Overview of the File Upload Flow
+## Overview of the File Upload Flow
 
-Since trpc doesn't [multipart form data](https://github.com/trpc/trpc/issues/1937) directly we have to find out way to uplaod file to s3 without going to trpc server.
+Since trpc doesn't [multipart form data](https://github.com/trpc/trpc/issues/1937) directly, we have to find out way to uplaod file to s3 without going to trpc server.
+While there are [few examples](https://github.com/trpc/examples-next-formdata/tree/main/src)demonstrating the use of form data directly with tRPC, several GitHub issues highlight challenges with this approach.
 
+<Image
+  src={"/_static/blogs/trpc-file-upload/flow-diagram.png"}
+  width={1280}
+  height={720}
+  alt="trpc image upload flow diagram"
+/>
+
+
+The general file upload process follows these steps:
 - Generate a Presigned URL: Create a presigned URL for uploading the file to S3 using a unique key (e.g., the file name).
 
 - Upload the File: Use the presigned URL to upload the file to S3 via a PUT request.
@@ -21,7 +30,9 @@ Since trpc doesn't [multipart form data](https://github.com/trpc/trpc/issues/193
 
 - Display the File: Retrieve and display the uploaded file in the frontend using the S3 URL.
 
-# Prerequisites
+
+
+## Prerequisites
 
 Before we begin, ensure you have the following packages installed:
 
@@ -29,10 +40,16 @@ Before we begin, ensure you have the following packages installed:
 npm install --save @paralleldrive/cuid2 @aws-sdk/client-s3 @aws-sdk/s3-request-presigner zod axios
 ```
 
-# Setting Up the S3 Service
+The `@paralleldrive/cuid2` package is used to generate unique IDs for file names, eliminating the need to manually specify them. Alternatively, you can use libraries like uuid or nanoid.
+
+Ensure you have a Next.js project set up with tRPC as per the [example in their GitHub repository](https://github.com/trpc/trpc/tree/next/examples/next-minimal-starter). For the latest app directory structure, [follow this example](https://github.com/trpc/trpc/tree/next/examples/.experimental/next-app-dir).
+
+
+Additionally, you need an AWS account and an S3 bucket configured. Make sure you have your AWS credentials and bucket details ready.
+
+## Setting Up the S3 Service
 
 First, let's create a service to handle interactions with S3. This service will generate presigned URLs for file uploads and retrieve signed URLs for accessing uploaded files.
-
 ```ts
 // s3/s3.service.ts
 
@@ -104,9 +121,20 @@ export class S3Service {
 }
 ```
 
-# S3 Configuration
+## S3 Configuration
 
 Next, configure the S3 service with your AWS credentials and bucket details.
+
+
+Be sure to add following environment variables to your `.env` file:
+
+```bash
+AWS_S3_REGION=your-region
+AWS_S3_ENDPOINT=your-endpoint
+AWS_S3_BUCKET_NAME=your-bucket-name
+AWS_ACCESS_KEY_ID=your-access-key-id
+AWS_SECRET_ACCESS_KEY=your-secret-access-key
+```
 
 ```ts
 // s3/config.ts
@@ -124,12 +152,12 @@ export const s3Driver = new S3Service({
 });
 ```
 
-# Creating the tRPC Router for File Uploads
+## Creating the tRPC Router for File Uploads
 
 Now, let's create a tRPC router to handle file uploads. This router will generate presigned URLs and optionally save file metadata to a database.
 
 ```ts
-// attachments.ts
+//  server/router/attachments.ts
 import cuid2 from "@paralleldrive/cuid2";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -179,62 +207,7 @@ export const attachmentsRouter = createTRPCRouter({
 });
 ```
 
-# Creating the tRPC Router for File Uploads
-
-Now, let's create a tRPC router to handle file uploads. This router will generate presigned URLs and optionally save file metadata to a database.
-
-```ts
-// attachments.ts
-import cuid2 from "@paralleldrive/cuid2";
-import { TRPCError } from "@trpc/server";
-import { z } from "zod";
-import { getFileExtension } from "./utils";
-import { createTRPCRouter, publicProcedure } from "./trpc";
-import { s3Driver } from "./s3/s3-driver";
-
-export const attachmentsRouter = createTRPCRouter({
-  getPreSignedUrl: publicProcedure
-    .input(
-      z.object({
-        mimeType: z.string(),
-        fileName: z.string(),
-      }),
-    )
-    .mutation(async ({ input }) => {
-      try {
-        const { fileName, mimeType } = input;
-        const extension = getFileExtension(fileName);
-        const id = cuid2.createId();
-        const attachmentKey = `${id}${extension ? `.${extension}` : ""}`;
-
-        const { url, path } = await s3Driver.getUrlToUpload({
-          key: attachmentKey,
-          mimeType,
-        });
-
-        // Optional: Save file metadata to the database
-        // const [_attachment] = await db.insert(attachments).values({
-        //   fullPath: path,
-        //   mimeType: mimeType,
-        //   extension,
-        //   isPublic: true,
-        // }).returning().execute();
-
-        return {
-          presignedUrl: url,
-          path,
-        };
-      } catch (error) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Error creating presigned URL",
-        });
-      }
-    }),
-});
-```
-
-# Utility Functions
+## Utility Functions
 
 Here are some utility functions to help with file extensions and S3 URL generation.
 
@@ -275,18 +248,20 @@ export async function uploadFileToS3({
 }
 ```
 
-# Frontend Implementation
+## Frontend Implementation
 
-For the frontend, we'll use a file uploader component to handle file selection and upload. This example uses
-[shadcn](https://ui.shadcn.com/) for UI components, but you can adapt it to your preferred library.
+For the frontend, we'll create a file uploader component to handle file selection and upload. This example uses
+[shadcn](https://ui.shadcn.com/) for UI components, but you can adapt it to your preferred library. The example below
+mightnot cover all usecases for file upload but this can be a good starting point.
 
-#### File uploader component
+
+### File uploader component
 
 ```tsx
 // components/ImageUploader.tsx
 "use client";
 
-import { api } from "@/trpc/client";
+import { api } from "@/trpc/client"; // Import your tRPC client from the trpc folder
 import { generateS3Url, uploadFileToS3 } from "./utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/avatar";
 import { Button } from "@/components/button";
@@ -363,16 +338,16 @@ export function ImageUploader({
 }
 ```
 
-## Using the File Uploader in a Form
+### Using the File Uploader in a Form
 
-Finally, integrate the `ImageUploader` component into a form.
+Finally, integrate the `ImageUploader` component into a form using `react-hook-form` and `zod` for validation. 
+This example uses the `UserForm` component to create a form for uploading user profile images.
 
 ```tsx
 // components/UserForm.tsx
 "use client";
 
 import { ImageUploader } from "@/components/ImageUploader";
-import { useZodForm } from "@/hooks/use-zod-form";
 import { Button } from "@/components/button";
 import {
   Form,
@@ -383,15 +358,22 @@ import {
   FormMessage,
 } from "@/components/form";
 import { Input } from "@/components/input";
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+
+const formSchema = z.object({
+  logo: z.string().nullable(),
+});
 
 export const UserForm = () => {
-  const form = useZodForm({
-    schema: FormTenantSchema,
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       logo: null,
     },
-  });
-
+  })
+ 
   const handleSubmit = () => {
     // Handle form submission
   };
@@ -419,3 +401,12 @@ export const UserForm = () => {
   );
 };
 ```
+
+
+
+## Conclusion
+In this guide, we walked through the process of uploading files and images to an Amazon S3 bucket using tRPC and Next.js. 
+By leveraging presigned URLs, we ensured a secure and efficient file upload flow without overloading the tRPC server with multipart form data.
+
+Also keep on eyes on these GitHub issues:
+- [Support for multipart form data](https://github.com/trpc/trpc/discussions/658)
