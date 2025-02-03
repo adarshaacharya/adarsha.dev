@@ -8,12 +8,12 @@ import { LINKS } from "@/lib/constants";
 import Link from "next/link";
 
 export default function Home() {
-  const blogs = allBlogs.slice(0, 2).sort((a, b) => {
-    if (new Date(a.publishedAt) > new Date(b.publishedAt)) {
-      return -1;
-    }
-    return 1;
-  });
+  const blogs = allBlogs
+    .sort(
+      (a, b) =>
+        new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
+    )
+    .slice(0, 2);
 
   return (
     <React.Fragment>

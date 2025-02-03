@@ -2,7 +2,7 @@ import {
   ComputedFields,
   defineDocumentType,
   makeSource,
-} from "contentlayer/source-files";
+} from "contentlayer2/source-files";
 import remarkGfm from "remark-gfm";
 import rehypePrettyCode, {
   CharsElement,
@@ -61,7 +61,6 @@ export default makeSource({
     rehypePlugins: [
       rehypeSlug,
       [
-        //@ts-expect-error
         rehypePrettyCode,
         {
           theme: "one-dark-pro",
