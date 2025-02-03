@@ -1,5 +1,5 @@
 ---
-title: "Upload Files and Images to S3 with tRPC and Next.js: A Step-by-Step Guide"
+title: "Upload Files and Images to AWS S3 with tRPC and Next.js: A Complete Guide"
 type: Blog
 summary: "Learn how to efficiently upload files and images to an AWS S3 bucket using tRPC and Next.js. This step-by-step guide covers setup, API integration, and best practices for seamless file storage."
 publishedAt: 2025-02-02
@@ -10,8 +10,8 @@ We'll cover generating presigned URLs, uploading files to S3, saving file paths 
 
 ## Overview of the File Upload Flow
 
-Since trpc doesn't [multipart form data](https://github.com/trpc/trpc/issues/1937) directly, we have to find out way to uplaod file to s3 without going to trpc server.
-While there are [few examples](https://github.com/trpc/examples-next-formdata/tree/main/src)demonstrating the use of form data directly with tRPC, several GitHub issues highlight challenges with this approach.
+Since trpc doesn't [multipart form data](https://github.com/trpc/trpc/issues/1937) directly, we have to find out way to upload file to s3 without going to trpc server.
+While there are [few examples](https://github.com/trpc/examples-next-formdata/tree/main/src) demonstrating the use of form data directly with tRPC, several GitHub issues highlight challenges with this approach.
 
 <Image
   src={"/_static/blogs/trpc-file-upload/flow-diagram.png"}
@@ -186,12 +186,12 @@ export const attachmentsRouter = createTRPCRouter({
         });
 
         // Optional: Save file metadata to the database
-        // const [_attachment] = await db.insert(attachments).values({
-        //   fullPath: path,
-        //   mimeType: mimeType,
-        //   extension,
-        //   isPublic: true,
-        // }).returning().execute();
+        //   const attachment = await prisma.attachment.create({
+        //   data: {
+        //     fullPath: path,
+        //     userId: context.user?.id,
+        //   },
+        // });
 
         return {
           presignedUrl: url,
@@ -408,5 +408,3 @@ export const UserForm = () => {
 In this guide, we walked through the process of uploading files and images to an Amazon S3 bucket using tRPC and Next.js. 
 By leveraging presigned URLs, we ensured a secure and efficient file upload flow without overloading the tRPC server with multipart form data.
 
-Also keep on eyes on these GitHub issues:
-- [Support for multipart form data](https://github.com/trpc/trpc/discussions/658)
