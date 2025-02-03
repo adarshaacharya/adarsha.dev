@@ -1,7 +1,7 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useMDXComponent } from "next-contentlayer/hooks";
+import { useMDXComponent } from "next-contentlayer2/hooks";
 import { BlogComments } from "./blog-comments";
 
 function CustomLink(props: { href: string; children: React.ReactNode }) {

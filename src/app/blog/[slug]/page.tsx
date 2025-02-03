@@ -1,5 +1,4 @@
-import type { GetStaticPaths, Metadata } from "next";
-import { notFound } from "next/navigation";
+import type {  Metadata } from "next";
 import { allBlogs } from "contentlayer/generated";
 import Balancer from "react-wrap-balancer";
 import { Mdx } from "@/components/mdx";
@@ -13,11 +12,12 @@ export async function generateStaticParams() {
   return paths;
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { slug: string };
-}): Promise<Metadata | undefined> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ slug: string }>;
+  }
+): Promise<Metadata | undefined> {
+  const params = await props.params;
   const blog = allBlogs.find((p) => p.slug === params.slug);
   if (!blog) {
     return;
@@ -35,7 +35,7 @@ export async function generateMetadata({
       locale: "en_US",
       type: "article",
       publishedTime: blog.publishedAt,
-      url: "./",
+      url: `${siteMetadata.siteUrl}/blog/${blog.slug}`,
       authors: siteMetadata.author,
       images: [
         {
@@ -55,7 +55,8 @@ export async function generateMetadata({
   };
 }
 
-export default async function Blog({ params }: { params: { slug: string } }) {
+export default async function Blog(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const blog = allBlogs.find((blog) => blog.slug === params.slug);
 
   if (!blog) {
