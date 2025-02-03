@@ -1,6 +1,6 @@
-import { ImageResponse, NextRequest } from "next/server";
-import { Space_Grotesk } from "next/font/google";
+import { NextRequest } from "next/server";
 import { siteMetadata } from "@/data/siteMetadata";
+import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
 
