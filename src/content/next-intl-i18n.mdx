@@ -150,7 +150,8 @@ create a folder called `i18n` inside `src` where we put all the configuration re
 First define the routing in `src/i18n/routing.ts` file.
 
 ```ts
-import { createSharedPathnamesNavigation } from "next-intl/navigation";
+// src/i18n/routing.ts
+import {createNavigation} from 'next-intl/navigation';
 import { defineRouting } from "next-intl/routing";
 
 export const routing = defineRouting({
@@ -162,8 +163,8 @@ export const routing = defineRouting({
 export type Pathnames = keyof typeof routing.pathnames;
 export type Locale = (typeof routing.locales)[number];
 
-export const { Link, permanentRedirect, redirect, usePathname, useRouter } =
-  createSharedPathnamesNavigation(routing);
+export const { Link, permanentRedirect, redirect, usePathname, useRouter, getPathname } =
+  createNavigation(routing);
 ```
 
 The above sample is fairly simple and we have copied it from [docs itself](https://next-intl-docs.vercel.app/docs/getting-started/app-router/with-i18n-routing#i18n-routing).
@@ -206,11 +207,18 @@ import { notFound } from "next/navigation";
 import { getRequestConfig } from "next-intl/server";
 import { routing } from "./routing";
 
-export default getRequestConfig(async ({ locale }) => {
-  // Validate that the incoming `locale` parameter is valid
-  if (!routing.locales.includes(locale as any)) notFound();
+export default getRequestConfig(async ({ requestLocale }) => {
+    // This typically corresponds to the `[locale]` segment
+  let locale = await requestLocale;
+
+
+  // Ensure that a valid locale is used
+  if (!locale || !routing.locales.includes(locale as any)) {
+    locale = routing.defaultLocale;
+  }
 
   return {
+    locale,
     messages: {
       ...(await import(`../../messages/${locale}/users.json`)),
       ...(await import(`../../messages/${locale}/auth.json`)),
@@ -230,7 +238,9 @@ Setup layout with provider to provide translations to the components.
 
 import {NextIntlClientProvider} from 'next-intl';
 import {getMessages} from 'next-intl/server';
- 
+ import {routing} from '@/i18n/routing';
+ import {notFound} from 'next/navigation';
+
 export default async function LocaleLayout({
   children,
   params: {locale}
@@ -238,6 +248,11 @@ export default async function LocaleLayout({
   children: React.ReactNode;
   params: {locale: string};
 }) {
+    // Ensure that the incoming `locale` is valid
+  if (!routing.locales.includes(locale as any)) {
+    notFound();
+  }
+
   // Providing all messages to the client
   // side is the easiest way to get started
   const messages = await getMessages();
