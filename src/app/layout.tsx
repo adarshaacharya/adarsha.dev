@@ -65,7 +65,6 @@ export default function RootLayout({
           "mx-auto min-h-screen max-w-3xl antialiased dark:bg-zinc-950 dark:text-gray-100",
           space_grotesk.className,
         )}
-        suppressHydrationWarning
       >
         <ThemeProvider
           attribute="class"

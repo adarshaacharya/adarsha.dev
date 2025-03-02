@@ -3,7 +3,7 @@
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { LayoutGroup, motion } from "framer-motion";
+import { LayoutGroup, motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { ThemeToggler } from "./theme-toggle";
 import React from "react";
@@ -50,7 +50,7 @@ export function Header() {
                       <span className="relative px-2 py-1">
                         {name}
                         {path === pathname ? (
-                          <motion.div
+                          <motion.div                         
                             className="absolute inset-0 top-7 z-[-1] mx-2 h-[1px] bg-neutral-200 from-transparent to-neutral-900 dark:bg-neutral-800 dark:bg-gradient-to-r"
                             layoutId="sidebar"
                             transition={{

@@ -9,7 +9,8 @@
     "lint": "next lint",
     "format": "prettier --write .",
     "type-check": "tsc --noEmit",
-    "build:content": "contentlayer2 build"
+    "build:content": "contentlayer2 build",
+    "typecheck": "tsc --noEmit"
   },
   "packageManager": "pnpm@8.11.0",
   "dependencies": {
@@ -24,8 +25,8 @@
     "clsx": "^2.0.0",
     "contentlayer2": "^0.5.3",
     "eslint": "9.19.0",
-    "framer-motion": "^10.18.0",
     "install": "^0.13.0",
+    "motion": "^12.4.7",
     "next": "15.1.6",
     "next-contentlayer2": "^0.5.3",
     "next-themes": "^0.2.1",
