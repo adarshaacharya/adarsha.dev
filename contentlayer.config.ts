@@ -2,7 +2,7 @@ import {
   ComputedFields,
   defineDocumentType,
   makeSource,
-} from "contentlayer/source-files";
+} from "contentlayer2/source-files";
 import remarkGfm from "remark-gfm";
 import rehypePrettyCode, {
   CharsElement,
@@ -12,6 +12,7 @@ import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import readingTime from "reading-time";
 
+/** @type {import('contentlayer/source-files').ComputedFields} */
 const computedFields: ComputedFields = {
   slug: {
     type: "string",
@@ -65,6 +66,7 @@ export default makeSource({
         {
           theme: "one-dark-pro",
           keepBackground: false,
+     
 
           onVisitHighlightedLine(node: LineElement) {
             if (
