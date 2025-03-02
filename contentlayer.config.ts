@@ -12,6 +12,7 @@ import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import readingTime from "reading-time";
 
+/** @type {import('contentlayer/source-files').ComputedFields} */
 const computedFields: ComputedFields = {
   slug: {
     type: "string",

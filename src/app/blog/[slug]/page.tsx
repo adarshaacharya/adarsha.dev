@@ -1,24 +1,26 @@
-import type {  Metadata } from "next";
+import type { Metadata } from "next";
 import { allBlogs } from "contentlayer/generated";
 import Balancer from "react-wrap-balancer";
 import { Mdx } from "@/components/mdx";
 import { siteMetadata } from "@/data/siteMetadata";
 import NotFound from "@/app/not-found";
 import { formatDate } from "@/lib/utils";
+import { getMDXComponent } from "next-contentlayer2/hooks";
 
-export async function generateStaticParams() {
-  const paths = allBlogs.map((blog) => ({ slug: blog.slug }));
+// export async function generateStaticParams() {
+//   const paths = allBlogs.map((blog) => ({ slug: blog.slug }));
 
-  return paths;
-}
+//   return paths;
+// }
 
-export async function generateMetadata(
-  props: {
-    params: Promise<{ slug: string }>;
-  }
-): Promise<Metadata | undefined> {
+export const generateStaticParams = async () =>
+  allBlogs.map((blog) => ({ slug: blog._raw.flattenedPath }));
+
+export async function generateMetadata(props: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata | undefined> {
   const params = await props.params;
-  const blog = allBlogs.find((p) => p.slug === params.slug);
+  const blog = allBlogs.find((blog) => blog._raw.flattenedPath === params.slug);
   if (!blog) {
     return;
   }
@@ -55,13 +57,17 @@ export async function generateMetadata(
   };
 }
 
-export default async function Blog(props: { params: Promise<{ slug: string }> }) {
+export default async function Blog(props: {
+  params: Promise<{ slug: string }>;
+}) {
   const params = await props.params;
-  const blog = allBlogs.find((blog) => blog.slug === params.slug);
+  const blog = allBlogs.find((blog) => blog._raw.flattenedPath === params.slug);
 
   if (!blog) {
     return <NotFound />;
   }
+
+  const Content = getMDXComponent(blog.body.code);
 
   return (
     <section>

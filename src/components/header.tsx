@@ -3,7 +3,6 @@
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { LayoutGroup, motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { ThemeToggler } from "./theme-toggle";
 import React from "react";
@@ -29,7 +28,7 @@ export function Header() {
   return (
     <header className="mb-10 tracking-tight mt-10">
       <div className=" lg:sticky lg:top-20">
-        <LayoutGroup>
+        <>
           <nav
             className="fade relative scroll-pr-6  px-0 pb-0 md:relative md:overflow-auto"
             id="nav"
@@ -49,7 +48,7 @@ export function Header() {
                     >
                       <span className="relative px-2 py-1">
                         {name}
-                        {path === pathname ? (
+                        {/* {path === pathname ? (
                           <motion.div                         
                             className="absolute inset-0 top-7 z-[-1] mx-2 h-[1px] bg-neutral-200 from-transparent to-neutral-900 dark:bg-neutral-800 dark:bg-gradient-to-r"
                             layoutId="sidebar"
@@ -59,7 +58,7 @@ export function Header() {
                               damping: 30,
                             }}
                           />
-                        ) : null}
+                        ) : null} */}
                       </span>
                     </Link>
                   );
@@ -71,7 +70,7 @@ export function Header() {
               </div>
             </div>
           </nav>
-        </LayoutGroup>
+        </>
       </div>
     </header>
   );
