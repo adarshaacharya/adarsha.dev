@@ -1,6 +1,5 @@
 import { BlogCard } from "@/components/blog-card";
-import { allBlogs } from "contentlayer/generated";
-import { Metadata } from "next";
+import { allBlogPosts } from "content-collections";
 import { generatePageMetadata } from "../seo";
 import Link from "next/link";
 import { ENV } from "@/lib/env";
@@ -13,7 +12,7 @@ export const metadata = generatePageMetadata({
 const isProd = ENV.NODE_ENV === "production";
 
 export default function Blog() {
-  const blogs = allBlogs.sort((a, b) => {
+  const blogs = allBlogPosts.sort((a, b) => {
     if (new Date(a.publishedAt) > new Date(b.publishedAt)) {
       return -1;
     }

@@ -1,8 +1,8 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { getMDXComponent } from "next-contentlayer2/hooks";
 import { BlogComments } from "./blog-comments";
+import { useMDXComponent } from "@content-collections/mdx/react";
 
 function CustomLink(props: { href: string; children: React.ReactNode }) {
   const { href, ...rest } = props;
@@ -42,7 +42,7 @@ const components = {
 };
 
 export function Mdx({ code }: { code: string }) {
-  const Content = getMDXComponent(code);
+  const Content = useMDXComponent(code);
 
   return (
     <React.Fragment>

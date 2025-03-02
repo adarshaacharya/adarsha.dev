@@ -37,4 +37,6 @@ next-env.d.ts
 # contentlayer
 .contentlayer
 
+.content-collections
+
 .env
