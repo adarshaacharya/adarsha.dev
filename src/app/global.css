@@ -153,3 +153,22 @@ table {
 [data-rehype-pretty-code-title] + pre {
   @apply mt-0 rounded-t-none border-t-0;
 }
+
+/* for modal */
+@layer components {
+  .img-zoomable {
+    @apply cursor-zoom-in transition-transform duration-300 hover:scale-[1.01];
+  }
+  
+  .blur-backdrop {
+    @apply fixed inset-0 z-50 bg-black/30 backdrop-blur-sm;
+  }
+  
+  .modal-container {
+    @apply fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-12;
+  }
+  
+  .modal-content {
+    @apply relative mx-auto max-w-5xl overflow-hidden rounded-xl bg-white/90 shadow-2xl backdrop-blur-xl;
+  }
+}

@@ -1,5 +1,13 @@
 export const WEB_APPS = [
   {
+    title: "Bricks",
+    repo: "https://github.com/adarshaacharya/bricks",
+    description:
+      "An api powered real estate marketplace. Bricks can be starter for building any scalable SaaS product using Nest.js.",
+    tags: ["Nest.js", "PostgreSQL", "Prisma", "Docker", "Redis", "oAuth"],
+    thumbnail: "/_static/projects/bricks.png",
+  },
+  {
     title: "Mentor Labs",
     tags: ["Typescript", "React", "Redux Toolkit", "Nodejs", "PostgreSQL"],
     description:
