@@ -2,6 +2,7 @@ import { GitHubIcon } from "@/components/icons";
 import { SocialLink } from "@/components/social-link";
 import { WEB_APPS } from "@/data/projects";
 import Image from "next/image";
+import { ZoomableImage } from "./zoomable-image";
 
 type Props = {
   project: (typeof WEB_APPS)[number];
@@ -13,14 +14,14 @@ export const ProjectCard = ({ project }: Props) => {
       className="flex cursor-pointer flex-col rounded-xl transition hover:bg-zinc-50 hover:dark:bg-zinc-800/50"
       key={project.title}
     >
-      <Image
+      <ZoomableImage
         src={project.thumbnail}
         alt={`Logo of ${project.title}`}
-        className="h-50 w-full rounded-t-lg object-cover bg-no-repeat"
         width={0}
         height={0}
-        unoptimized
+        className="h-50 w-full rounded-t-lg object-cover"
       />
+
       <div className="p-4">
         <a className="text-base font-semibold tracking-tight text-zinc-800 dark:text-zinc-100">
           {project.title}

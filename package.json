@@ -27,6 +27,7 @@
     "eslint": "9.19.0",
     "framer-motion": "^12.4.7",
     "install": "^0.13.0",
+    "lucide-react": "^0.477.0",
     "next": "15.1.6",
     "next-contentlayer2": "^0.5.3",
     "next-themes": "^0.2.1",
@@ -48,7 +49,8 @@
     "@tailwindcss/typography": "^0.5.10",
     "eslint-config-next": "15.2.0",
     "prettier": "^3.0.3",
-    "prettier-plugin-tailwindcss": "^0.5.4"
+    "prettier-plugin-tailwindcss": "^0.5.4",
+    "tailwindcss-animate": "^1.0.7"
   },
   "pnpm": {
     "overrides": {
