@@ -30,31 +30,24 @@ export default function Home() {
 
         <div className="text-gray-700 dark:text-gray-300">
           <p className="mt-4">
-            I’m a fullstack software engineer specializing in building scalable
-            web applications having rich user interface using javascript.
+            I’m a fullstack software engineer specializing in building web
+            applications with rich user interfaces and robust backend services
+            using Javascript-based technologies.
           </p>
           <p className="mt-4 mb-4">
-            Over the years, I&apos;ve worked on multiple startups to build
-            end-to-end products in insurance, game-tech, and video streaming
-            domains, and have actively contributed to various open source
-            projects. Currently, I&apos;m building iGaming solutions at &nbsp;
-            <a
-              href="https://mindworks.xyz/"
-              target="_blank"
-              className="border-b inline-block"
-            >
-              mindworks.xyz
-            </a>
-            .
+            Over the years, I&apos;ve worked on multiple startups to build and
+            launch end-to-end products in insurance, iGaming, and video
+            streaming domains, and have actively contributed to various open
+            source projects.
           </p>
 
           <p className="mb-4">
-            If you&apos;d like to collaborate, please&nbsp;
+            If you&apos;d like to collaborate, please send me an email at&nbsp;
             <a
               href="mailto:adarshaofficial@gmail.com"
               className="border-b inline-block"
             >
-              send me an email
+              adarshaofficial@gmail.com
             </a>
             &nbsp;or reach out on any of my social handles.
           </p>
