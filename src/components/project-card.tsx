@@ -1,11 +1,10 @@
-import { GitHubIcon } from "@/components/icons";
+import { GitHubIcon, LinkIcon } from "@/components/icons";
 import { SocialLink } from "@/components/social-link";
-import { WEB_APPS } from "@/data/projects";
-import Image from "next/image";
+import { WebApp } from "@/data/projects";
 import { ZoomableImage } from "./zoomable-image";
 
 type Props = {
-  project: (typeof WEB_APPS)[number];
+  project: WebApp;
 };
 
 export const ProjectCard = ({ project }: Props) => {
@@ -39,12 +38,19 @@ export const ProjectCard = ({ project }: Props) => {
             </p>
           ))}
         </div>
-        <div className="flex items-center">
+        <div className="flex items-center gap-2">
           <SocialLink
             icon={GitHubIcon}
             href={project.repo}
             className="h-6 w-6 flex-none"
           />
+          {project.demo && (
+            <SocialLink
+              icon={LinkIcon}
+              href={project.demo}
+              className="h-6 w-6 flex-none"
+            />
+          )}
         </div>
       </div>
     </div>

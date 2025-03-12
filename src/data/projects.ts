@@ -1,4 +1,13 @@
-export const WEB_APPS = [
+export type WebApp = {
+  title: string;
+  repo: string;
+  description: string;
+  tags: string[];
+  demo?: string;
+  thumbnail: string;
+};
+
+export const WEB_APPS: WebApp[] = [
   {
     title: "Bricks",
     repo: "https://github.com/adarshaacharya/bricks",
@@ -64,7 +73,7 @@ export const WEB_APPS = [
       "Tour 360° is a virtual reality viewing platform build for VisitNepal2020 that helps to view 360 thumbnails & book flights airplane, hotels hotel and guides boy.",
     tags: ["Php", "MySQL", "Aws"],
   },
-] as const;
+] as WebApp[];
 
 export const TOOLS = [
   {
@@ -99,4 +108,4 @@ export const TOOLS = [
     description: "Cli tool to make git commits with not-so perfect messges.",
     techs: ["npm-package"],
   },
-] as const;
+];
