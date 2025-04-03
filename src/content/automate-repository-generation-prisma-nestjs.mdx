@@ -1,0 +1,534 @@
+---
+title: "Automating Repository Generation in NestJS with Prisma"
+summary: "Learn how to automate repository generation in a Prisma + NestJS application. Reduce boilerplate, ensure consistency, and speed up development with a custom repository generation script."
+type: Blog
+publishedAt: 2025-04-04
+---
+
+In a Nest.js or any other backend applications, repository classes act as the data access layer. Managing repositories in a Prisma + NestJS application can get tedious, especially when dealing with multiple models.
+Manually creating repository files for each model is inefficient and prone to errors. Instead of writing the same CRUD methods for every model, this article will guide you way to dynamically generate repository classes with transaction handling based on the Prisma schema. This approach not only reduces boilerplate code but also ensures consistency across your application.
+
+> Before starting, make sure you have Nest.js application setup with Prisma. If you haven't done that yet, check out the [NestJS + Prisma documentation](https://docs.nestjs.com/recipes/prisma) for a quick setup.
+
+## Working Mechanism
+
+Example prisma schema file (schema.prisma) has Country model which will act as example model throughout the article.
+
+
+```ts
+// prisma/schema.prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "binary"
+}
+
+model Country {
+  id        Int      @id @default(autoincrement())
+  name      String
+  code      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+```
+
+
+Before, that make sure you have prisma service set up in your NestJS application. The Prisma service is responsible for managing the Prisma client instance and providing it to your application.
+
+```ts
+// src/prisma.service.ts
+import { Injectable, OnModuleInit } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
+
+
+@Injectable()
+export class PrismaService extends PrismaClient implements OnModuleInit {
+  async onModuleInit() {
+    await this.$connect();
+  }
+
+  async enableShutdownHooks(app: any) {
+    this.$on('beforeExit', async () => {
+      await app.close();
+    });
+  }
+}
+```
+
+💡 Key Features:
+
+•	Uses NestJS dependency injection for transaction handling  
+•	Provides common Prisma operations (find, create, update, delete)  
+•	Includes a paginated query method for fetching paginated results  
+
+
+### 1. Parsing the Prisma Schema
+
+Make sure to install the `@prisma/internals` package, which provides the necessary functions to parse the schema.
+
+```bash
+npm install @prisma/internals
+```
+
+Now, use `getDMMF()` function from `@prisma/internals` to parse the schema file and extract detailed metadata about each model, including field names, types, and relationships. This metadata is represented in the DMMF (Data Model Meta Format), which is Prisma's internal representation of your data models.
+
+```ts
+const { getDMMF } = require('@prisma/internals');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const schemaPath = path.join(__dirname, './prisma/schema.prisma');
+const dmmf = await getDMMF({
+  datamodel: fs.readFileSync(schemaPath, 'utf8'),
+});
+```
+
+
+### 2. Generating Repository Classes
+
+For each model in schama, the script generates a repository class that provides with transaction support for CRUD operations along with a paginated query method for fetching results.
+
+```ts
+// src/scripts/generate-repositories.js
+@Injectable()
+export class ${model.name}Repository {
+  constructor(
+    private readonly txHost: TransactionHost<TransactionalAdapterPrisma<PrismaService>>,
+  ) {}
+
+  // Find operations
+  get findFirst() {
+    return this.txHost.tx.${camelCase(model.name)}.findFirst;
+  }
+
+  get findMany() {
+    return this.txHost.tx.${camelCase(model.name)}.findMany;
+  }
+
+  // Create operations
+  get create() {
+    return this.txHost.tx.${camelCase(model.name)}.create;
+  }
+
+  get createMany() {
+    return this.txHost.tx.${camelCase(model.name)}.createMany;
+  }
+
+  // Update operations
+  get update() {
+    return this.txHost.tx.${camelCase(model.name)}.update;
+  }
+
+  get updateMany() {
+    return this.txHost.tx.${camelCase(model.name)}.updateMany;
+  }
+
+  // Delete operations
+  get delete() {
+    return this.txHost.tx.${camelCase(model.name)}.delete;
+  }
+
+  get deleteMany() {
+    return this.txHost.tx.${camelCase(model.name)}.deleteMany;
+  }
+
+  // Pagination function
+  async findManyPaginated(...arguments_: Parameters<typeof this.findMany>) {
+    const [data, count] = await this.txHost.withTransaction(async () => {
+      const data = await this.txHost.tx.${camelCase(model.name)}.findMany(...arguments_);
+      const count = await this.txHost.tx.${camelCase(model.name)}.count({ where: arguments_[0]?.where });
+      return [data, count];
+    });
+
+    const take = arguments_[0]?.take ?? 100;
+    const skip = arguments_[0]?.skip ?? 0;
+
+    const perPage = take;
+    const page = Math.floor(skip / take + 1);
+    const lastPage = Math.ceil(count / perPage);
+    return {
+      meta: {
+        currentPage: page,
+        perPage: perPage,
+        total: count,
+        prev: page > 1 ? page - 1 : null,
+        next: page < lastPage ? page + 1 : null,
+        lastPage,
+      },
+      data,
+    };
+  }
+}
+```
+
+
+
+
+### 3. Writing the Files
+
+Now, write the generated repository classes to files. The script creates a directory named `repositories` in the `src` folder and generates a file for each model. The file name is derived from the model name, converted to snake case, and suffixed with `-repository.ts`.
+For example, the `Country` model will generate a file named `country-repository.ts` in the `src/repositories` directory.
+
+```ts
+// src/scripts/generate-repositories.js
+fs.writeFileSync(
+  path.join(__dirname, `./src/repositories/${toSnakeCase(model.name)}-repository.ts`),
+  content,
+);
+```
+
+> Old repositories are automatically cleaned up when models change or are removed.
+
+
+### Running the Script
+
+Finally, call the `generateRepos()` function to execute the script. 
+
+```ts
+// src/scripts/generate-repositories.js
+(async () => {
+  try {
+    await generateRepos();
+    console.log(`✔ Generated .repository.ts`);
+    process.exit(0);
+  } catch (error) {
+    console.error(error);
+    process.exit(1);
+  }
+})();
+```
+
+You can run the script using Node.js:
+
+```bash
+# Make sure to run this command in the root directory of your project 
+node src/scripts/generate-repositories.js
+```
+
+
+### Final Code
+
+Here’s the complete code for the script that generates the repository classes based on the Prisma schema:
+
+```ts
+// src/scripts/generate-repositories.js
+/* eslint-disable @typescript-eslint/no-var-requires */
+const fs = require('node:fs');
+const path = require('node:path');
+const { getDMMF } = require('@prisma/internals');
+
+function toSnakeCase(str) {
+  return str
+    .replace(/[A-Z]/g, function (match) {
+      return '-' + match.toLowerCase();
+    })
+    .replace(/^-/, '');
+}
+
+function camelCase(str) {
+  str = String(str);
+  return String(str[0]).toLowerCase() + str.slice(1);
+}
+
+async function generateRepos() {
+  const schemaPath = path.join(__dirname, './prisma/schema.prisma');
+  const dmmf = await getDMMF({
+    datamodel: fs.readFileSync(schemaPath, 'utf8'),
+  });
+
+  fs.rmSync(path.join(__dirname, `./src/repositories`), {
+    force: true,
+    recursive: true,
+  });
+
+  for (const model of dmmf.datamodel.models) {
+    let content =
+      '// THIS IS AN AUTOGENERATED FILE. DO NOT EDIT THIS FILE DIRECTLY.\n';
+    content += `import { Injectable } from '@nestjs/common';
+
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
+
+import { PrismaService } from '../prisma.service';
+
+@Injectable()
+export class ${model.name}Repository {
+  constructor(
+    private readonly txHost: TransactionHost<TransactionalAdapterPrisma<PrismaService>>,
+  ) {}
+
+  // Find
+  get findFirst() {
+    return this.txHost.tx.${camelCase(model.name)}.findFirst;
+  }
+
+  get findFirstOrThrow() {
+    return this.txHost.tx.${camelCase(model.name)}.findFirstOrThrow;
+  }
+  
+  get findUnique() {
+    return this.txHost.tx.${camelCase(model.name)}.findUnique;
+  }
+
+  get findUniqueOrThrow() {
+    return this.txHost.tx.${camelCase(model.name)}.findUniqueOrThrow;
+  }
+
+  get findMany() {
+    return this.txHost.tx.${camelCase(model.name)}.findMany;
+  }
+
+  // Create
+  get create() {
+    return this.txHost.tx.${camelCase(model.name)}.create;
+  }
+
+  get createMany() {
+    return this.txHost.tx.${camelCase(model.name)}.createMany;
+  }
+
+  // Update
+  get update() {
+    return this.txHost.tx.${camelCase(model.name)}.update;
+  }
+
+  get upsert() {
+    return this.txHost.tx.${camelCase(model.name)}.upsert;
+  }
+
+  get updateMany() {
+    return this.txHost.tx.${camelCase(model.name)}.updateMany;
+  }
+
+  // Delete
+  get delete() {
+    return this.txHost.tx.${camelCase(model.name)}.delete;
+  }
+
+  get deleteMany() {
+    return this.txHost.tx.${camelCase(model.name)}.deleteMany;
+  }
+
+  // Aggregate
+  get aggregate() {
+    return this.txHost.tx.${camelCase(model.name)}.aggregate;
+  }
+
+  // Count
+  get count() {
+    return this.txHost.tx.${camelCase(model.name)}.count;
+  }
+
+  // GroupBy
+  get groupBy() {
+    return this.txHost.tx.${camelCase(model.name)}.groupBy;
+  }
+
+  async findManyPaginated(...arguments_: Parameters<typeof this.findMany>) {
+    const [data, count] = await this.txHost.withTransaction(async () => {
+      const data = await this.txHost.tx.${camelCase(model.name)}.findMany(...arguments_);
+      const count = await this.txHost.tx.${camelCase(model.name)}.count({ where: arguments_[0]?.where });
+      return [data, count];
+    });
+
+    const take = arguments_[0]?.take ?? 100;
+    const skip = arguments_[0]?.skip ?? 0;
+
+    const perPage = take;
+    const page = Math.floor(skip / take + 1);
+    const lastPage = Math.ceil(count / perPage);
+    return {
+      meta: {
+        currentPage: page,
+        perPage: perPage,
+        total: count,
+        prev: page > 1 ? page - 1 : null,
+        next: page < lastPage ? page + 1 : null,
+        lastPage,
+      },
+      data,
+    };
+  }
+}`;
+
+    if (!fs.existsSync(path.join(__dirname, './src/repositories'))) {
+      fs.mkdirSync(path.join(__dirname, './src/repositories'));
+    }
+
+    fs.writeFileSync(
+      path.join(
+        __dirname,
+        `./src/repositories/${toSnakeCase(model.name)}-repository.ts`,
+      ),
+      content,
+    );
+  }
+
+  let indexTsContent = '';
+  for (const model of dmmf.datamodel.models) {
+    indexTsContent += `export * from './${toSnakeCase(model.name)}-repository';\n`;
+  }
+
+  fs.writeFileSync(
+    path.join(__dirname, `./src/repositories/index.ts`),
+    indexTsContent,
+  );
+}
+
+// Run the script
+(async () => {
+  try {
+    await generateRepos();
+    console.log(`✔ Generated .repository.ts`);
+    process.exit(0);
+  } catch (error) {
+    console.error(error);
+    process.exit(1);
+  }
+})();
+```
+
+Whenever the Prisma schema is updated, simply rerun the script to regenerate the repositories automatically.
+
+You can add this script to your package.json scripts for easy access:
+
+```json
+// package.json
+{
+  "scripts": {
+    "generate:repositories": "node src/scripts/generate-repositories.js"
+  }
+}
+```
+
+Now, you can run `npm run generate:repositories` to regenerate your repositories whenever needed.
+
+### Example Repository File
+
+Here’s an example of a generated repository file for a model named `Country` which will be generated as `country-repository.ts`:
+
+```ts
+// src/repositories/country-repository.ts
+
+// THIS IS AN AUTOGENERATED FILE. DO NOT EDIT THIS FILE DIRECTLY.
+import { Injectable } from '@nestjs/common';
+
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
+
+import { PrismaService } from '../prisma.service';
+
+@Injectable()
+export class CountryRepository {
+  constructor(
+    private readonly txHost: TransactionHost<TransactionalAdapterPrisma<PrismaService>>,
+  ) {}
+
+  // Find
+  get findFirst() {
+    return this.txHost.tx.country.findFirst;
+  }
+
+  get findFirstOrThrow() {
+    return this.txHost.tx.country.findFirstOrThrow;
+  }
+  
+  get findUnique() {
+    return this.txHost.tx.country.findUnique;
+  }
+
+  get findUniqueOrThrow() {
+    return this.txHost.tx.country.findUniqueOrThrow;
+  }
+
+  get findMany() {
+    return this.txHost.tx.country.findMany;
+  }
+
+  // Create
+  get create() {
+    return this.txHost.tx.country.create;
+  }
+
+  get createMany() {
+    return this.txHost.tx.country.createMany;
+  }
+
+  // Update
+  get update() {
+    return this.txHost.tx.country.update;
+  }
+
+  get upsert() {
+    return this.txHost.tx.country.upsert;
+  }
+
+  get updateMany() {
+    return this.txHost.tx.country.updateMany;
+  }
+
+  // Delete
+  get delete() {
+    return this.txHost.tx.country.delete;
+  }
+
+  get deleteMany() {
+    return this.txHost.tx.country.deleteMany;
+  }
+
+  // Aggregate
+  get aggregate() {
+    return this.txHost.tx.country.aggregate;
+  }
+
+  // Count
+  get count() {
+    return this.txHost.tx.country.count;
+  }
+
+  // GroupBy
+  get groupBy() {
+    return this.txHost.tx.country.groupBy;
+  }
+
+  async findManyPaginated(...arguments_: Parameters<typeof this.findMany>) {
+    const [data, count] = await this.txHost.withTransaction(async () => {
+      const data = await this.txHost.tx.country.findMany(...arguments_);
+      const count = await this.txHost.tx.country.count({ where: arguments_[0]?.where });
+      return [data, count];
+    });
+
+    const take = arguments_[0]?.take ?? 100;
+    const skip = arguments_[0]?.skip ?? 0;
+
+    const perPage = take;
+    const page = Math.floor(skip / take + 1);
+    const lastPage = Math.ceil(count / perPage);
+    return {
+      meta: {
+        currentPage: page,
+        perPage: perPage,
+        total: count,
+        prev: page > 1 ? page - 1 : null,
+        next: page < lastPage ? page + 1 : null,
+        lastPage,
+      },
+      data,
+    };
+  }
+}
+```
+
+This file contains all the necessary CRUD operations for the `Country` model, along with a paginated query method. The script ensures that the repository is always in sync with the Prisma schema.
+
+---
+
+## Conclusion
+
+While this example uses Prisma, you can adapt the approach to work with other ORMs like Drizzle or Kysely, depending on your preference.
+If you’re working with Prisma and NestJS, consider implementing a similar approach to improve your development workflow! 🚀
+

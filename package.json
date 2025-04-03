@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbo",
+    "content:dev": "contentlayer2 dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -37,7 +38,7 @@
     "react-wrap-balancer": "^1.1.0",
     "reading-time": "^1.5.0",
     "rehype-autolink-headings": "^7.1.0",
-    "rehype-pretty-code": "^0.14.0",
+    "rehype-pretty-code": "^0.14.1",
     "rehype-slug": "^6.0.0",
     "remark-gfm": "^4.0.0",
     "shiki": "^2.2.0",
