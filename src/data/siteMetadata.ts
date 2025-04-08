@@ -14,4 +14,5 @@ export const siteMetadata = {
     linkedinLink: `https://www.linkedin.com/in/adarshaacharya/`,
     githubLink: `https://github.com/adarshaacharya`,
   },
+  repo : `https://github.com/adarshaacharya/adarsha.dev`,
 };
