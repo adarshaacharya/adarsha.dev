@@ -16,7 +16,7 @@
   "packageManager": "pnpm@8.11.0",
   "dependencies": {
     "@giscus/react": "^2.4.0",
-    "@next/third-parties": "15.1.6",
+    "@next/third-parties": "15.3.1",
     "@types/node": "20.8.6",
     "@types/react": "19.0.8",
     "@types/react-dom": "19.0.3",

@@ -42,15 +42,14 @@ export default function Home() {
           </p>
 
           <p className="mb-4">
-            I&apos;m currently open to new opportunities! Feel free to email me
-            at&nbsp;
-            <a
-              href="mailto:adarshaofficial@gmail.com"
-              className="border-b inline-block"
-            >
-              adarshaofficial@gmail.com
+            I&apos;m currently open to new opportunities! If you have an
+            exciting project or role that aligns with my expertise, please reach
+            out at&nbsp;
+            <a href="mailto:hi@adarsha.dev" className="border-b inline-block">
+              hi@adarsha.dev
             </a>
-            &nbsp;or reach out through any of my social channels.
+            &nbsp;or through any of my social channels below. I&apos;d love to
+            discuss how I can contribute to your team.
           </p>
         </div>
 

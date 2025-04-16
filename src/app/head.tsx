@@ -1,3 +1,8 @@
+import { GoogleAnalytics } from "@next/third-parties/google";
+import { ENV } from "@/lib/env";
+import Script from "next/script";
+import { GoogleAdsense } from "@/components/google-adsense";
+
 export default function Head() {
   return (
     <>
@@ -41,6 +46,12 @@ export default function Head() {
         name="google-site-verification"
         content="br9AjaAyJgS4OVigpXtHmm2DwdzuzMqzpK4G77lD2TY"
       />
+
+      <meta
+        name="google-adsense-account"
+        content={`ca-pub-${ENV.ADSENSE_CLIENT_ID}`}
+      />
+      {/* <GoogleAdsense pId={ENV.ADSENSE_CLIENT_ID} /> */}
     </>
   );
 }

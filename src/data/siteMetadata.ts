@@ -9,10 +9,10 @@ export const siteMetadata = {
     `Adarsha Acharya, Adarsha, Acharya, adarshaacharya, Aadarsha Acharya, Aadarsha, Acharya, adarsha.dev, adarsha, acharya, aadarsha`,
   ],
   social: {
-    email: "adarshaofficial@gmail.com",
+    email: "hi@adarsha.dev",
     x: "https://x.com/adarsha_ach",
     linkedinLink: `https://www.linkedin.com/in/adarshaacharya/`,
     githubLink: `https://github.com/adarshaacharya`,
   },
-  repo : `https://github.com/adarshaacharya/adarsha.dev`,
+  repo: `https://github.com/adarshaacharya/adarsha.dev`,
 };

@@ -16,8 +16,8 @@ importers:
         specifier: ^2.4.0
         version: 2.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@next/third-parties':
-        specifier: 15.1.6
-        version: 15.1.6(next@15.1.6(@opentelemetry/api@1.9.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0)
+        specifier: 15.3.1
+        version: 15.3.1(next@15.1.6(@opentelemetry/api@1.9.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0)
       '@types/node':
         specifier: 20.8.6
         version: 20.8.6
@@ -612,8 +612,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@next/third-parties@15.1.6':
-    resolution: {integrity: sha512-F0uemUqFwD3lLx5SrWXYRe9dZvMVkO0rFuMnvLiPBcagxNc23Ufl5cNXEm4Yuo8O1Mu8dgh+VjExMz1Td4vBew==}
+  '@next/third-parties@15.3.1':
+    resolution: {integrity: sha512-8v1pAtRjcaCbs80qcYLLCrSsECgeSb0WMU0J3pMBYNavG3Y3yQOgFog18nVgiNrNB20HkyrScquWsy8gcdiGRA==}
     peerDependencies:
       next: ^13.0.0 || ^14.0.0 || ^15.0.0
       react: ^18.2.0 || 19.0.0-rc-de68d2f4-20241204 || ^19.0.0
@@ -3497,7 +3497,7 @@ snapshots:
   '@next/swc-win32-x64-msvc@15.1.6':
     optional: true
 
-  '@next/third-parties@15.1.6(next@15.1.6(@opentelemetry/api@1.9.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0)':
+  '@next/third-parties@15.3.1(next@15.1.6(@opentelemetry/api@1.9.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0)':
     dependencies:
       next: 15.1.6(@opentelemetry/api@1.9.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       react: 19.0.0

@@ -9,6 +9,14 @@ export type WebApp = {
 
 export const WEB_APPS: WebApp[] = [
   {
+    title: "Form Axis",
+    repo: "https://github.com/adarshaacharya/form-axis",
+    description:
+      "AI powered form builder with conversational user interfaces. Just type a prompt, share a link, and watch users chat their way to glory.",
+    tags: ["Next.js", "Shadcn", "Convex", "Clerk", "Gemini", "Vercel"],
+    thumbnail: "/_static/projects/form-axis.png",
+  },
+  {
     title: "Bricks",
     repo: "https://github.com/adarshaacharya/bricks",
     description:
