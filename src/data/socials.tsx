@@ -3,6 +3,7 @@ import {
   InstagramIcon,
   LinkedInIcon,
   XIcon,
+  YoutubeIcon,
 } from "../components/icons";
 
 export const SOCIALS = [
@@ -23,7 +24,12 @@ export const SOCIALS = [
   },
   {
     label: "Instagram",
-    href: "https://www.instagram.com/adarsha.acharya.01/",
+    href: "https://www.instagram.com/ad4rsha/",
     icon: InstagramIcon,
+  },
+  {
+    label: "Youtube",
+    href: "https://www.youtube.com/@ad4rsha",
+    icon: YoutubeIcon,
   },
 ];
