@@ -23,11 +23,6 @@ export const SOCIALS = [
     icon: LinkedInIcon,
   },
   {
-    label: "Instagram",
-    href: "https://www.instagram.com/ad4rsha/",
-    icon: InstagramIcon,
-  },
-  {
     label: "Youtube",
     href: "https://www.youtube.com/@ad4rsha",
     icon: YoutubeIcon,

@@ -48,8 +48,7 @@ export default function Home() {
             <a href="mailto:hi@adarsha.dev" className="border-b inline-block">
               hi@adarsha.dev
             </a>
-            &nbsp;or through any of my social channels below. I&apos;d love to
-            discuss how I can contribute to your team.
+            &nbsp;or through any of my social channels below.
           </p>
         </div>
 
@@ -60,6 +59,7 @@ export default function Home() {
               aria-label={`Follow on ${social.label}`}
               href={social.href}
               icon={social.icon}
+              className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 "
             />
           ))}
         </div>
