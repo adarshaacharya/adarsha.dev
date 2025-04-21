@@ -49,7 +49,6 @@
   /* @apply rounded-lg border border-neutral-100 bg-neutral-100 px-1 py-0.5 text-neutral-800 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200; */
 
   @apply px-1 py-0.5 rounded-lg;
-
 }
 
 .prose pre code {
@@ -159,16 +158,53 @@ table {
   .img-zoomable {
     @apply cursor-zoom-in transition-transform duration-300 hover:scale-[1.01];
   }
-  
+
   .blur-backdrop {
     @apply fixed inset-0 z-50 bg-black/30 backdrop-blur-sm;
   }
-  
+
   .modal-container {
     @apply fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-12;
   }
-  
+
   .modal-content {
     @apply relative mx-auto max-w-5xl overflow-hidden rounded-xl bg-white/90 shadow-2xl backdrop-blur-xl;
   }
+}
+
+/* Chat scrollbar - transparent by default, visible on hover */
+.chat-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.chat-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-scrollbar::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 4px;
+}
+
+.chat-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3); /* Gray-400 at 30% opacity */
+}
+
+.dark .chat-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: rgba(75, 85, 99, 0.3); /* Gray-600 at 30% opacity */
+}
+
+/* For Firefox */
+.chat-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.chat-scrollbar:hover {
+  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+}
+
+.dark .chat-scrollbar:hover {
+  scrollbar-color: rgba(75, 85, 99, 0.3) transparent;
 }

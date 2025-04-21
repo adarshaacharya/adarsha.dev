@@ -31,8 +31,8 @@ export default function Home() {
         <div className="text-gray-700 dark:text-gray-300">
           <p className="mt-4">
             I’m a fullstack software engineer specializing in building web
-            applications with rich user interfaces and robust backend services
-            using Javascript-based technologies.
+            applications powered by modern JavaScript technologies and AI-driven
+            features.
           </p>
           <p className="mt-4 mb-4">
             Over the years, I&apos;ve worked on multiple startups to build and
