@@ -33,12 +33,13 @@ import { getEmbeddingCollections, getVectorStore } from "@/lib/ai/quadrant";
     const formattedDocs = docs.map((doc): DocumentInterface => {
       const { pageContent, metadata } = doc;
 
+      // how to get the url from metadata
       const url = metadata.source
-        .replace(/.*\/src\//, "")
-        .replace(/\/page\.tsx$/, "")
-        .replace(/\/index\.tsx$/, "")
-        .replace(/\/index\.ts$/, "")
-        .replace(/\/index\.mdx$/, "");
+        .replace("src/app", "")
+        .replace(".tsx", "")
+        .replace(".ts", "")
+        .replace(".mdx", "")
+        .replace(/\/page$/, "");
 
       const formattedContent = pageContent
         .replace(/import.*?from.*?;/g, "")
