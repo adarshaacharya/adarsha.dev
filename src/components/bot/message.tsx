@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import type { Message as ChatMessage } from "@ai-sdk/react";
 import { UserIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { MarkdownMessage } from "./markdown-message";
 
 interface MessageProps {
   message: ChatMessage;
@@ -34,7 +35,9 @@ export function Message({
             : "bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 rounded-tl-none",
         )}
       >
-        <p className="m-0 whitespace-pre-wrap">{message.content}</p>
+        <div className="m-0 whitespace-pre-wrap">
+          <MarkdownMessage content={message.content} />
+        </div>
       </div>
     </motion.div>
   );
