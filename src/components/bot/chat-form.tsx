@@ -40,7 +40,7 @@ export function ChatForm({
           value={input}
           onChange={handleInputChange}
           placeholder="Ask me anything..."
-          className="w-full p-2 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800 text-sm text-zinc-700 dark:text-zinc-300 resize-none focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-colors"
+          className="w-full p-2 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800 text-sm text-zinc-700 dark:text-zinc-300 resize-none focus:outline-none focus:ring-2  focus:border-transparent transition-colors"
           disabled={status === "streaming"}
           onKeyDown={(e) => {
             if (
