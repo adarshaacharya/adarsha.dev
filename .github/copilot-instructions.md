@@ -24,6 +24,10 @@ The webside is minimalisitc and clean so will be black and white with some color
 
 ```
 
+- AI components are inside `src/components/bot` folder
+- AI utils are inside `src/lib/ai` folder
+- Chat api is inside `src/app/api/chat/route.ts`
+
 # Technologies used:
 
 - Nextjs
@@ -32,6 +36,10 @@ The webside is minimalisitc and clean so will be black and white with some color
 - TypeScript
 - Vercel as deployment
 - Contentlayer for blog section (https://contentlayer.dev/docs)
+- Vercel AI SDK for chatbot (https://sdk.vercel.ai/docs/reference/ai-sdk-ui/use-chat)
+- Quadrant db for storing vector embeddings of website content
+- Langchain for vector embeddings and retrieval of data from Quadrant db (https://js.langchain.com/docs/integrations/document_loaders/file_loaders/directory/)
+- Motion/react for animations (https://www.framer.com/docs/motion/)
 
 ## Key Features
 
@@ -40,6 +48,7 @@ The webside is minimalisitc and clean so will be black and white with some color
 - Dark mode support using next-themes
 - Interactive components using shadcn/ui
 - Animation using motion/react
+- Chatbot using Vercel AI SDK, integrated with Quadrant db and Langchain for vector embeddings and retrieval
 
 ## ROLE
 
@@ -52,9 +61,11 @@ You are assisting in the development of Adarsha Acharya's portfolio website buil
 - TypeScript with strict mode
 - Tailwind CSS with shadcn/ui
 - `motion/react` for animations
-- chatbot using vercel ai sdk
 - Contentlayer for blog section
 - Vercel for deployment
+- chatbot using vercel ai sdk
+- Quadrant db to store vector embeddings of whole website content so it can be used for chatbot
+- langchain for vector embeddings and retrival of data from quadrant db
 
 ## KEY ARCHITECTURAL PRINCIPLES
 
@@ -68,7 +79,7 @@ You are assisting in the development of Adarsha Acharya's portfolio website buil
 - If the component is too large, break it down into smaller components by creating a new file for each component
 - Group similar components together in a folder inside `src/components`
 - Ensure components are reusable and maintainable and make components smaller and generic
-- all chatbot logic should so inside `src/components/chatbot` folder
+- all chatbot logic should so inside `src/components/bot` folder
 - avoid using unnecessary colors pallete and use only black and white with some color accents
 
 2. Performance:
@@ -106,8 +117,12 @@ Create beautiful chatbot that will help users navigate the website and find info
 
 - For chatbot we will use vercel ai sdk : https://sdk.vercel.ai/docs/reference/ai-sdk-ui/use-chat
 - make sure chatbot is beautiful with animation and mobile ready
+- Use langchain to create a chatbot that can answer questions about the website and its content
+- Use Quadrant db to store vector embeddings of the website content and use langchain to retrieve data from quadrant db
 
 # Important Links
 
 - @ai-sdk/react : https://sdk.vercel.ai/docs/reference/ai-sdk-ui/use-chat
 - Build rag chatbot : https://sdk.vercel.ai/docs/guides/rag-chatbot
+- langchain with document loaders : https://js.langchain.com/docs/integrations/document_loaders/file_loaders/directory/
+- Build llm with chat models: https://js.langchain.com/docs/tutorials/llm_chain

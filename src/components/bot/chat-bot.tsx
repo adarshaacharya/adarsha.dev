@@ -88,6 +88,6 @@ export function ChatBot() {
       >
         {open ? <X size={16} /> : <MessageSquare size={16} />}
       </motion.button>
-    </>
+    </> 
   );
 }
