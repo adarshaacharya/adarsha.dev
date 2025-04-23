@@ -10,6 +10,8 @@ import { siteMetadata } from "@/data/siteMetadata";
 import Head from "./head";
 import { ENV } from "@/lib/env";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { ChatBot } from "@/components/bot/chat-bot";
+import { Toaster, toast } from 'sonner';
 
 const space_grotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -74,7 +76,9 @@ export default function RootLayout({
           <main className="mx-4  px-2 md:px-0 lg:mx-auto flex flex-col justify-between min-h-screen">
             <Header />
             {children}
+            <ChatBot />
             <Footer />
+            <Toaster position="top-right" richColors />
           </main>
           <TailwindIndicator />
         </ThemeProvider>

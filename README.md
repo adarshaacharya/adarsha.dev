@@ -18,6 +18,14 @@ pnpm install
 pnpm dev
 ```
 
+## Generate embeddings
+
+To generate embeddings for the blog posts, run the following command:
+
+```bash
+pnpm run gen:embeddings
+```
+
 ## Templating Project
 
 If you want to use this project code as your own portfolio , you can go ahead. Please give me credit by mentioning original repo link somewhere in README.

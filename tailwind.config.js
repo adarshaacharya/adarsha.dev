@@ -46,6 +46,9 @@ module.exports = {
         "fade-in": "fade-in 0.3s ease-out",
         "fade-out": "fade-out 0.2s ease-out",
       },
+      colors: {
+        accent: "#2563EB", // Tailwind blue-600
+      },
     },
   },
   plugins: [require("@tailwindcss/typography"), require("tailwindcss-animate")],

@@ -4,8 +4,8 @@ import { SocialLink } from "@/components/social-link";
 import { allBlogs } from "contentlayer/generated";
 import { BlogCard } from "@/components/blog-card";
 import React from "react";
-import { LINKS } from "@/lib/constants";
 import Link from "next/link";
+import { LINKS } from "@/data/links";
 
 export default function Home() {
   const blogs = allBlogs
@@ -31,8 +31,8 @@ export default function Home() {
         <div className="text-gray-700 dark:text-gray-300">
           <p className="mt-4">
             I’m a fullstack software engineer specializing in building web
-            applications with rich user interfaces and robust backend services
-            using Javascript-based technologies.
+            applications powered by modern JavaScript technologies and AI-driven
+            features.
           </p>
           <p className="mt-4 mb-4">
             Over the years, I&apos;ve worked on multiple startups to build and
