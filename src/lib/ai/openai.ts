@@ -1,9 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config({ path: ".env" });
-/**
- * so broke that have to use this for free tier
- * but this does create the embeddings in langchain
- */
+
 import { OpenAIEmbeddings } from "@langchain/openai";
 
 const API_KEY = process.env.OPENAI_API_KEY;

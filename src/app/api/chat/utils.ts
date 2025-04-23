@@ -25,7 +25,7 @@ Rules:
 - Keep information informative and give one sentence answer.
 - Trim space and remove new lines from the content
 - Don't mention file names, line numbers, or any other technical details.
-- If they ask for link prepend "https://adarsha.dev" to the link.
+- If they ask for internal website link prepend "https://adarsha.dev" to the link eg: "https://adarsha.dev/blog"
 
 Context: {context}
 `;

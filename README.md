@@ -6,6 +6,7 @@ This is my personal website and blog built using:
 - Styling : [Tailwind CSS](https://tailwindcss.com/)
 - Markdown : [MDX](https://mdxjs.com/) and [Contentlayer](https://contentlayer.dev/)
 - Deployment: [Vercel](https://vercel.com/)
+- AI Bot : [OpenAI](https://openai.com/), [LangChain](https://langchain.com/), [Qdrant](https://qdrant.tech/)
 
 ## Running Locally
 
