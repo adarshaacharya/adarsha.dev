@@ -10,6 +10,13 @@ jobs:
   build-lint:
     runs-on: ubuntu-latest
 
+    env:
+      OPENAI_API_KEY: "fake-key"
+      QDRANT_API_KEY: "fake-key"
+      QDRANT_URL: "http://fake-url"
+      NEXT_PUBLIC_BASE_URL: "http://localhost:3000"
+      NODE_ENV: "test"
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
