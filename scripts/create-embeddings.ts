@@ -55,7 +55,10 @@ import { getEmbeddingCollections, getVectorStore } from "@/lib/ai/quadrant";
       };
     });
 
-    const splitter = RecursiveCharacterTextSplitter.fromLanguage("html", {});
+    const splitter = RecursiveCharacterTextSplitter.fromLanguage("html", {
+      chunkOverlap: 10,
+      chunkSize: 100,
+    });
 
     const splitDocs = await splitter.splitDocuments(formattedDocs);
 

@@ -110,10 +110,12 @@ When implementing features:
 6. Follow mobile-first design
 7. Implement proper tests
 8. Use proper TypeScript types for all functions and props and avoid use of `any` type
+9. Never use `use client` on `page.tsx` files and avoid using `framer-motion` on `page.tsx` files
+10. Please make sure SEO and performance are top-notch since its high ranking portfolio website
 
-## Next Steps
+## Chatbot
 
-Create beautiful chatbot that will help users navigate the website and find information quickly. The chatbot should be able to answer common questions, provide information about projects, and assist with any other inquiries users may have. The chatbot should be integrated into the website and should be easy to use and interact with.
+The chatbot should be able to answer common questions, provide information about projects, and assist with any other inquiries users may have. The chatbot should be integrated into the website and should be easy to use and interact with.
 
 - For chatbot we will use vercel ai sdk : https://sdk.vercel.ai/docs/reference/ai-sdk-ui/use-chat
 - make sure chatbot is beautiful with animation and mobile ready

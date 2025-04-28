@@ -2,7 +2,7 @@ import Image from "next/image";
 import { SOCIALS } from "../data/socials";
 import { SocialLink } from "@/components/social-link";
 import { allBlogs } from "contentlayer/generated";
-import { BlogCard } from "@/components/blog-card";
+import { BlogCard } from "@/components/blog/blog-card";
 import React from "react";
 import Link from "next/link";
 import { LINKS } from "@/data/links";

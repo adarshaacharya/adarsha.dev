@@ -57,7 +57,7 @@ export function Greeting({ onPromptClick = () => {} }: GreetingProps) {
             onClick={onPromptClick}
           />
           <ExamplePrompt
-            text="What technologies do you use?"
+            text="Give me your resume link"
             onClick={onPromptClick}
           />
         </div>
