@@ -1,13 +1,14 @@
-import { BlogCard } from "@/components/blog/blog-card";
+import { AnimatedBlogList } from "@/components/blog/animated-blog-list";
 import { Pagination } from "@/components/blog/pagination";
+import { SearchInput } from "../../components/blog/search-input";
 import { allBlogs } from "contentlayer/generated";
 import { generatePageMetadata } from "../seo";
-import Link from "next/link";
 import { ENV } from "@/lib/env";
 
 export const metadata = generatePageMetadata({
   title: "Blog",
-  description: "Read my blogs on web development, design and more.",
+  description:
+    "Explore my blog posts on Javascript, Typescript, React.js, Next.js, Prisma, Nest.js, AI , LLMs and more.",
 });
 
 const isProd = ENV.NODE_ENV === "production";
@@ -18,7 +19,9 @@ export default async function Blog({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const pageParam = (await searchParams).page;
+  const resolvedSearchParams = await searchParams;
+  const pageParam = resolvedSearchParams.page;
+  const searchQuery = resolvedSearchParams.search?.toString() || "";
   const page = typeof pageParam === "string" ? parseInt(pageParam, 10) || 1 : 1;
 
   const blogs = allBlogs.sort((a, b) => {
@@ -30,28 +33,29 @@ export default async function Blog({
 
   const undraftedBlogs = isProd ? blogs.filter((blog) => !blog.draft) : blogs;
 
-  const totalPages = Math.ceil(undraftedBlogs.length / BLOG_POSTS_PER_PAGE);
+  const filteredBlogs = searchQuery
+    ? undraftedBlogs.filter(
+        (blog) =>
+          blog.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          blog.summary.toLowerCase().includes(searchQuery.toLowerCase()),
+      )
+    : undraftedBlogs;
+
+  const totalPages = Math.ceil(filteredBlogs.length / BLOG_POSTS_PER_PAGE);
   const currentPage = page > totalPages ? 1 : page;
 
-  const currentPosts = undraftedBlogs.slice(
+  const currentPosts = filteredBlogs.slice(
     (currentPage - 1) * BLOG_POSTS_PER_PAGE,
     currentPage * BLOG_POSTS_PER_PAGE,
   );
 
   return (
-    <section>
-      <ul className="space-y-4">
-        {currentPosts.map((blog) => (
-          <li
-            key={blog.slug}
-            className="py-1 divide-y divide-gray-200 dark:divide-gray-700"
-          >
-            <Link href={`/blog/${blog.slug}`}>
-              <BlogCard blog={blog} />
-            </Link>
-          </li>
-        ))}
-      </ul>
+    <section className="min-h-[calc(100vh-300px)]">
+      <div className="mb-8">
+        <SearchInput />
+      </div>
+
+      <AnimatedBlogList posts={currentPosts} />
 
       {totalPages > 1 && (
         <Pagination currentPage={currentPage} totalPages={totalPages} />
