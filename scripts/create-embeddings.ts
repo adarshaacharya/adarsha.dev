@@ -57,13 +57,14 @@ import { getEmbeddingCollections, getVectorStore } from "@/lib/ai/quadrant";
 
     const splitter = RecursiveCharacterTextSplitter.fromLanguage("html", {
       chunkOverlap: 10,
-      chunkSize: 100,
+      chunkSize: 300,
     });
 
     const splitDocs = await splitter.splitDocuments(formattedDocs);
 
     console.log(`Split site into ${splitDocs.length} sub-documents.`);
 
+    console.log("Adding documents to vector store. This may take a few moments...");
     const vectorStore = await getVectorStore();
 
     await vectorStore.addDocuments(splitDocs);

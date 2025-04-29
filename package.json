@@ -12,7 +12,7 @@
     "type-check": "tsc --noEmit",
     "build:content": "contentlayer2 build",
     "typecheck": "tsc --noEmit",
-    "gen:embeddings": "npx ts-node ./scripts/create-embeddings.ts"
+    "gen:embeddings": "npx tsx ./scripts/create-embeddings.ts"
   },
   "packageManager": "pnpm@8.11.0",
   "dependencies": {
