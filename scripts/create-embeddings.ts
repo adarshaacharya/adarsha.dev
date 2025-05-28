@@ -6,6 +6,47 @@ import { DirectoryLoader } from "node_modules/langchain/dist/document_loaders/fs
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { DocumentInterface } from "@langchain/core/documents";
 import { getEmbeddingCollections, getVectorStore } from "@/lib/ai/quadrant";
+import fs from "fs/promises";
+import { WebPDFLoader } from "@langchain/community/document_loaders/web/pdf";
+
+// its inside the public folder, so we need to go one level up
+// and then into public/_static/resume.pdf
+const resumePdf = "public/_static/resume.pdf";
+
+async function loadResume() {
+  try {
+    const resumePdfBuffer = await fs.readFile(resumePdf);
+
+    if (!resumePdfBuffer) {
+      throw new Error("Resume PDF file not found or is empty.");
+    }
+
+    const resumePdfBlob = new Blob([resumePdfBuffer], {
+      type: "application/pdf",
+    });
+
+    const pdfLoader = new WebPDFLoader(resumePdfBlob, {
+      parsedItemSeparator: "",
+    });
+
+    const resumeDocs = await pdfLoader.load();
+
+    if (resumeDocs.length === 0) {
+      throw new Error("No documents found in the resume PDF.");
+    }
+
+    // Combine all pages into a single document
+    const combinedContent = resumeDocs.map((doc) => doc.pageContent).join("");
+
+    return {
+      pageContent: combinedContent,
+      metadata: { ...resumeDocs[0].metadata, totalPages: resumeDocs.length },
+    };
+  } catch (error) {
+    console.error("Error loading resume PDF:", error);
+    throw error;
+  }
+}
 
 (async function main() {
   try {
@@ -17,7 +58,13 @@ import { getEmbeddingCollections, getVectorStore } from "@/lib/ai/quadrant";
       ".ts": (path) => new TextLoader(path),
     });
 
-    const docs = (await loader.load()).filter((doc) => {
+    // Load both website docs and resume in parallel
+    const [websiteDocs, resumeDoc] = await Promise.all([
+      loader.load(),
+      loadResume(),
+    ]);
+
+    const docs = websiteDocs.filter((doc) => {
       const { metadata } = doc;
       const { source } = metadata;
 
@@ -30,7 +77,8 @@ import { getEmbeddingCollections, getVectorStore } from "@/lib/ai/quadrant";
       );
     });
 
-    const formattedDocs = docs.map((doc): DocumentInterface => {
+    // Format website docs
+    const formattedWebsiteDocs = docs.map((doc): DocumentInterface => {
       const { pageContent, metadata } = doc;
 
       // how to get the url from metadata
@@ -51,9 +99,18 @@ import { getEmbeddingCollections, getVectorStore } from "@/lib/ai/quadrant";
 
       return {
         pageContent: formattedContent,
-        metadata: { url },
+        metadata: { url, source: "website" },
       };
     });
+
+    // Format resume doc with proper metadata
+    const formattedResumeDoc: DocumentInterface = {
+      pageContent: resumeDoc.pageContent.trim(),
+      metadata: { url: "/resume", source: "resume" },
+    };
+
+    // Combine all formatted docs
+    const formattedDocs = [...formattedWebsiteDocs, formattedResumeDoc];
 
     const splitter = RecursiveCharacterTextSplitter.fromLanguage("html", {
       chunkOverlap: 10,
@@ -64,7 +121,9 @@ import { getEmbeddingCollections, getVectorStore } from "@/lib/ai/quadrant";
 
     console.log(`Split site into ${splitDocs.length} sub-documents.`);
 
-    console.log("Adding documents to vector store. This may take a few moments...");
+    console.log(
+      "Adding documents to vector store. This may take a few moments...",
+    );
     const vectorStore = await getVectorStore();
 
     await vectorStore.addDocuments(splitDocs);
