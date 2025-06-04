@@ -30,7 +30,7 @@
     "@qdrant/js-client-rest": "^1.13.0",
     "@types/node": "20.8.6",
     "@types/react": "19.0.8",
-    "@types/react-dom": "19.0.3",
+    "@types/react-dom": "19.1.6",
     "ai": "^4.3.9",
     "autoprefixer": "10.4.15",
     "class-transformer": "^0.5.1",
@@ -50,7 +50,7 @@
     "pdf-parse": "^1.1.1",
     "postcss": "8.4.29",
     "react": "19.0.0",
-    "react-dom": "19.0.0",
+    "react-dom": "19.1.0",
     "react-wrap-balancer": "^1.1.0",
     "reading-time": "^1.5.0",
     "rehype-autolink-headings": "^7.1.0",
@@ -74,7 +74,7 @@
   "pnpm": {
     "overrides": {
       "@types/react": "19.0.8",
-      "@types/react-dom": "19.0.3"
+      "@types/react-dom": "19.1.6"
     }
   }
 }
