@@ -9,8 +9,18 @@ export type WebApp = {
 
 export const WEB_APPS: WebApp[] = [
   {
+    title: "Humantryx",
+    repo: "https://github.com/adarshaacharya/humantryx",
+    demo: "https://humantryx.vercel.app/",
+    description:
+      "AI powered human resource management system. Manage employees, track performance, and automate HR tasks with AI-driven insights.",
+    tags: ["Next.js", "TRPC", "Better-Auth" , "Drizzle", "Shadcn", "Pinecone", "Langchain", "OpenAI"],
+    thumbnail: "/_static/projects/humantryx.png",
+  },
+  {
     title: "Form Axis",
     repo: "https://github.com/adarshaacharya/form-axis",
+    demo: "https://formaxis.vercel.app/",
     description:
       "AI powered form builder with conversational user interfaces. Just type a prompt, share a link, and watch users chat their way to glory.",
     tags: ["Next.js", "Shadcn", "Convex", "Clerk", "Gemini", "Vercel"],
