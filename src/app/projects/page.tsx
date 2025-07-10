@@ -1,9 +1,8 @@
 import { generatePageMetadata } from "../seo";
-import { ProjectCard } from "../../components/project-card";
+import { AnimatedProjectsList } from "../../components/animated-projects-list";
 import React from "react";
 import { WEB_APPS, TOOLS } from "@/data/projects";
-import { SocialLink } from "@/components/social-link";
-import { GitHubIcon, LinkIcon } from "@/components/icons";
+import { Separator } from "@/components/ui/separator";
 
 export const metadata = generatePageMetadata({
   title: "Projects",
@@ -13,51 +12,34 @@ export const metadata = generatePageMetadata({
 
 export default function Projects() {
   return (
-    <React.Fragment>
-      <section>
-        <h1 className="mb-4 text-2xl font-bold tracking-tighter">Web apps</h1>
-        <div
-          role="list"
-          className="grid grid-cols-1 gap-x-12 gap-y-16 sm:grid-cols-2 "
-        >
-          {WEB_APPS.map((project, idx) => (
-            <ProjectCard project={project} key={idx} />
-          ))}
+    <div className="space-y-16">
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-bold tracking-tight">Projects</h1>
+          <p className="text-muted-foreground text-lg max-w-2xl">
+            A collection of web applications, tools, and open source projects
+            I&apos;ve built over the years.
+          </p>
         </div>
-      </section>
+      </div>
 
-      <section className="py-10">
-        <h1 className="mb-4 text-2xl font-bold tracking-tighter">Tools</h1>
+      <div className="space-y-16">
+        <section className="space-y-8">
+          <h2 className="text-2xl font-semibold tracking-tight">
+            Web Applications
+          </h2>
+          <AnimatedProjectsList projects={WEB_APPS} type="web-apps" />
+        </section>
 
-        <div role="list" className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {TOOLS.map((project, idx) => (
-            <div
-              key={idx}
-              className="flex cursor-pointer flex-col
-              space-y-4
-              rounded-xl transition hover:bg-zinc-50 hover:dark:bg-zinc-800/50 p-3"
-            >
-              <p>{project.title}</p>
-              <p className="text-gray-500 dark:text-gray-400">
-                {project.description}
-              </p>
+        <Separator />
 
-              <div className="flex space-x-2 self-end">
-                <SocialLink
-                  href={project.repo}
-                  className="h-6 w-6 flex-none"
-                  icon={GitHubIcon}
-                />
-                <SocialLink
-                  href={project.external}
-                  className="h-6 w-6 flex-none"
-                  icon={LinkIcon}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-    </React.Fragment>
+        <section className="space-y-8">
+          <h2 className="text-2xl font-semibold tracking-tight">
+            Tools & Packages
+          </h2>
+          <AnimatedProjectsList projects={TOOLS} type="tools" />
+        </section>
+      </div>
+    </div>
   );
 }

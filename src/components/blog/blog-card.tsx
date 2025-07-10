@@ -1,5 +1,14 @@
 import { formatDate } from "@/lib/utils";
 import { Blog } from "contentlayer/generated";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, Clock } from "lucide-react";
 
 type BlogCardProps = Pick<
   Blog,
@@ -8,22 +17,27 @@ type BlogCardProps = Pick<
 
 export function BlogCard({ blog }: { blog: BlogCardProps }) {
   return (
-    <article className="space-y-2 cursor-pointer transition hover:bg-zinc-50 hover:dark:bg-zinc-800/50 sm:px-4 rounded-lg px-1 py-4">
-      <dl>
-        <dt className="sr-only">Published on</dt>
-        <dd className="text-base font-medium leading-6 text-gray-500 dark:text-gray-400">
-          <time dateTime={blog.publishedAt}>
-            {formatDate(blog.publishedAt)}
-          </time>
-          &nbsp;— {blog.readingTime.text}
-        </dd>
-      </dl>
-      <h3 className="text-xl font-bold leading-8 tracking-tight text-gray-900 dark:text-gray-100">
-        {blog.title}
-      </h3>
-      <p className="prose max-w-none text-gray-500 dark:text-gray-400">
-        {blog.summary}
-      </p>
-    </article>
+    <Card className="h-full transition-all duration-200 hover:shadow-md">
+      <CardHeader className="pb-4">
+        <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
+          <div className="flex items-center gap-1">
+            <Calendar className="h-4 w-4" />
+            <time dateTime={blog.publishedAt}>
+              {formatDate(blog.publishedAt)}
+            </time>
+          </div>
+          <div className="flex items-center gap-1">
+            <Clock className="h-4 w-4" />
+            <span>{blog.readingTime.text}</span>
+          </div>
+        </div>
+        <CardTitle className="line-clamp-2 text-lg">{blog.title}</CardTitle>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <CardDescription className="line-clamp-3 text-sm leading-relaxed">
+          {blog.summary}
+        </CardDescription>
+      </CardContent>
+    </Card>
   );
 }

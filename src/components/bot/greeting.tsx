@@ -2,6 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
 
 interface ExamplePromptProps {
   text: string;
@@ -10,14 +11,14 @@ interface ExamplePromptProps {
 
 function ExamplePrompt({ text, onClick }: ExamplePromptProps) {
   return (
-    <motion.button
-      whileHover={{ scale: 1.01 }}
-      whileTap={{ scale: 0.98 }}
+    <Button
+      variant="outline"
+      size="sm"
       onClick={() => onClick(text)}
-      className="text-xs py-1 px-2 rounded-md bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition-colors text-left"
+      className="h-auto p-3 text-xs justify-start text-left"
     >
       {text}
-    </motion.button>
+    </Button>
   );
 }
 
@@ -28,26 +29,30 @@ interface GreetingProps {
 export function Greeting({ onPromptClick = () => {} }: GreetingProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 5 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="flex flex-col items-center justify-center h-full text-center px-3 py-4 space-y-3"
+      className="flex flex-col items-center justify-center h-full text-center px-4 py-8 space-y-6"
     >
-      <div className="w-10 h-10 rounded-full bg-black dark:bg-white flex items-center justify-center mb-1">
-        <span className="text-white dark:text-black text-sm font-semibold">
+      <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center">
+        <span className="text-primary-foreground text-2xl font-semibold">
           A
         </span>
       </div>
 
-      <div className="space-y-1">
-        <h2 className="text-sm font-semibold">Chat with Adarsha</h2>
-        <p className="text-xs text-zinc-600 dark:text-zinc-400 max-w-[220px]">
-          Ask about my projects, skills, or experience
+      <div className="space-y-2">
+        <h2 className="text-lg font-semibold">
+          Hi! I&apos;m Adarsha&apos;s AI Assistant
+        </h2>
+        <p className="text-sm text-muted-foreground max-w-[280px]">
+          Ask me about my projects, skills, experience, or anything else
+          you&apos;d like to know.
         </p>
       </div>
 
-      <div className="flex flex-col w-full max-w-[220px]">
-        <div className="grid grid-cols-1 gap-1.5">
+      <div className="w-full max-w-[280px] space-y-2">
+        <p className="text-xs text-muted-foreground mb-2">Try asking:</p>
+        <div className="grid grid-cols-1 gap-2">
           <ExamplePrompt
             text="Tell me about your fullstack experience"
             onClick={onPromptClick}
@@ -57,7 +62,7 @@ export function Greeting({ onPromptClick = () => {} }: GreetingProps) {
             onClick={onPromptClick}
           />
           <ExamplePrompt
-            text="Give me your resume link"
+            text="What technologies do you work with?"
             onClick={onPromptClick}
           />
         </div>

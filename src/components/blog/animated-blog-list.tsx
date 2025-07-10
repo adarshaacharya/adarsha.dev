@@ -4,7 +4,7 @@ import { Blog } from "contentlayer/generated";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { BlogCard } from "./blog-card";
+import { BlogListItem } from "./blog-list-item";
 
 type AnimatedBlogListProps = {
   posts: Array<
@@ -12,28 +12,62 @@ type AnimatedBlogListProps = {
   >;
 };
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: "easeOut",
+    },
+  },
+};
+
 export function AnimatedBlogList({ posts }: AnimatedBlogListProps) {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("search");
 
+  if (posts.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <p className="text-muted-foreground">
+          {searchQuery
+            ? `No articles found matching "${searchQuery}"`
+            : "No articles found"}
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <motion.ul
-      className="space-y-4"
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.2 }}
-      key={searchQuery}
-      initial={searchQuery ? { opacity: 0.6 } : false}
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      key={searchQuery || "all"}
+      className="divide-y divide-border/40"
     >
       {posts.map((blog) => (
-        <li
-          key={blog.slug}
-          className="py-1 divide-y divide-gray-200 dark:divide-gray-700"
-        >
-          <Link href={`/blog/${blog.slug}`}>
-            <BlogCard blog={blog} />
+        <motion.div key={blog.slug} variants={itemVariants}>
+          <Link
+            href={`/blog/${blog.slug}`}
+            className="block hover:bg-muted/30 transition-colors duration-200 rounded-lg -mx-4 px-4"
+          >
+            <BlogListItem blog={blog} />
           </Link>
-        </li>
+        </motion.div>
       ))}
-    </motion.ul>
+    </motion.div>
   );
 }

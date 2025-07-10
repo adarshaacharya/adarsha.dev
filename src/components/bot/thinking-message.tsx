@@ -23,24 +23,27 @@ export function ThinkingMessage() {
       initial={{ opacity: 0, y: 5 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className="flex items-start"
+      className="flex items-start gap-2"
     >
-      <div className="rounded-lg rounded-tl-none px-2 py-1.5 bg-zinc-100 dark:bg-zinc-800 flex items-center space-x-1">
+      <div className="flex h-7 w-7 shrink-0 select-none items-center justify-center rounded-full bg-muted text-muted-foreground text-xs font-medium">
+        A
+      </div>
+      <div className="rounded-lg px-3 py-2 bg-muted flex items-center space-x-1">
         <motion.span
-          className="w-1 h-1 rounded-full bg-zinc-400 dark:bg-zinc-500"
+          className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50"
           variants={dotVariants}
           initial="initial"
           animate="animate"
         />
         <motion.span
-          className="w-1 h-1 rounded-full bg-zinc-400 dark:bg-zinc-500"
+          className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50"
           variants={dotVariants}
           initial="initial"
           animate="animate"
           transition={{ delay: 0.2 }}
         />
         <motion.span
-          className="w-1 h-1 rounded-full bg-zinc-400 dark:bg-zinc-500"
+          className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50"
           variants={dotVariants}
           initial="initial"
           animate="animate"

@@ -1,103 +1,14 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Messages } from "./messages";
-import { Send, MessageSquare, X } from "lucide-react";
+import { MessageSquare, X } from "lucide-react";
 import { ChatForm } from "./chat-form";
-
-const avatarVariants = {
-  initial: { scale: 0.5, rotate: -180 },
-  animate: {
-    scale: 1,
-    rotate: 0,
-    transition: {
-      type: "spring",
-      stiffness: 260,
-      damping: 20,
-    },
-  },
-  exit: {
-    scale: 0.5,
-    rotate: 180,
-    transition: {
-      duration: 0.2,
-    },
-  },
-};
-
-const headerVariants = {
-  initial: { opacity: 0, x: -20 },
-  animate: {
-    opacity: 1,
-    x: 0,
-    transition: {
-      delay: 0.2,
-      duration: 0.3,
-    },
-  },
-};
-
-const buttonWaveVariants = {
-  initial: { scale: 0.8, opacity: 0 },
-  animate: {
-    scale: [1, 1.2, 1],
-    opacity: [0.15, 0.3, 0.15],
-    transition: {
-      duration: 2,
-      repeat: Infinity,
-      ease: "easeInOut",
-    },
-  },
-};
-
-const secondWaveVariants = {
-  initial: { scale: 0.8, opacity: 0 },
-  animate: {
-    scale: [1, 1.3, 1],
-    opacity: [0.1, 0.2, 0.1],
-    transition: {
-      duration: 2.5,
-      repeat: Infinity,
-      ease: "easeInOut",
-      delay: 0.5,
-    },
-  },
-};
-
-const thirdWaveVariants = {
-  initial: { scale: 0.8, opacity: 0 },
-  animate: {
-    scale: [1, 1.4, 1],
-    opacity: [0.05, 0.15, 0.05],
-    transition: {
-      duration: 3,
-      repeat: Infinity,
-      ease: "easeInOut",
-      delay: 1,
-    },
-  },
-};
-
-const iconVariants = {
-  initial: { scale: 0 },
-  animate: {
-    scale: 1,
-    transition: {
-      type: "spring",
-      stiffness: 200,
-      damping: 15,
-    },
-  },
-  hover: {
-    scale: 1.1,
-    transition: {
-      duration: 0.2,
-    },
-  },
-};
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function ChatBot() {
   const [open, setOpen] = useState(false);
@@ -126,132 +37,86 @@ export function ChatBot() {
       <AnimatePresence mode="wait">
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.98 }}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.98 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-            className="fixed bottom-16 right-4 sm:right-6 w-[85vw] sm:w-[320px] h-[400px] bg-white dark:bg-zinc-900 rounded-lg shadow-lg flex flex-col overflow-hidden z-50 border border-zinc-200 dark:border-zinc-800"
+            className="fixed bottom-20 right-4 sm:right-6 w-[85vw] sm:w-[380px] z-50"
           >
-            <motion.div
-              className="flex items-center justify-between p-2 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
-              initial="initial"
-              animate="animate"
-            >
-              <div className="flex items-center space-x-2">
-                <motion.div
-                  variants={avatarVariants}
-                  className="w-6 h-6 rounded-full bg-black dark:bg-white flex items-center justify-center"
-                >
-                  <motion.span
-                    className="text-white dark:text-black font-medium text-xs"
-                    animate={{
-                      scale: [1, 1.1, 1],
-                      transition: {
-                        repeat: Infinity,
-                        repeatDelay: 8,
-                        duration: 1,
-                      },
-                    }}
+            <Card className="h-[500px] flex flex-col shadow-xl">
+              <CardHeader className="pb-3 px-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                      <span className="text-primary-foreground font-medium text-sm">
+                        A
+                      </span>
+                    </div>
+                    <CardTitle className="text-base">
+                      Chat with Adarsha
+                    </CardTitle>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setOpen(false)}
+                    className="h-8 w-8 p-0"
                   >
-                    A
-                  </motion.span>
-                </motion.div>
-                <motion.h2
-                  variants={headerVariants}
-                  className="text-xs font-medium"
-                >
-                  Chat with Adarsha
-                </motion.h2>
-              </div>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setOpen(false)}
-                className="p-1 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                aria-label="Close chat"
-              >
-                <X size={14} />
-              </motion.button>
-            </motion.div>
+                    <X className="h-4 w-4" />
+                    <span className="sr-only">Close chat</span>
+                  </Button>
+                </div>
+              </CardHeader>
 
-            <Messages
-              messages={messages}
-              status={status}
-              onPromptClick={handlePromptClick}
-            />
-            <ChatForm
-              open={open}
-              messages={messages}
-              status={status}
-              handleInputChange={handleInputChange}
-              handleSubmit={handleSubmit}
-              input={input}
-            />
+              <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
+                <Messages
+                  messages={messages}
+                  status={status}
+                  onPromptClick={handlePromptClick}
+                />
+                <ChatForm
+                  open={open}
+                  messages={messages}
+                  status={status}
+                  handleInputChange={handleInputChange}
+                  handleSubmit={handleSubmit}
+                  input={input}
+                />
+              </CardContent>
+            </Card>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="fixed bottom-4 right-4 z-50">
-        {/* Third wave (outermost) */}
-        <motion.div
-          className="absolute -inset-3 rounded-full bg-blue-400/10 blur-md"
-          variants={thirdWaveVariants}
-          initial="initial"
-          animate="animate"
-        />
-        {/* Second wave */}
-        <motion.div
-          className="absolute -inset-2.5 rounded-full bg-blue-400/15 blur-md"
-          variants={secondWaveVariants}
-          initial="initial"
-          animate="animate"
-        />
-        {/* First wave (innermost) */}
-        <motion.div
-          className="absolute -inset-2 rounded-full bg-blue-500/20 blur-md"
-          variants={buttonWaveVariants}
-          initial="initial"
-          animate="animate"
-        />
-        <motion.button
-          variants={iconVariants}
-          initial="initial"
-          animate="animate"
-          whileHover="hover"
-          whileTap={{ scale: 0.95 }}
+      <motion.div
+        className="fixed bottom-4 right-4 z-50"
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{
+          type: "spring",
+          stiffness: 260,
+          damping: 20,
+          delay: 0.5,
+        }}
+      >
+        <Button
           onClick={() => setOpen((o) => !o)}
-          className="relative w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 text-white flex items-center justify-center shadow-lg border border-white/20 dark:border-black/20"
-          aria-label="Toggle chat"
+          size="lg"
+          className="h-12 w-12 rounded-full shadow-lg"
         >
           <motion.div
-            animate={{
-              rotate: open ? 180 : 0,
-              scale: [1, 1.15, 1],
-              opacity: [0.8, 1, 0.8],
-            }}
-            transition={{
-              rotate: {
-                type: "spring",
-                stiffness: 200,
-                damping: 15,
-              },
-              scale: {
-                duration: 1.5,
-                repeat: Infinity,
-                repeatType: "reverse",
-              },
-              opacity: {
-                duration: 1.5,
-                repeat: Infinity,
-                repeatType: "reverse",
-              },
-            }}
-            className="text-white"
+            animate={{ rotate: open ? 180 : 0 }}
+            transition={{ duration: 0.3 }}
           >
-            {open ? <X size={16} /> : <MessageSquare size={16} />}
+            {open ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <MessageSquare className="h-5 w-5" />
+            )}
           </motion.div>
-        </motion.button>
-      </div>
+          <span className="sr-only">Toggle chat</span>
+        </Button>
+      </motion.div>
     </>
   );
 }

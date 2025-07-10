@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
+import React from "react";
 import { Greeting } from "./greeting";
 import { Message } from "./message";
 import { ThinkingMessage } from "./thinking-message";
 import { UIMessage } from "ai";
 import { UseChatHelpers } from "@ai-sdk/react";
 import { useScrollToBottom } from "./use-scroll-to-bottom";
+import { cn } from "@/lib/utils";
 
 type Props = {
   messages: UIMessage[];
@@ -26,9 +27,12 @@ export const Messages = ({
   return (
     <div
       ref={messagesContainerRef}
-      className="flex-1 overflow-y-auto chat-scrollbar px-2"
+      className={cn(
+        "flex-1 overflow-y-auto px-4",
+        "scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent",
+      )}
     >
-      <div className="flex flex-col gap-2 py-2">
+      <div className="flex flex-col gap-4 py-4">
         {!hasMessages && <Greeting onPromptClick={onPromptClick} />}
 
         {hasMessages &&
@@ -47,7 +51,7 @@ export const Messages = ({
 
         {status === "submitted" && hasMessages && <ThinkingMessage />}
 
-        <div ref={messagesEndRef} className="h-4 w-full" />
+        <div ref={messagesEndRef} className="h-1 w-full" />
       </div>
     </div>
   );

@@ -1,8 +1,12 @@
-import { UseChatOptions, UseChatHelpers, useChat } from "@ai-sdk/react";
+"use client";
+
+import { UseChatHelpers } from "@ai-sdk/react";
 import { motion } from "framer-motion";
 import { Send } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 
 type Props = {
   open: boolean;
@@ -32,15 +36,15 @@ export function ChatForm({
   }, [messages, open, status]);
 
   return (
-    <div className="p-2 border-t border-zinc-200 dark:border-zinc-800">
-      <form onSubmit={handleSubmit} className="flex space-x-1 items-center">
-        <textarea
+    <div className="border-t p-4">
+      <form onSubmit={handleSubmit} className="flex gap-2 items-end">
+        <Textarea
           ref={inputRef}
-          rows={2}
+          rows={1}
           value={input}
           onChange={handleInputChange}
           placeholder="Ask me anything..."
-          className="w-full p-2 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800 text-sm text-zinc-700 dark:text-zinc-300 resize-none focus:outline-none focus:ring-2  focus:border-transparent transition-colors"
+          className="min-h-[40px] max-h-[120px] resize-none"
           disabled={status === "streaming"}
           onKeyDown={(e) => {
             if (
@@ -60,15 +64,14 @@ export function ChatForm({
             }
           }}
         />
-        <motion.button
+        <Button
           type="submit"
+          size="sm"
           disabled={status === "streaming" || !input.trim()}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="p-1.5 rounded-full bg-accent text-white disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Send size={14} />
-        </motion.button>
+          <Send className="h-4 w-4" />
+          <span className="sr-only">Send message</span>
+        </Button>
       </form>
     </div>
   );

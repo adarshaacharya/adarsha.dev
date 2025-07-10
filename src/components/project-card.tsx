@@ -2,6 +2,17 @@ import { GitHubIcon, LinkIcon } from "@/components/icons";
 import { SocialLink } from "@/components/social-link";
 import { WebApp } from "@/data/projects";
 import { ZoomableImage } from "./zoomable-image";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ExternalLink, Github } from "lucide-react";
 
 type Props = {
   project: WebApp;
@@ -9,50 +20,80 @@ type Props = {
 
 export const ProjectCard = ({ project }: Props) => {
   return (
-    <div
-      className="flex cursor-pointer flex-col rounded-xl transition hover:bg-zinc-50 hover:dark:bg-zinc-800/50"
-      key={project.title}
-    >
-      <ZoomableImage
-        src={project.thumbnail}
-        alt={`Logo of ${project.title}`}
-        width={0}
-        height={0}
-        className="h-50 w-full rounded-t-lg object-cover"
-      />
+    <Card className="group overflow-hidden transition-all duration-500 hover:shadow-xl hover:-translate-y-1">
+      <div className="overflow-hidden  relative">
+        <ZoomableImage
+          src={project.thumbnail}
+          alt={`Screenshot of ${project.title}`}
+          width={0}
+          height={0}
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      </div>
 
-      <div className="p-4">
-        <a className="text-base font-semibold tracking-tight text-zinc-800 dark:text-zinc-100">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-xl font-bold line-clamp-1 group-hover:text-primary transition-colors">
           {project.title}
-        </a>
-        <div className=" z-10 mt-2 text-sm text-gray-500 dark:text-gray-400">
+        </CardTitle>
+        <CardDescription className="text-sm leading-relaxed line-clamp-2 mt-2">
           {project.description}
-        </div>
-        <div className="z-10 mb-6 mt-6 flex flex-wrap gap-1 ">
-          {project.tags.map((techStackItem) => (
-            <p
-              className="hover:text-primary dark:hover:text-primary inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs leading-4 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-200"
-              key={techStackItem}
+        </CardDescription>
+      </CardHeader>
+
+      <CardContent className="pb-4 pt-0">
+        <div className="flex flex-wrap gap-2">
+          {project.tags.map((tag) => (
+            <Badge
+              key={tag}
+              variant="secondary"
+              className="text-xs font-medium"
             >
-              {techStackItem}
-            </p>
+              {tag}
+            </Badge>
           ))}
+      
         </div>
-        <div className="flex items-center gap-2">
-          <SocialLink
-            icon={GitHubIcon}
-            href={project.repo}
-            className="h-6 w-6 flex-none"
-          />
+      </CardContent>
+
+      <CardFooter className="pt-0 pb-6">
+        <div className="flex gap-3 w-full">
+          <Button
+            variant="outline"
+            size="sm"
+            asChild
+            className="flex-1 hover:bg-primary hover:text-primary-foreground transition-colors"
+          >
+            <a
+              href={project.repo}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2"
+            >
+              <Github className="h-4 w-4" />
+              Code
+            </a>
+          </Button>
           {project.demo && (
-            <SocialLink
-              icon={LinkIcon}
-              href={project.demo}
-              className="h-6 w-6 flex-none"
-            />
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              className="flex-1 hover:bg-primary hover:text-primary-foreground transition-colors"
+            >
+              <a
+                href={project.demo}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Demo
+              </a>
+            </Button>
           )}
         </div>
-      </div>
-    </div>
+      </CardFooter>
+    </Card>
   );
 };

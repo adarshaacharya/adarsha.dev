@@ -2,10 +2,13 @@ import Image from "next/image";
 import { SOCIALS } from "../data/socials";
 import { SocialLink } from "@/components/social-link";
 import { allBlogs } from "contentlayer/generated";
-import { BlogCard } from "@/components/blog/blog-card";
+import { BlogListItem } from "@/components/blog/blog-list-item";
 import React from "react";
 import Link from "next/link";
 import { LINKS } from "@/data/links";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { ArrowRight, Download } from "lucide-react";
 
 export default function Home() {
   const blogs = allBlogs
@@ -16,74 +19,110 @@ export default function Home() {
     .slice(0, 2);
 
   return (
-    <React.Fragment>
-      <section className="mb-5">
-        <Image
-          src="/_static/me.jpg"
-          width={100}
-          height={100}
-          alt="avatar"
-          className="rounded-full cursor-pointer hover:grayscale mb-5"
-          priority
-        />
-        <h1 className="text-2xl font-bold">Adarsha Acharya</h1>
+    <div className="space-y-12">
+      <section className="space-y-6">
+        <div className="flex items-start gap-6">
+          <Image
+            src="/_static/me.jpg"
+            width={120}
+            height={120}
+            alt="Adarsha Acharya"
+            className="rounded-2xl transition-all duration-300 hover:scale-105"
+            priority
+          />
+          <div className="flex-1 space-y-4">
+            <div className="space-y-3">
+              <h1 className="text-3xl font-bold tracking-tight">
+                Adarsha Acharya
+              </h1>
+              <p className="text-lg text-muted-foreground ">
+                Fullstack Software Engineer
+              </p>
+            </div>
 
-        <div className="text-gray-700 dark:text-gray-300">
-          <p className="mt-4">
-            I’m a fullstack software engineer specializing in building web
+            <div className="flex items-center gap-4">
+              {SOCIALS.map((social) => (
+                <SocialLink
+                  key={social.label}
+                  aria-label={`Follow on ${social.label}`}
+                  href={social.href}
+                  icon={social.icon}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4 text-muted-foreground leading-relaxed">
+          <p>
+            I&apos;m a fullstack software engineer specializing in building web
             applications powered by modern JavaScript technologies and AI-driven
             features.
           </p>
-          <p className="mt-4 mb-4">
+          <p>
             Over the years, I&apos;ve worked on multiple startups to build and
             launch end-to-end products in insurance, iGaming, and video
             streaming domains, and have actively contributed to various open
             source projects.
           </p>
-
-          <p className="mb-4">
+          <p>
             I&apos;m currently open to new opportunities! If you have an
             exciting project or role that aligns with my expertise, please reach
-            out at&nbsp;
-            <a href="mailto:hi@adarsha.dev" className="border-b inline-block">
+            out at{" "}
+            <a
+              href="mailto:hi@adarsha.dev"
+              className="font-medium text-foreground underline underline-offset-4 hover:text-primary transition-colors"
+            >
               hi@adarsha.dev
-            </a>
-            &nbsp;or through any of my social channels below.
+            </a>{" "}
+            or through any of my social channels.
           </p>
         </div>
 
-        <div className="flex space-x-4 mb-2 mt-4">
-          {SOCIALS.map((social) => (
-            <SocialLink
-              key={social.label}
-              aria-label={`Follow on ${social.label}`}
-              href={social.href}
-              icon={social.icon}
-              className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 "
-            />
-          ))}
+        <div className="flex gap-3">
+          <Button variant="outline" asChild>
+            <a href={LINKS.RESUME} target="_blank" rel="noopener noreferrer">
+              <Download className="h-4 w-4 mr-2" />
+              Resume
+            </a>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href="/projects">
+              View Projects
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Link>
+          </Button>
         </div>
-        <p className="mt-4 border-b inline-block cursor-pointer">
-          <a href={LINKS.RESUME} target="_blank" rel="noopener noreferrer">
-            View Resume
-          </a>
-        </p>
       </section>
 
-      <div className="my-8 w-full border-t border-gray-200 dark:border-gray-800" />
+      <Separator />
 
-      <div>
-        <h2 className="mb-6 text-2xl font-bold">Latest posts</h2>
-        <ul>
+      <section className="space-y-2">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-semibold tracking-tight">
+            Latest Posts
+          </h2>
+          <Button variant="ghost" asChild>
+            <Link href="/blog">
+              View all posts
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Link>
+          </Button>
+        </div>
+
+        <div className="max-w-4xl divide-y divide-border/40">
           {blogs.map((blog) => (
-            <li key={blog.slug} className="py-1">
-              <Link href={`/blog/${blog.slug}`}>
-                <BlogCard blog={blog} key={blog.slug} />
-              </Link>
-            </li>
+            <Link
+              key={blog.slug}
+              href={`/blog/${blog.slug}`}
+              className="block hover:bg-muted/30 transition-colors duration-200 rounded-lg -mx-4 px-4"
+            >
+              <BlogListItem blog={blog} />
+            </Link>
           ))}
-        </ul>
-      </div>
-    </React.Fragment>
+        </div>
+      </section>
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ReactNode } from "react";
 
@@ -19,28 +19,27 @@ export function PaginationButton({
   children,
   className,
 }: PaginationButtonProps) {
-  const baseStyles = cn(
-    "flex items-center justify-center rounded-md transition-colors",
-    isDisabled && "opacity-50 cursor-not-allowed",
-    className,
-  );
-
-  const commonProps = {
-    className: cn(
-      baseStyles,
-      isActive
-        ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900 font-medium"
-        : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800",
-    ),
-  };
-
   if (isDisabled || !href) {
-    return <div {...commonProps}>{children}</div>;
+    return (
+      <Button
+        variant={isActive ? "default" : "outline"}
+        size="sm"
+        disabled={isDisabled}
+        className={className}
+      >
+        {children}
+      </Button>
+    );
   }
 
   return (
-    <Link href={href} {...commonProps}>
-      {children}
-    </Link>
+    <Button
+      variant={isActive ? "default" : "outline"}
+      size="sm"
+      className={className}
+      asChild
+    >
+      <Link href={href}>{children}</Link>
+    </Button>
   );
 }

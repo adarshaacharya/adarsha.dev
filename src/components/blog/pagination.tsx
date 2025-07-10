@@ -21,48 +21,71 @@ export function Pagination({
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentPage]);
 
-  const pageNumbers = Array.from(
-    { length: Math.min(totalPages, 5) },
-    (_, i) => i + 1,
-  );
+  const generatePageNumbers = () => {
+    const delta = 2;
+    const range = [];
+    const rangeWithDots = [];
+
+    for (
+      let i = Math.max(2, currentPage - delta);
+      i <= Math.min(totalPages - 1, currentPage + delta);
+      i++
+    ) {
+      range.push(i);
+    }
+
+    if (currentPage - delta > 2) {
+      rangeWithDots.push(1, "...");
+    } else {
+      rangeWithDots.push(1);
+    }
+
+    rangeWithDots.push(...range);
+
+    if (currentPage + delta < totalPages - 1) {
+      rangeWithDots.push("...", totalPages);
+    } else if (totalPages > 1) {
+      rangeWithDots.push(totalPages);
+    }
+
+    return rangeWithDots;
+  };
+
+  const pageNumbers = generatePageNumbers();
 
   return (
-    <nav className="flex justify-center items-center space-x-3 mt-10 mb-8">
+    <nav className="flex items-center justify-center gap-2 mt-12">
       <PaginationButton
         href={
           currentPage > 1 ? `${basePath}?page=${currentPage - 1}` : undefined
         }
         isDisabled={currentPage <= 1}
-        className="p-2 border border-gray-200 dark:border-gray-700"
       >
-        <ChevronLeft size={18} />
+        <ChevronLeft className="h-4 w-4" />
       </PaginationButton>
 
-      <div className="flex space-x-2 items-center">
-        {pageNumbers.map((page) => (
+      {pageNumbers.map((page, index) => {
+        if (page === "...") {
+          return (
+            <span
+              key={`ellipsis-${index}`}
+              className="px-3 py-2 text-muted-foreground"
+            >
+              ...
+            </span>
+          );
+        }
+
+        return (
           <PaginationButton
             key={page}
             href={`${basePath}?page=${page}`}
             isActive={page === currentPage}
-            className="w-8 h-8"
           >
             {page}
           </PaginationButton>
-        ))}
-
-        {totalPages > BLOG_POSTS_PER_PAGE && (
-          <>
-            <span className="px-2 text-gray-400 dark:text-gray-500">...</span>
-            <PaginationButton
-              href={`${basePath}?page=${totalPages}`}
-              isActive={totalPages === currentPage}
-              className="w-8 h-8"
-            >
-              {totalPages}
-            </PaginationButton>
-          </>
-        )}
-      </div>
+        );
+      })}
 
       <PaginationButton
         href={
@@ -71,9 +94,8 @@ export function Pagination({
             : undefined
         }
         isDisabled={currentPage >= totalPages}
-        className="p-2 border border-gray-200 dark:border-gray-700"
       >
-        <ChevronRight size={18} />
+        <ChevronRight className="h-4 w-4" />
       </PaginationButton>
     </nav>
   );

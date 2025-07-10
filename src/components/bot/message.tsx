@@ -3,7 +3,6 @@
 import React from "react";
 import { motion } from "framer-motion";
 import type { Message as ChatMessage } from "@ai-sdk/react";
-import { UserIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface MessageProps {
@@ -24,14 +23,25 @@ export function Message({
       initial={{ opacity: 0, y: 5 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
-      className={cn("flex items-start gap-1.5", isUser && "flex-row-reverse")}
+      className={cn(
+        "flex items-start gap-2 group",
+        isUser && "flex-row-reverse",
+      )}
     >
       <div
         className={cn(
-          "rounded-lg px-2 py-1 max-w-[85%] break-words text-xs",
+          "flex h-7 w-7 shrink-0 select-none items-center justify-center rounded-full text-xs font-medium",
           isUser
-            ? "bg-accent text-white rounded-tr-none"
-            : "bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 rounded-tl-none",
+            ? "bg-primary text-primary-foreground"
+            : "bg-muted text-muted-foreground",
+        )}
+      >
+        {isUser ? "You" : "A"}
+      </div>
+      <div
+        className={cn(
+          "rounded-lg px-3 py-2 max-w-[80%] break-words text-sm shadow-sm",
+          isUser ? "bg-primary text-primary-foreground" : "bg-muted",
         )}
       >
         <p className="m-0 whitespace-pre-wrap">{message.content}</p>

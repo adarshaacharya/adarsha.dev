@@ -2,13 +2,15 @@
 
 import { useTheme } from "next-themes";
 import { MoonIcon, SunIcon } from "./icons";
+import { Button } from "@/components/ui/button";
 
 export function ThemeToggler() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <button
-      aria-label="Toggle theme"
+    <Button
+      variant="ghost"
+      size="sm"
       onClick={() => {
         if (theme === "dark") {
           setTheme("light");
@@ -16,17 +18,14 @@ export function ThemeToggler() {
         }
         setTheme("dark");
       }}
-      className="rounded-xs rounded p-1 hover:bg-gray-200 hover:dark:bg-[#313131]"
+      className="h-9 w-9 px-0"
     >
       {theme === "dark" ? (
-        <span className="sun-icon">
-          <SunIcon height={25} width={25} />
-        </span>
+        <SunIcon height={18} width={18} />
       ) : (
-        <span className="moon-icon">
-          <MoonIcon height={25} width={25} />
-        </span>
+        <MoonIcon height={18} width={18} />
       )}
-    </button>
+      <span className="sr-only">Toggle theme</span>
+    </Button>
   );
 }

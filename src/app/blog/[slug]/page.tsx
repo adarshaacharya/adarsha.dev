@@ -6,6 +6,10 @@ import { siteMetadata } from "@/data/siteMetadata";
 import NotFound from "@/app/not-found";
 import { formatDate } from "@/lib/utils";
 import { getMDXComponent } from "next-contentlayer2/hooks";
+import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { ArrowLeft, Calendar, Clock } from "lucide-react";
 
 // export async function generateStaticParams() {
 //   const paths = allBlogs.map((blog) => ({ slug: blog.slug }));
@@ -70,16 +74,36 @@ export default async function Blog(props: {
   const Content = getMDXComponent(blog.body.code);
 
   return (
-    <section>
-      <h1 className="text-2xl font-bold tracking-tighter">
-        <Balancer>{blog.title}</Balancer>
-      </h1>
-      <div className="mb-8 mt-2 flex items-center justify-between text-sm text-neutral-600 dark:text-neutral-400">
-        <p>
-          {formatDate(blog.publishedAt)} - {blog.readingTime.text}
-        </p>
-      </div>
+    <article className="space-y-8">
+      <Button variant="ghost" size="sm" asChild className="mb-4">
+        <Link href="/blog">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to blog
+        </Link>
+      </Button>
+
+      <header className="space-y-4">
+        <h1 className="text-4xl font-bold tracking-tight">
+          <Balancer>{blog.title}</Balancer>
+        </h1>
+        <p className="text-lg text-muted-foreground">{blog.summary}</p>
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <div className="flex items-center gap-1">
+            <Calendar className="h-4 w-4" />
+            <time dateTime={blog.publishedAt}>
+              {formatDate(blog.publishedAt)}
+            </time>
+          </div>
+          <div className="flex items-center gap-1">
+            <Clock className="h-4 w-4" />
+            <span>{blog.readingTime.text}</span>
+          </div>
+        </div>
+      </header>
+
+      <Separator />
+
       <Mdx code={blog.body.code} />
-    </section>
+    </article>
   );
 }

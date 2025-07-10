@@ -5,18 +5,112 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 47.4% 11.2%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 72.2% 50.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 47.4% 11.2%;
+    --radius: 0.5rem;
   }
 
   .dark {
-    --background: 224 71% 4%;
-    --foreground: 213 31% 91%;
+    --background: 0 0% 7%;
+    --foreground: 0 0% 95%;
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 0 0% 95%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 95%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 95%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 80%;
   }
 }
 
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
+  }
+}
+
+/* Custom scrollbar styles */
+@layer utilities {
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-muted rounded-full;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/30;
+  }
+
+  /* Firefox */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted)) transparent;
+  }
+}
+
+/* Prose dark mode improvements */
+@layer components {
+  .dark .prose.dark\:prose-invert {
+    --tw-prose-body: hsl(var(--foreground) / 0.9);
+    --tw-prose-headings: hsl(var(--foreground));
+    --tw-prose-lead: hsl(var(--foreground) / 0.85);
+    --tw-prose-links: hsl(var(--foreground));
+    --tw-prose-bold: hsl(var(--foreground));
+    --tw-prose-counters: hsl(var(--foreground) / 0.8);
+    --tw-prose-bullets: hsl(var(--foreground) / 0.6);
+    --tw-prose-hr: hsl(var(--border));
+    --tw-prose-quotes: hsl(var(--foreground) / 0.9);
+    --tw-prose-quote-borders: hsl(var(--border));
+    --tw-prose-captions: hsl(var(--foreground) / 0.7);
+    --tw-prose-code: hsl(var(--foreground));
+    --tw-prose-pre-code: hsl(var(--foreground) / 0.9);
+    --tw-prose-th-borders: hsl(var(--border));
+    --tw-prose-td-borders: hsl(var(--border));
+  }
+}
+
+/* Typography and prose styles */
 .prose .anchor {
   @apply invisible absolute no-underline;
-
   margin-left: -1em;
   padding-right: 0.5em;
   width: 80%;
@@ -42,12 +136,16 @@
 }
 
 .prose pre {
-  @apply bg-neutral-50 dark:bg-neutral-900 rounded-lg overflow-x-auto border border-neutral-200 dark:border-neutral-900;
+  @apply bg-neutral-50 dark:bg-neutral-900 rounded-lg overflow-x-auto border 
+}
+
+/* Dark mode fix for code blocks */
+.dark .prose pre,
+.dark .prose pre[class*="language-"] {
+  background-color: rgb(10, 10, 10) !important;
 }
 
 .prose code {
-  /* @apply rounded-lg border border-neutral-100 bg-neutral-100 px-1 py-0.5 text-neutral-800 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200; */
-
   @apply px-1 py-0.5 rounded-lg;
 }
 
@@ -62,7 +160,6 @@
 }
 
 .prose img {
-  /* Don't apply styles to next/image */
   @apply m-0;
 }
 
@@ -77,11 +174,11 @@ h4 {
 }
 
 .prose > :first-child {
-  /* Override removing top margin, causing layout shift */
   margin-top: 1.25em !important;
   margin-bottom: 1.25em !important;
 }
 
+/* Code highlighting */
 code[class*="language-"],
 pre[class*="language-"] {
   @apply text-neutral-50;
@@ -92,11 +189,11 @@ pre::-webkit-scrollbar {
 }
 
 pre {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-/* Remove Safari input shadow on mobile */
+/* Form elements */
 input[type="text"],
 input[type="email"] {
   -webkit-appearance: none;
@@ -120,6 +217,7 @@ table {
   margin: 0 !important;
 }
 
+/* Rehype pretty code */
 [data-rehype-pretty-code-fragment] code {
   @apply grid min-w-full break-words rounded-none border-0 bg-transparent p-0 text-sm text-black;
   counter-reset: line;
@@ -153,7 +251,7 @@ table {
   @apply mt-0 rounded-t-none border-t-0;
 }
 
-/* for modal */
+/* Modal styles */
 @layer components {
   .img-zoomable {
     @apply cursor-zoom-in transition-transform duration-300 hover:scale-[1.01];
@@ -170,41 +268,4 @@ table {
   .modal-content {
     @apply relative mx-auto max-w-5xl overflow-hidden rounded-xl bg-white/90 shadow-2xl backdrop-blur-xl;
   }
-}
-
-/* Chat scrollbar - transparent by default, visible on hover */
-.chat-scrollbar::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
-
-.chat-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.chat-scrollbar::-webkit-scrollbar-thumb {
-  background: transparent;
-  border-radius: 4px;
-}
-
-.chat-scrollbar:hover::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.3); /* Gray-400 at 30% opacity */
-}
-
-.dark .chat-scrollbar:hover::-webkit-scrollbar-thumb {
-  background: rgba(75, 85, 99, 0.3); /* Gray-600 at 30% opacity */
-}
-
-/* For Firefox */
-.chat-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: transparent transparent;
-}
-
-.chat-scrollbar:hover {
-  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
-}
-
-.dark .chat-scrollbar:hover {
-  scrollbar-color: rgba(75, 85, 99, 0.3) transparent;
 }

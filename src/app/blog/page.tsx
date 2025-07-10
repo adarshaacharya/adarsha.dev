@@ -50,16 +50,26 @@ export default async function Blog({
   );
 
   return (
-    <section className="min-h-[calc(100vh-300px)]">
-      <div className="mb-8">
-        <SearchInput />
-      </div>
+    <div className="space-y-10">
+      <section className="space-y-8">
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <h1 className="text-4xl font-bold tracking-tight">Blog</h1>
+            <p className="text-muted-foreground text-lg max-w-2xl">
+              Thoughts on software development, web technologies, and
+              engineering practices.
+            </p>
+          </div>
+          <SearchInput />
+        </div>
 
-      <AnimatedBlogList posts={currentPosts} />
-
+        <div className="max-w-4xl">
+          <AnimatedBlogList posts={currentPosts} />
+        </div>
+      </section>
       {totalPages > 1 && (
         <Pagination currentPage={currentPage} totalPages={totalPages} />
       )}
-    </section>
+    </div>
   );
 }
