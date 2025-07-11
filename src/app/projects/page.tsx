@@ -12,17 +12,7 @@ export const metadata = generatePageMetadata({
 
 export default function Projects() {
   return (
-    <div className="space-y-16">
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <h1 className="text-4xl font-bold tracking-tight">Projects</h1>
-          <p className="text-muted-foreground text-lg max-w-2xl">
-            A collection of web applications, tools, and open source projects
-            I&apos;ve built over the years.
-          </p>
-        </div>
-      </div>
-
+    <div className="space-y-10">
       <div className="space-y-16">
         <section className="space-y-8">
           <h2 className="text-2xl font-semibold tracking-tight">

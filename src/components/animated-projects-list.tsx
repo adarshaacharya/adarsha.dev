@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ProjectCard } from "./project-card";
-import { Project } from "@/data/projects";
+import { Tool, WebApp } from "@/data/projects";
 import {
   Card,
   CardContent,
@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Github, ExternalLink } from "lucide-react";
 
 type AnimatedProjectsListProps = {
-  projects: Project[];
+  projects: WebApp[] | Tool[];
   type: "web-apps" | "tools";
 };
 
@@ -54,7 +54,7 @@ export function AnimatedProjectsList({
       {projects.map((project, idx) => (
         <motion.div key={idx} variants={itemVariants}>
           {type === "web-apps" ? (
-            <ProjectCard project={project} />
+            <ProjectCard project={project as WebApp} />
           ) : (
             <Card className="group transition-all duration-300 hover:shadow-lg">
               <CardHeader>
@@ -88,7 +88,7 @@ export function AnimatedProjectsList({
                     className="hover:bg-background"
                   >
                     <a
-                      href={project.external}
+                      href={project.demo}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-2"

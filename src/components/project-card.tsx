@@ -20,8 +20,8 @@ type Props = {
 
 export const ProjectCard = ({ project }: Props) => {
   return (
-    <Card className="group overflow-hidden transition-all duration-500 hover:shadow-xl hover:-translate-y-1">
-      <div className="overflow-hidden  relative">
+    <Card className="group overflow-hidden transition-all duration-500 hover:shadow-xl  h-full flex flex-col">
+      <div className=" relative cursor-pointer">
         <ZoomableImage
           src={project.thumbnail}
           alt={`Screenshot of ${project.title}`}
@@ -29,19 +29,18 @@ export const ProjectCard = ({ project }: Props) => {
           height={0}
           className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
 
       <CardHeader className="pb-4">
         <CardTitle className="text-xl font-bold line-clamp-1 group-hover:text-primary transition-colors">
           {project.title}
         </CardTitle>
-        <CardDescription className="text-sm leading-relaxed line-clamp-2 mt-2">
+        <CardDescription className="text-sm leading-relaxed mt-2">
           {project.description}
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="pb-4 pt-0">
+      <CardContent className="pb-4 pt-0 flex-1">
         <div className="flex flex-wrap gap-2">
           {project.tags.map((tag) => (
             <Badge
@@ -52,7 +51,6 @@ export const ProjectCard = ({ project }: Props) => {
               {tag}
             </Badge>
           ))}
-      
         </div>
       </CardContent>
 

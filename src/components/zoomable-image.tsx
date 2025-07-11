@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { ImageViewer } from "./image-viewer";
 import Image from "next/image";
 
 interface ZoomableImageProps {
@@ -31,7 +30,7 @@ export const ZoomableImage: React.FC<ZoomableImageProps> = ({
           alt={alt}
           width={width}
           height={height}
-          className={`img-zoomable transition-opacity duration-500 ${
+          className={`transition-opacity duration-500 ${
             isLoaded ? "opacity-100" : "opacity-0"
           } ${className}`}
           onClick={() => setIsViewerOpen(true)}
@@ -40,12 +39,12 @@ export const ZoomableImage: React.FC<ZoomableImageProps> = ({
         />
       </div>
 
-      <ImageViewer
+      {/* <ImageViewer
         src={src}
         alt={alt}
         isOpen={isViewerOpen}
-        onClose={() => setIsViewerOpen(false)}
-      />
+        setIsViewerOpen={setIsViewerOpen}
+      /> */}
     </>
   );
 };

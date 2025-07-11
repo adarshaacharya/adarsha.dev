@@ -21,7 +21,7 @@ export default function Home() {
   return (
     <div className="space-y-12">
       <section className="space-y-6">
-        <div className="flex items-start gap-6">
+        <div className="flex items-center gap-6">
           <Image
             src="/_static/me.jpg"
             width={120}
@@ -31,14 +31,9 @@ export default function Home() {
             priority
           />
           <div className="flex-1 space-y-4">
-            <div className="space-y-3">
-              <h1 className="text-3xl font-bold tracking-tight">
-                Adarsha Acharya
-              </h1>
-              <p className="text-lg text-muted-foreground ">
-                Fullstack Software Engineer
-              </p>
-            </div>
+            <h1 className="text-2xl font-bold">
+              Adarsha Acharya
+            </h1>
 
             <div className="flex items-center gap-4">
               {SOCIALS.map((social) => (

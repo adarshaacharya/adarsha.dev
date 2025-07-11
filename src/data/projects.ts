@@ -93,11 +93,19 @@ export const WEB_APPS: WebApp[] = [
   },
 ] as WebApp[];
 
-export const TOOLS = [
+export type Tool = {
+  title: string;
+  repo: string;
+  demo: string;
+  description: string;
+  techs: string[];
+};
+
+export const TOOLS: Tool[] = [
   {
     title: "states-nepal",
     repo: "https://github.com/adarshaacharya/states-nepal",
-    external: "https://www.npmjs.com/package/states-nepal",
+    demo: "https://www.npmjs.com/package/states-nepal",
     description:
       "npm package to get the dataset about different administrative division of Nepal.",
     techs: ["npm-package"],
@@ -105,7 +113,7 @@ export const TOOLS = [
   {
     title: "aaja (आज)",
     repo: "https://github.com/adarshaacharya/aaja",
-    external: "https://www.npmjs.com/package/aaja",
+    demo: "https://www.npmjs.com/package/aaja",
     description:
       "Cli tool to get today's nepali date, tithi, public events and current time.",
     techs: ["npm-package"],
@@ -113,7 +121,7 @@ export const TOOLS = [
   {
     title: "ApiHub",
     repo: "https://github.com/adarshaacharya/ApiHub",
-    external:
+    demo:
       "https://marketplace.visualstudio.com/items?itemName=AadarshaAcharya.api-hub",
     description:
       "VS Code extension to get free third party api url on different categories.",
@@ -122,7 +130,7 @@ export const TOOLS = [
   {
     title: "shitcommits",
     repo: "https://github.com/adarshaacharya/shitcommits",
-    external: "https://www.npmjs.com/package/shitcommits",
+    demo: "https://www.npmjs.com/package/shitcommits",
     description: "Cli tool to make git commits with not-so perfect messges.",
     techs: ["npm-package"],
   },
