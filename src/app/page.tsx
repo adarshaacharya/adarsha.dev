@@ -31,9 +31,7 @@ export default function Home() {
             priority
           />
           <div className="flex-1 space-y-4">
-            <h1 className="text-2xl font-bold">
-              Adarsha Acharya
-            </h1>
+            <h1 className="text-2xl font-bold">Adarsha Acharya</h1>
 
             <div className="flex items-center gap-4">
               {SOCIALS.map((social) => (
@@ -62,9 +60,8 @@ export default function Home() {
             source projects.
           </p>
           <p>
-            I&apos;m currently open to new opportunities! If you have an
-            exciting project or role that aligns with my expertise, please reach
-            out at{" "}
+            If you have an exciting project or role that aligns with my
+            expertise, please reach out at{" "}
             <a
               href="mailto:hi@adarsha.dev"
               className="font-medium text-foreground underline underline-offset-4 hover:text-primary transition-colors"
