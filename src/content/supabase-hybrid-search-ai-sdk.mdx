@@ -1,0 +1,750 @@
+---
+title: "Building a RAG System with Supabase Hybrid Search and AI SDK v5"
+summary: "Master RAG implementation with supabase hybrid search with Reciprocal Ranked Fusion (RRF) and integration with Vercel AI SDK v5."
+type: Blog
+publishedAt: 2025-09-28
+---
+
+Consider a RAG system where users ask "How do I handle authentication errors in my API?" A keyword search might find documents containing "authentication errors" but miss "API error handling" or "token validation failures", even though they're highly relevant. Meanwhile, semantic search understands the intent but might surface generic "error handling" docs that don't address authentication specifically.
+
+This is the core RAG problem: retrieval quality directly impacts generation quality. Poor search results lead to hallucinated or incomplete AI responses. Hybrid search resolves this by combining keyword precision with semantic understanding using Reciprocal Ranked Fusion (RRF).
+
+This post demonstrates implementing Supabase hybrid search with AI SDK integration, covering database schema, RPC functions, and practical tuning strategies for better RAG performance.
+
+## What is Hybrid Search?
+
+Hybrid search is not a built-in PostgreSQL feature. It's a custom implementation pattern that combines two PostgreSQL capabilities:
+
+1. **Keyword Search (FTS)**: PostgreSQL's full-text search using `tsvector` for exact term matching
+2. **Semantic Search**: Vector similarity search using embeddings for contextual understanding
+
+**Reciprocal Ranked Fusion (RRF)** merges results by scoring documents based on their rank in both search methods. The formula: `score = 1/(k + rank)` where `k` is a smoothing constant.
+
+A document ranking #1 in keyword and #3 in semantic search scores higher than one ranking #10 in both methods.
+
+### Under the Hood
+
+PostgreSQL provides the building blocks:
+
+- **FTS**: Native `tsvector`/`tsquery` with GIN indexes and ranking functions
+- **Vector search**: `pgvector` extension with HNSW/IVFFlat indexes for similarity search
+
+The "hybrid" part is custom logic that:
+
+1. Runs both FTS and vector searches separately
+2. Ranks results from each method
+3. Uses RRF (or other fusion strategies) to merge rankings
+4. Returns a unified, optimally ranked result set
+
+**Example Implementation Flow:**
+
+```sql
+-- Step 1: Keyword search (PostgreSQL native)
+SELECT id, ts_rank(fts, websearch_to_tsquery('authentication errors')) as rank
+FROM documents
+WHERE fts @@ websearch_to_tsquery('authentication errors')
+ORDER BY rank DESC;
+
+-- Step 2: Semantic search (pgvector extension)
+SELECT id, embedding <=> '[0.1, 0.2, 0.3, ...]'::vector as distance
+FROM documents
+ORDER BY distance;
+
+-- Step 3: Custom RRF fusion (your implementation)
+-- Combines both result sets using reciprocal rank fusion
+```
+
+**What Supabase Provides:**
+
+- Pre-built RPC functions that handle the fusion logic
+- Schema templates with proper indexes
+- Integration tooling and documentation
+- Managed `pgvector` extension support
+
+The same pattern works in any PostgreSQL setup with `pgvector` - you just need to implement the RRF logic in your application layer or as custom SQL functions.
+
+
+## Architecture Overview
+
+<Image 
+ src={"/_static/blogs/supabase-hybrid-search-ai-sdk/flow-diagram.png"}
+  width={1280}
+  height={720}
+  alt="data-cache-nextjs"
+/>
+<p className="text-center">Image: Supabase Hybrid Search Architecture</p>
+
+## Database Schema
+
+For your typical RAG system, you will need to create a documents table with the following columns where you store your document content and their embeddings.
+
+Here's the complete database schema with proper indexes for both keyword and semantic search:
+
+```sql
+-- Create documents table for hybrid search
+CREATE TABLE documents (
+  id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  content TEXT,
+  fts TSVECTOR GENERATED ALWAYS AS (to_tsvector('english', content)) STORED,
+  embedding VECTOR(1536), -- OpenAI text-embedding-3-small dimensions
+  metadata JSONB
+);
+
+-- Create indexes for optimal performance
+CREATE INDEX idx_documents_fts ON documents USING gin(fts);
+CREATE INDEX idx_documents_embedding ON documents
+  USING hnsw (embedding vector_cosine_ops)
+  WITH (m = 16, ef_construction = 64);
+```
+
+As per above schema:
+
+- `content`: The raw text of your documents
+- `embedding`: Vector representation of the document for semantic search (in our case 1536 dimensions for `text-embedding-3-small`) this might vary based on the model you use
+- `metadata`: JSONB column for storing additional document metadata (might be useful for filtering)
+- `fts`: This might look unusual compared to other columns - it's a PostgreSQL TSVECTOR that enables full-text search (FTS) functionality.
+
+TSVECTOR is PostgreSQL's data type for full-text search. It stores a sorted list of distinct words (lexemes) that have been normalized for searching. Here's how it works:
+The `to_tsvector('english', content)` function:
+
+1.  tokenizes text into words
+2.  normalizes them (removes punctuation, converts to lowercase)
+3.  stems words using English language rules ("running" → "run", "authentication" → "authent")
+4.  removes stop words ("the", "and", "is"),
+5.  creates lexemes with position information.
+
+For example,
+
+Original content: "The users are running authentication tests"
+
+Becomes TSVECTOR: 'authent':3 'run':4 'test':5 'user':2
+
+Notice how:
+
+- `The` was removed (stop word)
+- `users` became `user` (stemming)
+- `running` became `run` (stemming)
+- `authentication` became `authent` (stemming)
+- `tests` became `test` (stemming)
+- Numbers indicate word positions.
+
+- **GENERATED ALWAYS AS**: Automatically computes the tsvector whenever content changes
+
+- **STORED**: Physically stores the computed tsvector (faster queries, uses more storage)
+
+- Alternative is **VIRTUAL** (computed on-the-fly, slower queries, less storage)
+
+
+
+Example:
+
+```sql
+-- Without TSVECTOR (slow, inaccurate):
+SELECT * FROM documents
+WHERE content ILIKE '%authentication%' AND content ILIKE '%error%';
+
+-- With TSVECTOR (fast, smart):
+SELECT * FROM documents
+WHERE fts @@ websearch_to_tsquery('authentication errors');
+```
+
+## Generating Document Embeddings
+
+We will use embeddings model to create the embeddings for your documents, like `text-embedding-3-small` model from OpenAI.
+
+Now let's see how to generate embeddings and store documents in the database:
+
+```typescript
+// Example: Creating embeddings for document storage
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+async function createDocumentEmbedding(documentContent: string) {
+  try {
+    const response = await openai.embeddings.create({
+      model: "text-embedding-3-small",
+      input: documentContent,
+      dimensions: 1536, // Optional: specify dimensions
+    });
+
+    return response.data[0].embedding;
+  } catch (error) {
+    console.error("Error creating embedding:", error);
+    throw error;
+  }
+}
+
+// Example: Storing document with embedding
+async function storeDocument(content: string, metadata: any) {
+  const embedding = await createDocumentEmbedding(content);
+
+  const { data, error } = await supabase.from("documents").insert({
+    content,
+    embedding: `[${embedding.join(",")}]`, // Convert array to PostgreSQL vector format
+    metadata,
+  });
+
+  if (error) throw error;
+  return data;
+}
+```
+
+## Hybrid Search RPC Function
+
+The next step is to create a RPC function which is hybrid search function that combines keyword and semantic results using RRF (Reciprocal Ranked Fusion) algorithm:
+
+```sql
+CREATE OR REPLACE FUNCTION hybrid_search_documents(
+  query_text TEXT,                    -- User's search query
+  query_embedding VECTOR(1536),       -- Vector representation of the query
+  match_count INT DEFAULT 10,         -- Number of results to return
+  full_text_weight FLOAT DEFAULT 1,   -- Weight for keyword search (1.0 = equal weight)
+  semantic_weight FLOAT DEFAULT 1,    -- Weight for semantic search (1.0 = equal weight)
+  rrf_k INT DEFAULT 50               -- Smoothing constant for RRF algorithm
+)
+RETURNS SETOF documents
+LANGUAGE SQL
+AS $$
+WITH full_text AS (
+  -- Get keyword search results with ranking
+  SELECT
+    id,
+    row_number() OVER(ORDER BY ts_rank_cd(fts, websearch_to_tsquery(query_text)) DESC) AS rank_ix
+  FROM documents
+  WHERE fts @@ websearch_to_tsquery(query_text)  -- Only documents matching the text query
+  ORDER BY rank_ix
+  LIMIT LEAST(match_count, 30) * 2  -- Get 2x the final results for better fusion
+),
+semantic AS (
+  -- Get semantic search results with ranking
+  SELECT
+    id,
+    row_number() OVER (ORDER BY embedding <=> query_embedding) AS rank_ix  -- <=> is cosine distance
+  FROM documents
+  ORDER BY rank_ix
+  LIMIT LEAST(match_count, 30) * 2
+)
+SELECT documents.*
+FROM full_text
+FULL OUTER JOIN semantic ON full_text.id = semantic.id  -- Join both result sets
+JOIN documents ON COALESCE(full_text.id, semantic.id) = documents.id  -- Get full document data
+ORDER BY
+  -- RRF scoring: 1/(k + rank) for each method, weighted and summed
+  COALESCE(1.0 / (rrf_k + full_text.rank_ix), 0.0) * full_text_weight +  -- COALESCE handles NULL ranks
+  COALESCE(1.0 / (rrf_k + semantic.rank_ix), 0.0) * semantic_weight
+DESC
+LIMIT LEAST(match_count, 30);
+$$;
+```
+
+> Make sure to migrate the schema of documents table and Supabase RPC function above to your Supabase project.
+
+### Parameters
+
+- **`query_text`**: User search query
+- **`query_embedding`**: Vector representation (1536 dimensions for text-embedding-3-small)
+- **`match_count`**: Result limit (max 30)
+- **`full_text_weight`**: Keyword search influence multiplier
+- **`semantic_weight`**: Semantic search influence multiplier
+- **`rrf_k`**: Smoothing constant (default 50)
+
+### Weight Tuning
+
+The weight parameters control how much influence each search method has on the final ranking. Choose your approach based on your content type and user needs:
+
+**Content-Based Weighting Strategy:**
+
+Let's explore different weight combinations for various content types:
+
+```typescript
+// Example 1: Emphasize keyword precision (good for exact term searches)
+const keywordFocused = await supabaseAdmin.rpc("hybrid_search_documents", {
+  query_text: "React useState hook",
+  query_embedding: embedding,
+  full_text_weight: 3.0, // Triple weight for exact keyword matches
+  semantic_weight: 1.0, // Normal semantic weight
+});
+
+// Example 2: Emphasize semantic understanding (good for conceptual searches)
+const semanticFocused = await supabaseAdmin.rpc("hybrid_search_documents", {
+  query_text: "managing component state",
+  query_embedding: embedding,
+  full_text_weight: 1.0, // Normal keyword weight
+  semantic_weight: 2.5, // 2.5x weight for semantic understanding
+});
+
+// Example 3: Balanced approach (recommended starting point)
+const balanced = await supabaseAdmin.rpc("hybrid_search_documents", {
+  query_text: "React hooks tutorial",
+  query_embedding: embedding,
+  full_text_weight: 1.0, // Equal weights
+  semantic_weight: 1.0,
+});
+```
+
+**When to Choose Each Approach:**
+
+- **High `full_text_weight` (2.0-4.0)**: Use for technical documentation, API references, or when exact terminology matters. Users searching for "useState" should find documents containing that exact term.
+
+- **High `semantic_weight` (2.0-4.0)**: Use for knowledge bases, support content, or discovery scenarios. Users asking "how to manage state" should find documents about useState, useEffect, and state management patterns.
+
+- **Balanced weights (1.0-1.5)**: Use for mixed content or when you're unsure. Start here and adjust based on user feedback.
+
+**How weights affect scoring:**
+
+- Document ranking #1 in keyword, #5 in semantic with equal weights (1.0 each):
+  - Score: `(1/1) * 1.0 + (1/5) * 1.0 = 1.2`
+- Same document with `full_text_weight: 2.0`:
+  - Score: `(1/1) * 2.0 + (1/5) * 1.0 = 2.2` (higher priority for keywords)
+- Same document with `semantic_weight: 2.0`:
+  - Score: `(1/1) * 1.0 + (1/5) * 2.0 = 1.4` (higher priority for semantics)
+
+### RRF_K Smoothing
+
+The smoothing constant prevents extreme scores for top-ranked items:
+
+```typescript
+// Without smoothing (rrf_k = 0)
+// Document ranked #1 gets score: 1/1 = 1.0
+// Document ranked #2 gets score: 1/2 = 0.5
+
+// With smoothing (rrf_k = 50)
+// Document ranked #1 gets score: 1/(50+1) = 0.0196
+// Document ranked #2 gets score: 1/(50+2) = 0.0192
+
+// This prevents scenarios where a document ranked #1 in one search
+// always beats a document ranked #2 in both searches
+```
+
+**Choosing the right `rrf_k` value:**
+
+- **Low values (10-30)**: Aggressive ranking, top results dominate
+  ```typescript
+  rrf_k: 20; // Good for: Exact match scenarios, technical documentation
+  ```
+- **Medium values (50-100)**: Balanced, recommended for most cases
+  ```typescript
+  rrf_k: 50; // Good for: General purpose, mixed content types
+  ```
+- **High values (200+)**: Conservative, reduces top result dominance
+  ```typescript
+  rrf_k: 200; // Good for: Broad discovery, research scenarios
+  ```
+
+**Real-world example:**
+
+```typescript
+// Document A: #1 in keyword, #100 in semantic
+// Document B: #2 in keyword, #2 in semantic
+
+// Without smoothing (rrf_k = 0):
+// Document A: 1/1 + 1/100 = 1.01
+// Document B: 1/2 + 1/2 = 1.0
+// Result: Document A wins (not ideal)
+
+// With smoothing (rrf_k = 50):
+// Document A: 1/51 + 1/150 = 0.0196 + 0.0067 = 0.0263
+// Document B: 1/52 + 1/52 = 0.0192 + 0.0192 = 0.0384
+// Result: Document B wins (better overall performance)
+```
+
+Formula: `score = 1/(k + rank)` where `k` is the smoothing constant.
+
+## AI SDK Integration
+
+So far we've built the complete hybrid search infrastructure: database schema with vector embeddings, PostgreSQL RPC function for RRF fusion, and document storage with metadata. Now we'll integrate [Vercel's AI SDK](https://sdk.vercel.ai/) to create an intelligent chat interface that uses our hybrid search for context-aware responses.
+
+The AI SDK provides streaming chat capabilities with tool calling, allowing the AI to search our document database and generate responses based on retrieved content. This completes the RAG pipeline: user queries trigger hybrid search, relevant documents are retrieved, and the AI generates contextual answers.
+
+> Although we are using AI SDK for chat integration, you can use any other frameworks like Langgraph or Llama Index that supports tool calling.
+
+### Vectorization Service
+
+Creating simple vectorization service that handles embedding generation and document search. It converts text queries to vector embeddings and calls the hybrid search RPC function to retrieve relevant documents.
+
+Now let's build the service that handles embedding generation and document retrieval:
+
+```typescript
+// lib/vectorization-service.ts
+export class VectorizationService {
+  async searchDocuments(
+    query: string,
+    limit: number = 10
+  ): Promise<
+    Array<{
+      content: string;
+      metadata: Record<string, unknown>;
+      score?: number;
+    }>
+  > {
+    try {
+      // Generate query embedding using OpenAI
+      const queryEmbedding = await this.generateEmbedding(query);
+      const queryEmbeddingString = `[${queryEmbedding.join(",")}]`;
+
+      // Call hybrid search RPC function
+      const { data, error } = await supabaseAdmin.rpc(
+        "hybrid_search_documents",
+        {
+          query_text: query,
+          query_embedding: queryEmbeddingString,
+          match_count: limit,
+        }
+      );
+
+      if (error) throw new Error(`Search failed: ${error.message}`);
+
+      return (data || []).map((item: Record<string, unknown>) => ({
+        content: (item.content as string) || "",
+        metadata: (item.metadata as Record<string, unknown>) || {},
+        score: item.score as number | undefined,
+      }));
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  private async generateEmbedding(text: string): Promise<number[]> {
+    const response = await fetch("https://api.openai.com/v1/embeddings", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "text-embedding-3-small",
+        input: text,
+        dimensions: 1536,
+      }),
+    });
+
+    const data = await response.json();
+    return data.data[0].embedding;
+  }
+}
+```
+
+Now you can use this vectorization service to generate embeddings for your documents and store them in the database:
+
+```typescript
+// Example: Using the vectorization service to store documents
+import { VectorizationService } from "@/lib/vectorization-service";
+import { supabaseAdmin } from "@/lib/supabase";
+
+const vectorizationService = new VectorizationService();
+
+async function storeDocumentWithEmbedding(
+  content: string,
+  metadata: Record<string, unknown>,
+  userId: string
+) {
+  try {
+    // Generate embedding for the document content
+    const embedding = await vectorizationService.generateEmbedding(content);
+
+    // Store document with embedding in Supabase
+    const { data, error } = await supabaseAdmin.from("documents").insert({
+      content,
+      embedding: `[${embedding.join(",")}]`, // Convert to PostgreSQL vector format
+      metadata,
+      user_id: userId,
+    });
+
+    if (error) throw error;
+
+    console.log("Document stored successfully:", data);
+    return data;
+  } catch (error) {
+    console.error("Failed to store document:", error);
+    throw error;
+  }
+}
+
+// Example usage: Store authentication documentation
+await storeDocumentWithEmbedding(
+  "To authenticate API requests, include a Bearer token in the Authorization header. If the token is invalid or expired, the API will return a 401 Unauthorized error. Use the /auth/refresh endpoint to get a new token.",
+  {
+    title: "API Authentication Guide",
+    category: "auth_docs",
+    topics: ["authentication", "api", "bearer-token", "error-handling"],
+    fileName: "api-auth.md",
+  }
+);
+```
+
+### AI SDK Chat Integration
+
+This chat route integrates the vectorization service with AI SDK's streaming capabilities. It creates a tool that the AI can use to search documents and provides intelligent responses based on the retrieved content.
+
+Here's how to integrate the vectorization service with AI SDK for intelligent chat responses:
+
+```typescript
+// app/api/chat/route.ts
+import { streamText, tool } from "ai";
+import { openai } from "@ai-sdk/openai";
+import { z } from "zod";
+import { vectorizationService } from "@/lib/vectorization-service";
+
+export async function POST(req: Request) {
+  const { messages } = await req.json();
+
+  const result = streamText({
+    model: openai("gpt-4o-mini"),
+    messages,
+    system: `You are a helpful AI assistant with access to a document database. 
+             Use the searchDocuments tool to find relevant information and provide 
+             accurate answers based on the search results.`,
+    tools: {
+      searchDocuments: tool({
+        description:
+          "Search through uploaded documents to find relevant information",
+        inputSchema: z.object({
+          query: z
+            .string()
+            .describe("The search query to find relevant documents"),
+        }),
+        execute: async ({ query }) => {
+          const searchResults = await vectorizationService.searchDocuments(
+            query,
+            5
+          );
+
+          return {
+            query,
+            results: searchResults.map((result) => ({
+              content: result.content,
+              metadata: result.metadata,
+              score: result.score,
+            })),
+            totalResults: searchResults.length,
+            summary:
+              searchResults.length > 0
+                ? `Found ${searchResults.length} document(s) related to "${query}"`
+                : `No documents found for "${query}"`,
+          };
+        },
+      }),
+    },
+  });
+
+  return result.toDataStreamResponse();
+}
+```
+
+### Frontend Implementation
+
+The React component uses AI SDK's useChat hook to create an interactive chat interface. It handles user input, displays messages, and connects to the backend chat API with authentication.
+
+Finally, here's the React component that creates the interactive chat interface:
+
+```typescript
+// components/chat/chat-page.tsx
+"use client";
+
+import { useChat } from "@ai-sdk/react";
+import { useAuth } from "@/contexts/AuthContext";
+
+export default function ChatPage() {
+  const { session } = useAuth();
+
+  const { messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({
+      api: "/api/chat",
+      headers: {
+        Authorization: `Bearer ${session?.access_token}`,
+      },
+    }),
+  });
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.map((message) => (
+          <div key={message.id} className="space-y-2">
+            <div className="font-semibold">
+              {message.role === "user" ? "You" : "AI"}
+            </div>
+            <div className="text-gray-700">{message.content}</div>
+          </div>
+        ))}
+      </div>
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const input = e.currentTarget.elements.namedItem(
+            "message"
+          ) as HTMLInputElement;
+          if (input.value.trim()) {
+            sendMessage({ text: input.value });
+            input.value = "";
+          }
+        }}
+      >
+        <input
+          name="message"
+          placeholder="Ask about your documents..."
+          className="w-full p-3 border rounded-lg"
+        />
+      </form>
+    </div>
+  );
+}
+```
+
+---
+
+<p className="italic font-bold mt-4">
+🎁 Below are bonus sections covering metadata for enhanced filtering and search tuning strategies. For most of the RAG systems, above startegies should be enough, if you want to enhance capabilities of your RAG system, you can follow the guide below.
+</p>
+
+### Bonus 1 : Metadata for Enhanced Filtering
+
+The `metadata` JSONB column allows flexible document categorization and enhanced filtering. Here's an example structure for a knowledge base system - adapt these fields based on your specific use case:
+
+Here's a sample metadata structure that enhances search and filtering capabilities:
+
+```typescript
+// Example: Essential metadata for hybrid search
+const documentMetadata = {
+  title: "How to Reset User Passwords",
+  category: "user_management",
+  fileName: "reset-passwords-guide.md",
+  fileSize: 245760, // bytes
+  mimeType: "text/markdown",
+  topics: ["authentication", "user management", "security"],
+  keywords: ["password", "reset", "admin", "user", "authentication"],
+  summary: "Step-by-step guide for resetting user passwords in the admin panel",
+  status: "published",
+  userId: "user-12345", // ID of the user who uploaded the document (might be useful hile filtering)
+};
+
+// Other possible metadata structures for different use cases:
+// - API docs: { endpoint, method, version, status, examples }
+// - Product docs: { product, feature, audience, status, version }
+// - Legal docs: { documentType, jurisdiction, effectiveDate, status }
+// - Marketing: { campaign, audience, channel, status, metrics }
+```
+
+This will really shine in your hybrid search by filtering documents based on metadata fields. Example if we want to restrict search results to a specific user, we can use the `userId` field in the metadata. This is particularly useful for multi-tenant applications where you need to restrict search results to specific users or categories:
+
+```sql
+-- Enhanced RPC function with metadata filtering
+CREATE OR REPLACE FUNCTION hybrid_search_documents_with_filter(
+  query_text TEXT,                    -- User's search query
+  query_embedding VECTOR(1536),       -- Vector representation of the query
+  user_id_filter TEXT DEFAULT NULL,   -- Filter by userId in metadata
+  match_count INT DEFAULT 10,         -- Number of results to return
+  full_text_weight FLOAT DEFAULT 1,   -- Weight for keyword search (1.0 = equal weight)
+  semantic_weight FLOAT DEFAULT 1,    -- Weight for semantic search (1.0 = equal weight)
+  rrf_k INT DEFAULT 50               -- Smoothing constant for RRF algorithm
+)
+RETURNS SETOF documents
+LANGUAGE SQL
+AS $$
+WITH full_text AS (
+  -- Get keyword search results with ranking and user filtering
+  SELECT
+    id,
+    row_number() OVER(ORDER BY ts_rank_cd(fts, websearch_to_tsquery(query_text)) DESC) AS rank_ix
+  FROM documents
+  WHERE fts @@ websearch_to_tsquery(query_text)  -- Only documents matching the text query
+    AND (user_id_filter IS NULL OR metadata->>'userId' = user_id_filter)  -- Filter by userId if provided
+  ORDER BY rank_ix
+  LIMIT LEAST(match_count, 30) * 2  -- Get 2x the final results for better fusion
+),
+semantic AS (
+  -- Get semantic search results with ranking and user filtering
+  SELECT
+    id,
+    row_number() OVER (ORDER BY embedding <=> query_embedding) AS rank_ix  -- <=> is cosine distance
+  FROM documents
+  WHERE (user_id_filter IS NULL OR metadata->>'userId' = user_id_filter)  -- Filter by userId if provided
+  ORDER BY rank_ix
+  LIMIT LEAST(match_count, 30) * 2
+)
+SELECT documents.*
+FROM full_text
+FULL OUTER JOIN semantic ON full_text.id = semantic.id  -- Join both result sets
+JOIN documents ON COALESCE(full_text.id, semantic.id) = documents.id  -- Get full document data
+ORDER BY
+  -- RRF scoring: 1/(k + rank) for each method, weighted and summed
+  COALESCE(1.0 / (rrf_k + full_text.rank_ix), 0.0) * full_text_weight +  -- COALESCE handles NULL ranks
+  COALESCE(1.0 / (rrf_k + semantic.rank_ix), 0.0) * semantic_weight
+DESC
+LIMIT LEAST(match_count, 30);
+$$;
+```
+
+**Usage Examples:**
+
+```typescript
+// Search only user's documents
+const userResults = await supabaseAdmin.rpc(
+  "hybrid_search_documents_with_filter",
+  {
+    query_text: "authentication errors",
+    query_embedding: embedding,
+    user_id_filter: "user-123", // Only search documents uploaded by this user
+    match_count: 10,
+  }
+);
+
+// Search all documents (user_id_filter is optional - don't pass it at all)
+const allResults = await supabaseAdmin.rpc(
+  "hybrid_search_documents_with_filter",
+  {
+    query_text: "API documentation",
+    query_embedding: embedding,
+    match_count: 10,
+    // user_id_filter not passed - will default to NULL and search all documents
+  }
+);
+```
+
+### Bonus 2 : Search Tuning
+
+Search tuning controls how much influence keyword matches versus semantic similarity have on the final ranking.
+By adjusting the weights and smoothing, you can tailor retrieval to your content and user intent: emphasize exact terminology for API docs and specs, prioritize conceptual matches for tutorials and Q&A, or keep a balanced setup for mixed collections. Start balanced, observe relevance/CTR, then iterate.
+
+```typescript
+// Emphasize keyword matches
+const results = await supabaseAdmin.rpc("hybrid_search_documents", {
+  query_text: "exact phrase search",
+  query_embedding: embedding,
+  full_text_weight: 2.0, // Double weight for keywords
+  semantic_weight: 1.0,
+});
+```
+
+This increases `full_text_weight` so exact-term matches (FTS) have more influence on the final score. Documents containing the literal query terms rank higher—ideal for API docs, error codes, and specification lookups.
+
+```typescript
+// Emphasize semantic understanding
+const results = await supabaseAdmin.rpc("hybrid_search_documents", {
+  query_text: "find similar concepts",
+  query_embedding: embedding,
+  full_text_weight: 1.0,
+  semantic_weight: 2.0, // Double weight for semantics
+});
+```
+
+This boosts `semantic_weight` so meaning-based matches carry more weight. Conceptually related documents surface even if phrasing differs—ideal for tutorials, how‑tos, and exploratory queries.
+
+## Conclusion
+
+The combination of Supabase's search capabilities with AI SDK creates intelligent interfaces that understand both exact queries and semantic intent, significantly improving user experience and search effectiveness.
+
+## References
+
+- [Supabase Hybrid Search Documentation](https://supabase.com/docs/guides/ai/hybrid-search)
+- [AI SDK Documentation](https://sdk.vercel.ai/)
+- [PostgreSQL Full-Text Search](https://www.postgresql.org/docs/current/textsearch.html)
+- [Vector Similarity Search](https://supabase.com/docs/guides/ai/vector-columns)
+
+---
+
+_Start with the database schema and basic hybrid search implementation. Test the RRF algorithm with your content, experiment with weight tuning, then integrate AI SDK for intelligent chat interfaces._
