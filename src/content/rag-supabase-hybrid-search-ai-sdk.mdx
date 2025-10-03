@@ -361,6 +361,15 @@ The AI SDK provides streaming chat capabilities with tool calling, allowing the 
 
 > Although we are using AI SDK for chat integration, you can use any other frameworks like Langgraph or Llama Index that supports tool calling.
 
+### Installation
+
+Before implementing the AI SDK integration, install the required packages:
+
+```bash
+npm install ai @ai-sdk/openai @ai-sdk/react @supabase/supabase-js openai
+```
+
+
 ### Vectorization Service
 
 Creating simple vectorization service that handles embedding generation and document search. It converts text queries to vector embeddings and calls the hybrid search RPC function to retrieve relevant documents.
