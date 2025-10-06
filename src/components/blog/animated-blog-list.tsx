@@ -56,13 +56,12 @@ export function AnimatedBlogList({ posts }: AnimatedBlogListProps) {
       initial="hidden"
       animate="visible"
       key={searchQuery || "all"}
-      className="divide-y divide-border/40"
     >
       {posts.map((blog) => (
         <motion.div key={blog.slug} variants={itemVariants}>
           <Link
             href={`/blog/${blog.slug}`}
-            className="block hover:bg-muted/30 transition-colors duration-200 rounded-lg -mx-4 px-4"
+            className="block hover:bg-muted/20 transition-colors duration-200 rounded-lg -mx-2 md:-mx-4 px-2 md:px-4"
           >
             <BlogListItem blog={blog} />
           </Link>

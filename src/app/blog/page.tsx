@@ -50,20 +50,22 @@ export default async function Blog({
   );
 
   return (
-    <div className="space-y-10">
-      <section className="space-y-8">
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-bold tracking-tight">Blog</h1>
-            <p className="text-muted-foreground text-lg max-w-2xl">
-              Thoughts on software development, web technologies, and
+    <div className="space-y-10 md:space-y-12">
+      <section className="space-y-8 md:space-y-10">
+        <div className="space-y-5 md:space-y-6">
+          <div className="space-y-2 md:space-y-3">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight leading-tight">
+              Blog
+            </h1>
+            <p className="text-muted-foreground max-w-3xl text-sm md:text-base">
+              Thoughts on software development, web technologies, Generative AI, and
               engineering practices.
             </p>
           </div>
           <SearchInput />
         </div>
 
-        <div className="max-w-4xl">
+        <div className="max-w-5xl">
           <AnimatedBlogList posts={currentPosts} />
         </div>
       </section>
