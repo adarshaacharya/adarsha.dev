@@ -9,27 +9,22 @@ import { MessageSquare, X } from "lucide-react";
 import { ChatForm } from "./chat-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DefaultChatTransport } from "ai";
 
 export function ChatBot() {
   const [open, setOpen] = useState(false);
-  const { messages, input, handleInputChange, handleSubmit, status } = useChat({
-    api: "/api/chat",
+  const [input, setInput] = useState("");
+  const { messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({
+      api: "/api/chat",
+    }),
     onError: (error) => {
       toast.error("An error occurred, please try again!");
     },
   });
 
   const handlePromptClick = (prompt: string) => {
-    handleInputChange({
-      target: { value: prompt },
-    } as React.ChangeEvent<HTMLInputElement>);
-
-    setTimeout(() => {
-      handleSubmit({
-        preventDefault: () => {},
-        stopPropagation: () => {},
-      } as React.FormEvent);
-    }, 100);
+    sendMessage({ text: prompt });
   };
 
   return (
@@ -122,9 +117,9 @@ export function ChatBot() {
                   open={open}
                   messages={messages}
                   status={status}
-                  handleInputChange={handleInputChange}
-                  handleSubmit={handleSubmit}
                   input={input}
+                  setInput={setInput}
+                  sendMessage={sendMessage}
                 />
               </CardContent>
             </Card>

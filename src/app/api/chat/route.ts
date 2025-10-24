@@ -1,88 +1,89 @@
-import { LangChainAdapter, Message as VercelChatMessage } from "ai";
 import {
-  ChatPromptTemplate,
-  MessagesPlaceholder,
-  PromptTemplate,
-} from "@langchain/core/prompts";
+  streamText,
+  generateText,
+  UIMessage,
+  convertToModelMessages,
+} from "ai";
 import { getVectorStore } from "@/lib/ai/quadrant";
-import {
-  CHAT_PROMPT,
-  convertToLangChainMessages,
-  REPHRASE_PROMPT,
-  retrievalModel,
-  streamingModel,
-} from "./utils";
-import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
-import { createRetrievalChain } from "langchain/chains/retrieval";
-import { createHistoryAwareRetriever } from "langchain/chains/history_aware_retriever";
+import { chatModel, queryModel, SYSTEM_PROMPT } from "./utils";
 
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
   try {
     const { messages } = (await req.json()) as {
-      messages: VercelChatMessage[];
+      messages: UIMessage[];
     };
 
     if (!messages || messages.length === 0) {
       return new Response("No messages provided", { status: 400 });
     }
 
-    const chatHistory = convertToLangChainMessages(messages.slice(0, -1));
+    // Get the current message text
+    const currentMessage = messages[messages.length - 1];
+    const textPart = currentMessage.parts?.find((part) => part.type === "text");
+    const currentMessageText =
+      textPart && "text" in textPart ? textPart.text : "";
 
-    const currentMessageContent = messages[messages.length - 1].content;
+    // Get chat history (all messages except the current one)
+    const chatHistory = messages.slice(0, -1);
 
-    const retriever = (await getVectorStore()).asRetriever({
-      k: 3,
+    // Initialize vector store for retrieval
+    const vectorStore = await getVectorStore();
+
+    // Generate search query from chat history and current message
+    let searchQuery = currentMessageText;
+
+    // If there's chat history, generate a better search query
+    if (chatHistory.length > 0) {
+      const historyText = chatHistory
+        .map((msg) => {
+          const textPart = msg.parts?.find((part) => part.type === "text");
+          const text = textPart && "text" in textPart ? textPart.text : "";
+          return `${msg.role === "user" ? "User" : "Assistant"}: ${text}`;
+        })
+        .join("\n");
+
+      const queryPrompt = `Given the following conversation history and the latest user question, generate a search query to look up relevant information. Only return the search query, nothing else.
+
+Conversation history:
+${historyText}
+
+Latest question: ${currentMessageText}
+
+Search query:`;
+
+      const { text: generatedQuery } = await generateText({
+        model: queryModel,
+        prompt: queryPrompt,
+      });
+
+      searchQuery = generatedQuery.trim();
+    }
+
+    // Retrieve relevant documents from vector store
+    const retrievedDocs = await vectorStore.similaritySearch(searchQuery, 3);
+
+    // Format the context from retrieved documents
+    const context = retrievedDocs
+      .map((doc) => {
+        const url = doc.metadata?.url || "";
+        const content = doc.pageContent || "";
+        return `Page URL: ${url}\n\nPage content:\n${content}`;
+      })
+      .join("\n--------\n");
+
+    // Replace {context} placeholder in system prompt
+    const systemPromptWithContext = SYSTEM_PROMPT.replace("{context}", context);
+
+    // Stream the response using AI SDK v6
+    const result = streamText({
+      model: chatModel,
+      system: systemPromptWithContext,
+      messages: convertToModelMessages(messages),
     });
 
-    const rephrasePrompt = ChatPromptTemplate.fromMessages([
-      new MessagesPlaceholder("chat_history"),
-      ["user", "{input}"],
-      ["user", REPHRASE_PROMPT],
-    ]);
-
-    // chain responsible to get the chat history and put it on prompt
-    const historyRetrievalChain = await createHistoryAwareRetriever({
-      llm: retrievalModel,
-      retriever,
-      rephrasePrompt,
-    });
-
-    const prompt = ChatPromptTemplate.fromMessages([
-      ["system", CHAT_PROMPT],
-      new MessagesPlaceholder("chat_history"),
-      ["user", "{input}"],
-    ]);
-
-    const combineDocsRAGChain = await createStuffDocumentsChain({
-      llm: streamingModel,
-      prompt,
-      // add url from metadata  and page_content
-      // as the content of the document, check quadrant.ts for defination
-      documentPrompt: PromptTemplate.fromTemplate(
-        "Page URL: {url}\n\nPage content:\n{page_content}",
-      ),
-      documentSeparator: "\n--------\n",
-    });
-
-    // similarity search in vector store to find relevant documents as per user query
-    const retrievalChain = await createRetrievalChain({
-      combineDocsChain: combineDocsRAGChain,
-      retriever: historyRetrievalChain,
-    });
-
-    const llmInput = await retrievalChain.invoke({
-      input: currentMessageContent, // the input / question as defined in the prompt
-      chat_history: chatHistory,
-    });
-
-    const stream = await combineDocsRAGChain.stream({
-      input: llmInput,
-      chat_history: chatHistory,
-    });
-
-    return LangChainAdapter.toDataStreamResponse(stream);
+    return result.toUIMessageStreamResponse();
   } catch (error) {
     console.error("Error in chat API:", error);
     return new Response("Internal Server Error", { status: 500 });

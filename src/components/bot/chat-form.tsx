@@ -1,7 +1,6 @@
 "use client";
 
-import { UseChatHelpers } from "@ai-sdk/react";
-import { motion } from "framer-motion";
+import type { UIMessage } from "ai";
 import { Send } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
@@ -10,20 +9,20 @@ import { Button } from "@/components/ui/button";
 
 type Props = {
   open: boolean;
-  messages: UseChatHelpers["messages"];
-  status: UseChatHelpers["status"];
-  handleInputChange: UseChatHelpers["handleInputChange"];
-  handleSubmit: UseChatHelpers["handleSubmit"];
-  input: UseChatHelpers["input"];
+  messages: UIMessage[];
+  status: "submitted" | "streaming" | "ready" | "error";
+  input: string;
+  setInput: (value: string) => void;
+  sendMessage: (message: { text: string }) => void;
 };
 
 export function ChatForm({
   open,
   messages,
   status,
-  handleInputChange,
-  handleSubmit,
   input,
+  setInput,
+  sendMessage,
 }: Props) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -35,6 +34,14 @@ export function ChatForm({
     }
   }, [messages, open, status]);
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (input.trim() && status === "ready") {
+      sendMessage({ text: input });
+      setInput("");
+    }
+  };
+
   return (
     <div className="border-t p-4">
       <form onSubmit={handleSubmit} className="flex gap-2 items-end">
@@ -42,7 +49,7 @@ export function ChatForm({
           ref={inputRef}
           rows={1}
           value={input}
-          onChange={handleInputChange}
+          onChange={(e) => setInput(e.target.value)}
           placeholder="Ask me anything..."
           className="min-h-[40px] max-h-[120px] resize-none"
           disabled={status === "streaming"}
@@ -58,8 +65,9 @@ export function ChatForm({
                 toast.error(
                   "Please wait for the model to finish its response!",
                 );
-              } else {
-                handleSubmit(e);
+              } else if (input.trim()) {
+                sendMessage({ text: input });
+                setInput("");
               }
             }
           }}

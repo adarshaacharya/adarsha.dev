@@ -17,7 +17,7 @@ export const ProjectCard = ({ project, index }: Props) => {
     <div className="group">
       <div
         className={cn(
-          "flex flex-col lg:flex-row gap-8 lg:gap-12 items-start",
+          "flex flex-col lg:flex-row gap-8 lg:gap-12 items-center",
           !isEven && "lg:flex-row-reverse",
         )}
       >

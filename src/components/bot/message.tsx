@@ -2,11 +2,11 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import type { Message as ChatMessage } from "@ai-sdk/react";
+import type { UIMessage } from "ai";
 import { cn } from "@/lib/utils";
 
 interface MessageProps {
-  message: ChatMessage;
+  message: UIMessage;
   isLoading?: boolean;
   isLast?: boolean;
 }
@@ -17,6 +17,17 @@ export function Message({
   isLast = false,
 }: MessageProps) {
   const isUser = message.role === "user";
+
+  // Extract text content from message parts
+  const textContent = message.parts
+    ?.map((part) => {
+      if (part.type === "text" && "text" in part) {
+        return part.text;
+      }
+      return "";
+    })
+    .filter(Boolean)
+    .join("");
 
   return (
     <motion.div
@@ -44,7 +55,7 @@ export function Message({
           isUser ? "bg-primary text-primary-foreground" : "bg-muted",
         )}
       >
-        <p className="m-0 whitespace-pre-wrap">{message.content}</p>
+        <p className="m-0 whitespace-pre-wrap">{textContent}</p>
       </div>
     </motion.div>
   );

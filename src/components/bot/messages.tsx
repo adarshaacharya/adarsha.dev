@@ -4,14 +4,13 @@ import React from "react";
 import { Greeting } from "./greeting";
 import { Message } from "./message";
 import { ThinkingMessage } from "./thinking-message";
-import { UIMessage } from "ai";
-import { UseChatHelpers } from "@ai-sdk/react";
+import type { UIMessage } from "ai";
 import { useScrollToBottom } from "./use-scroll-to-bottom";
 import { cn } from "@/lib/utils";
 
 type Props = {
   messages: UIMessage[];
-  status: UseChatHelpers["status"];
+  status: "submitted" | "streaming" | "ready" | "error";
   onPromptClick?: (prompt: string) => void;
 };
 
