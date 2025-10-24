@@ -28,7 +28,7 @@
     "@radix-ui/react-separator": "^1.1.7",
     "@radix-ui/react-slot": "^1.2.3",
     "@types/node": "20.8.6",
-    "@types/react": "19.0.8",
+    "@types/react": "19.2.2",
     "@types/react-dom": "19.0.3",
     "ai": "6.0.0-beta.72",
     "autoprefixer": "10.4.15",
@@ -46,7 +46,7 @@
     "next-themes": "^0.2.1",
     "pdf-parse": "^1.1.1",
     "postcss": "8.4.29",
-    "react": "19.0.0",
+    "react": "19.2.0",
     "react-dom": "19.0.0",
     "react-wrap-balancer": "^1.1.0",
     "reading-time": "^1.5.0",
@@ -72,7 +72,7 @@
   },
   "pnpm": {
     "overrides": {
-      "@types/react": "19.0.8",
+      "@types/react": "19.2.2",
       "@types/react-dom": "19.0.3"
     }
   }
