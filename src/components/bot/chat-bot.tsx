@@ -5,7 +5,7 @@ import { useChat } from "@ai-sdk/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Messages } from "./messages";
-import { MessageSquare, X } from "lucide-react";
+import { MessageSquare, X, Minimize2, Maximize2 } from "lucide-react";
 import { ChatForm } from "./chat-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import { DefaultChatTransport } from "ai";
 export function ChatBot() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
+  const [isExpanded, setIsExpanded] = useState(false);
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/chat",
@@ -36,27 +37,28 @@ export function ChatBot() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-            className="fixed bottom-24 right-4 sm:right-8 w-[85vw] sm:w-[380px] z-50"
+            className="fixed bottom-24 right-4 sm:right-8 w-[90vw] sm:w-[400px] z-50"
           >
-            <Card className="h-[500px] flex flex-col shadow-xl">
-              <CardHeader className="pb-3 px-4">
+            <Card
+              className={`${
+                isExpanded ? "h-[700px]" : "h-[600px]"
+              } flex flex-col shadow-xl transition-all duration-300`}
+            >
+              <CardHeader className="pb-3 px-4 border-b">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
+                    {/* Status indicator */}
                     <motion.div
-                      className="w-8 h-8 rounded-full bg-primary flex items-center justify-center relative"
-                      animate={{
-                        scale: [1, 1.1, 1],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
+                      className="relative"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.1 }}
                     >
+                      <div className="w-2 h-2 rounded-full bg-green-500" />
                       <motion.div
-                        className="absolute inset-0 rounded-full bg-primary/20"
+                        className="absolute inset-0 rounded-full bg-green-500/30"
                         animate={{
-                          scale: [1, 1.5, 1],
+                          scale: [1, 1.8, 1],
                           opacity: [0.7, 0, 0.7],
                         }}
                         transition={{
@@ -65,16 +67,15 @@ export function ChatBot() {
                           ease: "easeInOut",
                         }}
                       />
-                      <span className="text-primary-foreground font-medium text-sm relative z-10">
-                        A
-                      </span>
                     </motion.div>
+
+                    {/* Title */}
                     <motion.div
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.1 }}
                     >
-                      <CardTitle className="text-base">
+                      <CardTitle className="text-sm font-semibold">
                         <motion.span
                           animate={{
                             backgroundPosition: [
@@ -95,15 +96,36 @@ export function ChatBot() {
                       </CardTitle>
                     </motion.div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setOpen(false)}
-                    className="h-8 w-8 p-0"
-                  >
-                    <X className="h-4 w-4" />
-                    <span className="sr-only">Close chat</span>
-                  </Button>
+
+                  {/* Action buttons */}
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsExpanded(!isExpanded)}
+                      className="h-7 w-7 p-0 hover:bg-muted"
+                      title={isExpanded ? "Collapse" : "Expand"}
+                    >
+                      {isExpanded ? (
+                        <Minimize2 className="h-3.5 w-3.5" />
+                      ) : (
+                        <Maximize2 className="h-3.5 w-3.5" />
+                      )}
+                      <span className="sr-only">
+                        {isExpanded ? "Collapse" : "Expand"}
+                      </span>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setOpen(false)}
+                      className="h-7 w-7 p-0 hover:bg-muted"
+                      title="Close"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                      <span className="sr-only">Close chat</span>
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
 
