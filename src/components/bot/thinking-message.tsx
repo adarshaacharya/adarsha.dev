@@ -12,7 +12,7 @@ const dotVariants: Variants = {
     transition: {
       repeat: Infinity,
       duration: 1.2,
-      ease: "easeInOut",
+      ease: [0.4, 0, 0.2, 1],
     },
   },
 };

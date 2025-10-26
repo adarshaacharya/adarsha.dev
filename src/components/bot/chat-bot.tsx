@@ -64,7 +64,7 @@ export function ChatBot() {
                         transition={{
                           duration: 2,
                           repeat: Infinity,
-                          ease: "easeInOut",
+                          ease: [0.4, 0, 0.2, 1],
                         }}
                       />
                     </motion.div>
@@ -167,7 +167,7 @@ export function ChatBot() {
           transition={{
             duration: 2,
             repeat: Infinity,
-            ease: "easeInOut",
+            ease: [0.4, 0, 0.2, 1],
           }}
           className="relative"
         >
@@ -181,7 +181,7 @@ export function ChatBot() {
             transition={{
               duration: 2.5,
               repeat: Infinity,
-              ease: "easeInOut",
+              ease: [0.4, 0, 0.2, 1],
             }}
           />
           <motion.div
@@ -193,7 +193,7 @@ export function ChatBot() {
             transition={{
               duration: 2.5,
               repeat: Infinity,
-              ease: "easeInOut",
+              ease: [0.4, 0, 0.2, 1],
               delay: 0.5,
             }}
           />
@@ -230,7 +230,7 @@ export function ChatBot() {
                   transition={{
                     duration: 1.5,
                     repeat: Infinity,
-                    ease: "easeInOut",
+                    ease: [0.4, 0, 0.2, 1],
                   }}
                 >
                   <MessageSquare className="h-5 w-5" />

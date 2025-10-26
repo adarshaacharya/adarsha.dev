@@ -33,7 +33,7 @@ export function Message({
     <motion.div
       initial={{ opacity: 0, y: 5 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
+      transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
       className={cn(
         "flex items-start gap-2 group",
         isUser && "flex-row-reverse",
