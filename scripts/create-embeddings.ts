@@ -1,13 +1,13 @@
 import dotenv from "dotenv";
 dotenv.config({ path: ".env" });
 
-import { TextLoader } from "langchain/document_loaders/fs/text";
-import { DirectoryLoader } from "node_modules/langchain/dist/document_loaders/fs/directory";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { DocumentInterface } from "@langchain/core/documents";
 import { getEmbeddingCollections, getVectorStore } from "@/lib/ai/quadrant";
 import fs from "fs/promises";
 import { WebPDFLoader } from "@langchain/community/document_loaders/web/pdf";
+import { TextLoader } from "@langchain/classic/document_loaders/fs/text";
+import { DirectoryLoader } from "@langchain/classic/document_loaders/fs/directory";
 
 // its inside the public folder, so we need to go one level up
 // and then into public/_static/resume.pdf
@@ -21,7 +21,7 @@ async function loadResume() {
       throw new Error("Resume PDF file not found or is empty.");
     }
 
-    const resumePdfBlob = new Blob([resumePdfBuffer], {
+    const resumePdfBlob = new Blob([new Uint8Array(resumePdfBuffer)], {
       type: "application/pdf",
     });
 
