@@ -27,10 +27,6 @@ const itemVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: {
-      duration: 0.4,
-      ease: [0.4, 0, 0.2, 1],
-    },
   },
 };
 
@@ -58,7 +54,14 @@ export function AnimatedBlogList({ posts }: AnimatedBlogListProps) {
       key={searchQuery || "all"}
     >
       {posts.map((blog) => (
-        <motion.div key={blog.slug} variants={itemVariants}>
+        <motion.div
+          key={blog.slug}
+          variants={itemVariants}
+          transition={{
+            duration: 0.4,
+            ease: [0.4, 0, 0.2, 1],
+          }}
+        >
           <Link
             href={`/blog/${blog.slug}`}
             className="block hover:bg-muted/20 transition-colors duration-200 rounded-lg -mx-2 md:-mx-4 px-2 md:px-4"
