@@ -50,7 +50,7 @@
     "next-contentlayer2": "^0.5.3",
     "next-themes": "^0.2.1",
     "pdf-parse": "^1.1.1",
-    "postcss": "8.4.29",
+    "postcss": "8.4.31",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-wrap-balancer": "^1.1.0",
