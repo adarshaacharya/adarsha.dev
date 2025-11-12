@@ -33,7 +33,7 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@types/node": "20.8.6",
     "@types/react": "19.0.8",
-    "@types/react-dom": "19.0.3",
+    "@types/react-dom": "19.2.3",
     "ai": "6.0.0-beta.72",
     "autoprefixer": "10.4.15",
     "class-transformer": "^0.5.1",
@@ -78,7 +78,7 @@
   "pnpm": {
     "overrides": {
       "@types/react": "19.0.8",
-      "@types/react-dom": "19.0.3"
+      "@types/react-dom": "19.2.3"
     }
   }
 }
