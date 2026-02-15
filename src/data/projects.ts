@@ -9,12 +9,21 @@ export type WebApp = {
 
 export const WEB_APPS: WebApp[] = [
   {
+    title: "Cedular",
+    repo: "https://github.com/adarshaacharya/cedular",
+    demo: "https://cedular.vercel.app/",
+    description:
+      "Connect your email and get AI-powered scheduling. CC your personal assistant email on meeting requests or chat directly with your AI assistant.",
+    tags: ["Next.js", "Prisma", "Better auth", "AI SDK", "Workflow Dev Kit"],
+    thumbnail: "/_static/projects/cedular.png",
+  },
+  {
     title: "Humantryx",
     repo: "https://github.com/adarshaacharya/humantryx",
     demo: "https://humantryx.vercel.app/",
     description:
       "AI powered human resource management system. Manage employees, track performance, and automate HR tasks with AI-driven insights.",
-    tags: ["Next.js", "TRPC", "Better-Auth" , "Drizzle", "Shadcn", "Pinecone", "Langchain", "OpenAI"],
+    tags: ["Next.js", "TRPC", "Better-Auth", "Drizzle", "Shadcn", "Pinecone", "Langchain", "OpenAI"],
     thumbnail: "/_static/projects/humantryx.png",
   },
   {

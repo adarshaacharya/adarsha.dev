@@ -5,9 +5,10 @@ import { SocialLink } from "./social-link";
 import { usePathname } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 
-export function Footer({ currentYear }: { currentYear: number }) {
+export function Footer() {
   const pathname = usePathname();
   const isHomePage = pathname === "/";
+  const currentYear = new Date().getFullYear();
 
   return (
     <footer className="mt-16 space-y-6">
