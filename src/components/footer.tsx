@@ -5,7 +5,7 @@ import { SocialLink } from "./social-link";
 import { usePathname } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 
-export function Footer() {
+export function Footer({ currentYear }: { currentYear: number }) {
   const pathname = usePathname();
   const isHomePage = pathname === "/";
 
@@ -30,7 +30,7 @@ export function Footer() {
 
         <div className="space-y-2 text-sm text-muted-foreground">
           <p>
-            © {new Date().getFullYear()}{" "}
+            © {currentYear}{" "}
             <a
               href={siteMetadata.social.x}
               target="_blank"

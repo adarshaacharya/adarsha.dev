@@ -1,5 +1,5 @@
 import "./global.css";
-import type { Metadata } from "next";
+import { Suspense } from "react";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Header } from "@/components/header";
@@ -12,6 +12,7 @@ import { ENV } from "@/lib/env";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { ChatBot } from "@/components/bot/chat-bot";
 import { Toaster, toast } from 'sonner';
+import { Metadata } from "next/dist/types";
 
 const space_grotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -58,6 +59,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const currentYear = new Date().getFullYear();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <Head />
@@ -76,8 +79,10 @@ export default function RootLayout({
           <main className="mx-4  px-2 md:px-0 lg:mx-auto flex flex-col justify-between min-h-screen">
             <Header />
             {children}
-            <ChatBot />
-            <Footer />
+            <Suspense fallback={null}>
+              <ChatBot />
+            </Suspense>
+            <Footer currentYear={currentYear} />
             <Toaster position="top-right" richColors />
           </main>
           <TailwindIndicator />
