@@ -59,8 +59,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const currentYear = new Date().getFullYear();
-
   return (
     <html lang="en" suppressHydrationWarning>
       <Head />
@@ -70,23 +68,25 @@ export default function RootLayout({
           space_grotesk.className,
         )}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark" // default to dark mode, can be light, dark, system
-          enableSystem
-          disableTransitionOnChange
-        >
-          <main className="mx-4  px-2 md:px-0 lg:mx-auto flex flex-col justify-between min-h-screen">
-            <Header />
-            {children}
-            <Suspense fallback={null}>
-              <ChatBot />
-            </Suspense>
-            <Footer currentYear={currentYear} />
-            <Toaster position="top-right" richColors />
-          </main>
-          <TailwindIndicator />
-        </ThemeProvider>
+        <Suspense fallback={null}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark" // default to dark mode, can be light, dark, system
+            enableSystem
+            disableTransitionOnChange
+          >
+            <main className="mx-4  px-2 md:px-0 lg:mx-auto flex flex-col justify-between min-h-screen">
+              <Header />
+              {children}
+              <Suspense fallback={null}>
+                <ChatBot />
+              </Suspense>
+              <Footer />
+              <Toaster position="top-right" richColors />
+            </main>
+            <TailwindIndicator />
+          </ThemeProvider>
+        </Suspense>
         <GoogleAnalytics gaId={ENV.GOOGLE_ANALYTICS_ID} />
       </body>
     </html>
