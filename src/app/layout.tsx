@@ -59,6 +59,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const currentYear = new Date().getFullYear();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <Head />
@@ -80,7 +82,7 @@ export default function RootLayout({
             <Suspense fallback={null}>
               <ChatBot />
             </Suspense>
-            <Footer />
+            <Footer currentYear={currentYear} />
             <Toaster position="top-right" richColors />
           </main>
           <TailwindIndicator />
