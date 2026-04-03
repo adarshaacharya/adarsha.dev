@@ -16,7 +16,7 @@
   },
   "packageManager": "pnpm@8.11.0",
   "dependencies": {
-    "@ai-sdk/groq": "3.0.0-beta.20",
+    "@ai-sdk/groq": "3.0.33",
     "@ai-sdk/openai": "3.0.0-beta.34",
     "@ai-sdk/react": "3.0.0-beta.72",
     "@giscus/react": "^2.4.0",
