@@ -25,9 +25,9 @@ export function Header() {
   }
 
   return (
-    <header className="mb-12 mt-8">
+    <header className="mb-8 mt-6">
       <nav className="flex w-full items-center justify-between">
-        <div className="flex items-center space-x-8">
+        <div className="flex items-center space-x-6">
           {Object.entries(navItems).map(([path, { name }]) => {
             const isActive = path === pathname;
             return (

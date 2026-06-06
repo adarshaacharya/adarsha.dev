@@ -49,7 +49,7 @@ export function AnimatedBlogList({ posts }: AnimatedBlogListProps) {
   return (
     <motion.div
       variants={containerVariants}
-      initial="hidden"
+      initial={false}
       animate="visible"
       key={searchQuery || "all"}
     >
