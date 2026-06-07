@@ -10,7 +10,7 @@ export function Footer() {
   const isHomePage = pathname === "/";
 
   return (
-    <footer className="mt-16 space-y-6">
+    <footer className="mt-16 space-y-6 pb-8">
       <Separator />
 
       <div className="flex flex-col items-center space-y-4 text-center">

@@ -16,7 +16,7 @@ export default function Home() {
       (a, b) =>
         new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
     )
-    .slice(0, 2);
+    .slice(0, 4);
 
   return (
     <div className="space-y-8">
@@ -94,7 +94,7 @@ export default function Home() {
           </Button>
         </div>
 
-        <div className="max-w-4xl divide-y divide-border/40">
+        <div className="divide-y divide-border/40">
           {blogs.map((blog) => (
             <Link
               key={blog.slug}

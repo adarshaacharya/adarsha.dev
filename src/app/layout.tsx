@@ -64,7 +64,7 @@ export default function RootLayout({
       <Head />
       <body
         className={cn(
-          "mx-auto min-h-screen max-w-3xl antialiased dark:bg-zinc-950 dark:text-gray-100",
+          "min-h-screen w-full antialiased dark:bg-zinc-950 dark:text-gray-100",
           space_grotesk.className,
         )}
       >
@@ -75,9 +75,9 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <main className="mx-4 px-1 md:px-0 lg:mx-auto flex flex-col justify-between min-h-screen">
+            <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 sm:px-6 xl:max-w-4xl 2xl:max-w-5xl">
               <Header />
-              {children}
+              <div className="flex-1">{children}</div>
               <Suspense fallback={null}>
                 <ChatBot />
               </Suspense>
