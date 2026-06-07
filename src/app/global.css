@@ -150,9 +150,13 @@
 }
 
 .prose pre code {
-  @apply p-0 text-neutral-800 dark:text-neutral-200;
+  @apply p-0 text-neutral-800;
   border: initial;
   line-height: 1.5;
+}
+
+.dark .prose pre code {
+  color: rgb(229 229 229);
 }
 
 .prose code span {
@@ -219,9 +223,13 @@ table {
 
 /* Rehype pretty code */
 [data-rehype-pretty-code-fragment] code {
-  @apply grid min-w-full break-words rounded-none border-0 bg-transparent p-0 text-sm text-black;
+  @apply grid min-w-full break-words rounded-none border-0 bg-transparent p-0 text-sm text-neutral-800;
   counter-reset: line;
   box-decoration-break: clone;
+}
+
+.dark [data-rehype-pretty-code-fragment] code {
+  color: rgb(229 229 229);
 }
 [data-rehype-pretty-code-fragment] .line {
   @apply py-1;

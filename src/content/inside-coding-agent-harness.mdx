@@ -1,23 +1,24 @@
 ---
-title: "It's Not Just a Loop: Inside the Coding Agent Harness"
+title: "It's Not Just a Loop: Building the Coding Agent Harness"
 summary: "A technical dissection of what coding agents actually run — tool loops, sandboxing, compaction, memory, and why the model is the smallest part."
 publishedAt: 2026-06-06
 ---
 
-
 > "It's just calling the API in a loop."
 
-Every developer who's poked at Claude Code or Codex CLI for the first time eventually says this. And they're not wrong — but they're describing maybe 5% of the system. The other 95% is what makes the difference between a toy that occasionally works and an agent that can actually change production code without destroying your repo.
+It is an easy conclusion to reach after poking at Claude Code, Codex CLI, OpenCode, or Cursor. The model asks for a tool, the tool runs, the result goes back, repeat. That really is the loop. It is also maybe 5% of the system.
 
-This post tears open that 95%. Not a tutorial on how to use Claude Code — an autopsy of what actually runs when you type a prompt into any serious coding agent. We'll look at the harness, the tool execution pipeline, context management, memory, and the permission layer. By the end, you'll understand what problems each layer solves and why they exist.
+The other 95% is what stops that loop from becoming an expensive script with permission to destroy your repo. This post is about that part: what actually runs around the model when you type a prompt into a coding agent.
+
+I learned most of this while building [Archer](https://github.com/adarshaacharya/archer), my own terminal-first coding agent. Archer is a learning project, not a competitor to the agents above. It started as an attempt to reproduce the loop and quickly turned into an excuse to understand everything surrounding it.
 
 ---
 
 ## The Misconception: It's Not a Chatbot
 
-The mental model most people carry is this: user sends message → LLM responds → done. That works for a conversational assistant. Coding agents are different. They operate in a loop, take actions with real side effects, and have to manage state across an unbounded number of turns without losing coherence or destroying the user's codebase.
+The chatbot version is straightforward: user sends message → LLM responds → done. A coding agent adds tools and keeps going. It reads files, proposes edits, runs commands, sees what happened, and decides what to do next.
 
-The moment you add side effects — file writes, shell commands, web fetches — you've left chatbot territory. You need a runtime that can:
+That sounds like a small change until those tools have real side effects. File writes, shell commands, and web requests need a runtime that can:
 
 - **Execute** tool calls safely and in the right order
 - **Track** what happened across turns
@@ -35,31 +36,31 @@ The harness is the orchestration layer that wraps the LLM. The model only sees t
 
 ![Coding agent harness architecture — data flow from user input through intent router, LLM loop, tool executor, permission policy, OS sandbox, compaction, and SQLite persistence](./diagram-harness.png)
 
-Think of it as a thin but deeply opinionated process manager. A minimal harness contains:
+I think of the harness as an opinionated process manager. A minimal harness contains:
 
-```
-AgentRuntime {
-  messages: Message[]       // the only state
-  llmClient: LLMClient      // provider-agnostic
-  toolExecutor: ToolExecutor
-  permissionPolicy: Policy
+```typescript
+interface AgentRuntime {
+  messages: CoreMessage[]      // the only state — from Vercel AI SDK
+  model: LanguageModel         // provider-agnostic handle
+  tools: ToolSet
+  policy: PermissionPolicy
   systemPrompt: string
-  usageTracker: UsageTracker
+  usage: UsageTracker
 }
 ```
 
-There is no explicit state machine. No workflow graph. The message array *is* the state. The entire agent's working memory lives in that array.
+From the model's point of view, the message array is the state. If an instruction, tool call, or observation is not in that history, the model cannot use it.
 
-Claude Code's harness, for instance, separates reasoning (the model) from mediation (everything else) across six distinct layers:
+A useful way to split the surrounding runtime is:
 
 1. **Input Layer** — session management, permission modes, project trust gates
 2. **Memory Layer** — CLAUDE.md, project notes, skill files
 3. **Execution Layer** — tool definitions, parallel vs. sequential scheduling, cost tracking
 4. **Integration Layer** — MCP servers, external capabilities
 5. **Multi-Agent Layer** — subagent spawning, worktree isolation
-6. **Observability Layer** — lifecycle hooks (PreToolUse, PostToolUse, Stop, PreCompact)
+6. **Observability Layer** — lifecycle hooks, logs, traces, usage
 
-Each layer has a specific job and doesn't bleed into the others. That separation is what allows the system to be composable — you can swap out the permission policy without touching the tool executor.
+What matters here is not the exact list. It is the separation. A permission-policy change should not require rewriting the tool executor. A new model provider should not affect the storage layer.
 
 ---
 
@@ -67,40 +68,49 @@ Each layer has a specific job and doesn't bleed into the others. That separation
 
 The loop is simple by design:
 
-```
-while not done:
-  response = llm.complete(messages, tools)
-  messages.append(response)
-  
-  if response.is_text_only:
-    break
-  
-  for tool_call in response.tool_calls:
-    result = execute(tool_call)
-    messages.append(tool_result(result))
-  
-  if budget_exceeded or turn_limit_reached:
-    break
+```typescript
+while (true) {
+  const step = await generateModelStep({
+    model: runtime.model,
+    messages: runtime.messages,
+    tools: runtime.tools,
+    system: runtime.systemPrompt,
+  })
+
+  // Preserve text and tool calls, including each call's ID.
+  runtime.messages.push(step.assistantMessage)
+
+  if (!step.toolCalls.length) break
+
+  const results = await executeScheduledToolCalls(step.toolCalls, runtime.policy)
+  for (const result of results) {
+    runtime.messages.push(toolResultMessage(result.callId, result.output))
+  }
+
+  if (budgetExceeded() || turnLimitReached()) break
+}
 ```
 
-That's it. Every coding agent — Claude Code, Codex CLI, Cursor — runs some variant of this. The complexity is entirely in what `execute(tool_call)` does and how `messages` is managed.
+The code is almost disappointingly small. The difficult decisions are hidden inside `executeScheduledToolCalls`, the message history, and the stopping conditions.
 
 What makes this different from a simple API call:
 
 - **Tool calls can fail.** The harness must decide: retry, report error to model, or abort?
 - **Tool results can be enormous.** A `cat` on a 50k LOC file would blow the context window. The harness must truncate or summarize.
-- **Some tools must run sequentially.** File writes must not race. The harness schedules read-only tools in parallel and serializes mutating ones.
-- **The loop can run indefinitely.** Budget and turn limits are not optional guardrails — they're structural constraints on a system that has no natural stopping condition.
+- **Some tools depend on earlier results.** Independent work can run in parallel, while dependent commands and conflicting edits must be ordered.
+- **The loop can run indefinitely.** Without budget and turn limits, it has no natural stopping condition.
 
 ---
 
-## Tool Calls: The Real Complexity
+## Tools: How Model Intent Becomes Action
 
-A tool in an agent harness is not just a function. It's a contract between the model and the runtime, with three components:
+The model cannot open a file or run a command by itself. It can only ask the harness. A tool turns that request into something software can inspect before anything happens.
 
-### 1. The Schema
+A tool definition usually gives the model three pieces of information:
 
-The harness ships tool definitions to the LLM as JSON Schema. The model's tool calls must conform to these schemas — any deviation is a structured output failure that the harness must handle.
+- a **name**, such as `read_file` or `bash`
+- a **description** explaining when the tool is useful
+- an **input schema** describing the arguments the tool accepts
 
 ```json
 {
@@ -117,46 +127,69 @@ The harness ships tool definitions to the LLM as JSON Schema. The model's tool c
 }
 ```
 
-The model never sees actual function signatures. It sees text descriptions of what tools do. The quality of these descriptions directly affects how reliably the model invokes tools correctly.
+The model sees this public contract and returns a **tool call** containing the chosen tool and proposed input. The harness validates it before deciding whether anything should run. Local tools execute inside the harness; provider-hosted tools and external tool servers run elsewhere and return a result.
 
-### 2. The Execution Pipeline
+Names, descriptions, schemas, examples, and the surrounding prompt all influence tool selection. This makes tool design part of the agent's reasoning interface. A vague `execute` tool gives the model little guidance. A focused `read_file` tool with clearly described inputs is easier to choose and harder to misuse.
 
-When the harness receives a tool call, it runs through a pipeline before touching the system:
+Schemas help, but they do not make a call safe. Some providers support strict schema-constrained calls; others make a best effort. Either way, `read_file("../../.ssh/id_rsa")` can be perfectly valid JSON. The harness still has to decide whether the action itself is allowed.
+
+### The Tool-Call Lifecycle
+
+A tool call is one step in a conversation between the model and the harness:
 
 ```
-tool_call
-  → parse & validate input
+expose relevant tools to the model
+  → model returns text, one tool call, or several tool calls
+  → validate each tool call and its input
   → check permission policy
   → request user approval (if required)
-  → execute in sandbox
-  → capture stdout/stderr/exit code
-  → format result for model context
-  → append to message array
+  → execute locally, through a provider, or through an external tool server
+  → normalize and limit the result
+  → attach the result to the matching tool call
+  → send the updated conversation back to the model
 ```
 
-The core tool taxonomy breaks into four classes, and the harness treats each fundamentally differently:
+The returned value is a **tool result**: file contents, a patch result, search results, or a shell command's stdout, stderr, and exit code. It becomes context for the next model step. From there, the model may call another tool, recover from an error, or answer the user.
+
+There are more exit paths than "the model finished." The loop may pause for approval, stop because a tool has no local executor, fail during execution, or hit a turn, token, time, or cost limit.
+
+### Different Tools Need Different Controls
+
+I found four groups useful when reasoning about scheduling and risk:
 
 | Class | Examples | Scheduling | Approval |
 |-------|---------|-----------|---------|
-| **Read** | ReadFile, Grep, Glob, LS | Parallel | Auto — truncate if oversized |
-| **Write** | Edit, Write, MultiEdit | Sequential | Always explicit, show diff first |
-| **Execute** | Bash | Sequential | Static analysis first, then approval |
-| **Web** | Search, OpenPage, FetchURL | Parallel | URL allowlist or per-request |
+| **Read** | ReadFile, Grep, Glob, LS | Often parallel when independent | Usually automatic |
+| **Write** | Edit, Write, ApplyPatch | Serialize conflicting edits | Often approval or diff review |
+| **Execute** | Bash, test runner | Depends on command dependencies | Policy-based; high-risk commands denied |
+| **Web** | Search, FetchURL | Often parallel when independent | Network policy or allowlist |
 
-Read tools run in parallel safely. Write tools must serialize — concurrent edits to the same file corrupt state. Bash is the most dangerous: one command can delete the repo, exfiltrate credentials, or fork-bomb the machine. Web tools are parallel but introduce a different risk class: outbound network calls.
+The category does not decide the schedule. Two independent reads can usually run together. Two edits to the same file cannot. Shell commands can be parallel or strictly ordered depending on whether one needs the result of another.
 
-**Web search is the tool that patches a structural limitation of the model itself.** LLM training data has a hard cutoff — everything published after it is invisible. For a coding agent this matters concretely: the npm package the model confidently recommends may be deprecated, the API signature may have changed, the CVE it doesn't know about may be in the code it just wrote. Without web search, the agent reasons with frozen training data. With it, results get injected into the message array as tool results and the model's next response is grounded in live reality.
+Approval has the same problem. A read is low risk only if its path is allowed. A shell command may be harmless, mutating, or destructive depending on its arguments. Tool names are a useful hint, but the proposed action, permission mode, and sandbox boundary have to make the final decision.
 
-The harness decides *when* to search in one of three ways: automatic triggers (any question about a library version), model-driven (model calls the search tool when it decides it needs context), or user-explicit (a `/web` command). Each has a failure mode. Automatic triggers over-fire. Model-driven fails when the model doesn't know what it doesn't know — if training data confidently contained wrong information, the model won't think to verify. User-explicit requires the user to notice the gap. Archer uses model-driven and exposes Tavily, Exa, and its own Archer Scout as pluggable providers — the same provider-abstraction pattern as the LLM layer.
+### How Many Tools Does a Coding Agent Need?
+
+Surprisingly few. A coding agent needs three basic capabilities:
+
+1. **Inspect** the repository and read relevant context
+2. **Change** files in a reviewable way
+3. **Execute** commands to search, build, test, and verify
+
+A shell plus filesystem access can technically cover all three. Shell commands can read files, search code, write changes, inspect Git, and run tests. That makes Bash an effective escape hatch and explains why very small coding-agent implementations can still solve real tasks.
+
+But "capable" is not the same as "well designed." Raw shell output is often verbose and inconsistent. Shell-based edits are difficult to review, easy to quote incorrectly, and harder for a policy engine to classify. A small set of structured tools such as `read_file`, `grep`, `apply_patch`, and `bash` gives the harness cleaner inputs, more precise approvals, and better observations while preserving Bash for everything that does not deserve a dedicated tool.
+
+The balance I settled on was a small structured toolset with Bash as the escape hatch. A specialized tool earns its place when it makes a frequent action safer, more compact, or easier for the model to use reliably.
 
 When I built Archer — my own attempt at replicating this harness from scratch — I implemented three approval modes to see how far you can get with a simple policy instead of per-tool rules:
-- `read-only` — denies all writes automatically
-- `workspace-write` — writes require user approval, reads are automatic
-- `danger-full-access` — auto-approves everything (for trusted automation)
+- `read-only` — blocks direct file-edit tools; shell commands still pass through command policy and approval
+- `workspace-write` — file edits and mutating commands require approval, while reads are automatic
+- `danger-full-access` — auto-approves ordinary edits and commands, while known-dangerous commands remain denied
 
-### 3. The Approval Layer
+### The Approval Layer
 
-Approval is where the harness makes value judgments about risk. A naive implementation asks the user about everything. A well-designed one uses a policy engine.
+My first instinct was to ask the user about anything remotely risky. That sounds safe, but a constant stream of prompts trains people to approve without reading. A policy engine handles the obvious cases and reserves interruptions for decisions that matter.
 
 In Archer, this lives in a small `@archer/sandbox` policy module:
 
@@ -165,47 +198,58 @@ decidePathAccess(path: string, operation: "read" | "write"): "allow" | "ask" | "
 decideCommand(command: string): "allow" | "ask" | "deny"
 ```
 
-`decideCommand` runs a shell command through a static analyzer — it tokenizes the command and checks for known-dangerous patterns (pipes to `rm`, `chmod 777`, `curl | bash`, etc.) without executing it. This is not foolproof, but it catches the obvious cases before they reach the user prompt queue.
+`decideCommand` runs a shell command through a static analyzer. It recognizes allowlisted inspection and test commands, sends network, package-manager, and unclassified commands for approval, and denies known-dangerous patterns such as `rm -rf`, recursive permission changes, or `git reset --hard`. This is not foolproof, but it catches obvious cases before execution.
 
 The policy is separate from the tool executor by design. You can swap in a stricter or more permissive policy without changing a single line of tool code.
 
 ---
 
-## The Sandbox: Two Layers, Not One
+## The Sandbox: The Boundary Between Intent and Side Effects
 
 ![Coding agent sandbox — permission policy at the app layer and OS sandbox at the kernel layer operating independently](./diagram-sandbox.png)
 
-The permission policy and the OS sandbox are two different systems solving two different problems. Most people treat them as one thing. They're not.
+The first Archer prototype treated approval as the safety system. If a command looked risky, ask the user. If they approved it, run the command. That felt reasonable until I noticed the obvious hole: approval controls intent, not capability.
 
-The **permission policy** lives at the application layer — it answers *"should we run this?"* before execution begins. The **OS sandbox** lives at the kernel layer — it answers *"even if we run it, what can it actually touch?"* during execution. A tool call can pass the permission check and still be constrained by the sandbox. Independence is the point: if the policy layer makes a mistake, the sandbox catches it. If the sandbox has a misconfiguration, the policy is a first line of defense. Defense in depth only works when the layers fail independently.
+A user might approve `npm test` without realizing a lifecycle script reaches outside the repository. The model might generate a command broader than the one it meant to run. A prompt-injected instruction hidden in a file or webpage might ask for something the user never intended. Once tools are connected, reasoning mistakes turn into `rm`, `curl`, file edits, package installs, and outbound requests.
 
-Claude Code implements OS-level sandboxing via macOS `sandbox-exec` and Linux namespaces — kernel-enforced boundaries that restrict which filesystem paths the process can read/write and which network endpoints it can reach. The application-level permission model doesn't replace this; it sits above it.
+That is where sandboxing comes in. Approval answers, *"did the user consent to this action?"* A sandbox answers, *"even with consent, what is this process technically capable of doing?"*
 
-**Layered defenses can degrade in non-obvious ways.** In production, Claude Code hit a real case: commands with more than 50 subcommands fell back to a single generic approval prompt instead of running per-subcommand policy checks, because granular parsing caused UI freezes. The security property was silently weakened under real load — two layers sharing a failure mode through the UI thread.
+The two checks happen at different points. Before execution, the **policy layer** decides whether an action should be attempted. Reads might pass automatically. Writes might require confirmation. Known-dangerous commands can be denied outright. In Archer, this is the same `@archer/sandbox` policy used by the approval layer above.
 
-The consequences of getting the sandbox wrong are concrete. A now-patched SOCKS5 null-byte injection in Claude Code's network sandbox affected every release from v2.0.24 through v2.1.89 — roughly 130 versions over 5.5 months. It allowed arbitrary outbound network calls from inside the sandbox: credentials, source code, anything accessible to the process. Anthropic patched it silently in v2.1.90 with no mention in release notes.
+```typescript
+decidePathAccess(path: string, operation: "read" | "write"): "allow" | "ask" | "deny"
+decideCommand(command: string): "allow" | "ask" | "deny"
+```
 
-In Archer, I only built the policy layer — no OS-level sandbox. For a local, trusted environment with explicit approval modes it's fine. But the gap is real: a sufficiently crafted bash command could still escape policy checks in edge cases. For anything automated or multi-user, the OS sandbox layer is not optional.
+During execution, the **execution sandbox** limits what the process can actually touch. In practice, that usually means constraining writable paths, protecting sensitive directories like `.git` or config stores, restricting outbound network access, and requiring escalation when a command needs broader access.
+
+A command can pass the policy check and still fail inside the OS sandbox because it tries to write outside the workspace or reach a blocked host. That failure is the sandbox doing its job.
+
+The implementation differs across agents and operating systems, but the shape is consistent: define a writable workspace, protect critical paths, restrict network access, and provide an escalation path when broader access is genuinely needed.
+
+Archer currently has only the first layer. It can decide whether a file write or shell command should be allowed, but it does not yet run commands inside a full OS-level sandbox. That is acceptable for the local learning project it is today. It would not be enough for unattended or multi-user execution.
+
+That gap changed how I think about sandboxing. It is not an optional security feature added after the agent works. It is part of the boundary between a model suggesting an action and a process carrying it out.
 
 ---
 
 ## Memory: Three Completely Different Problems
 
-"Memory" in an agent harness means three different things, and conflating them is where most naive implementations go wrong.
+"Memory" sounded like one feature when I started. It turned out to be three unrelated problems sharing a name.
 
 ![Coding agent memory layers — from volatile message array through compaction artifact to persistent SQLite and permanent project files](./diagram-memory.png)
 
 ### 1. In-Session Context (The Message Array)
 
-The most immediate form of memory is the conversation history living in the message array. This is what the LLM actually sees. It grows with every turn — user messages, assistant responses, tool calls, tool results. Tool results are the real problem: a single `grep` or `find` can add thousands of tokens.
+The first is the conversation history in the message array. This is what the model actually sees. It grows with every user message, assistant response, tool call, and tool result. Tool results are the troublemakers: one careless `grep` or `find` can add thousands of tokens.
 
-The context window is finite. In a long coding session, tool observations can consume 70-80% of available tokens. When the array grows too large, the model starts "forgetting" earlier context — or the API call simply fails with a 400.
+The context window is finite. In a long coding session, tool observations can consume 70-80% of the available tokens. Eventually the model starts losing earlier context, or the API call simply fails with a 400.
 
 ### 2. Cross-Session Persistence (Storage Layer)
 
-The second problem: when a session ends, everything in the message array disappears. For a coding agent that works across days or weeks on a project, this is catastrophic.
+Then there is restart persistence. Without storage, closing the process wipes the entire session. That gets old quickly when a task spans more than one sitting.
 
-Serious agents solve this with a persistent storage layer. In Archer, I went with SQLite + Drizzle ORM — four tables covers the essentials:
+Archer uses SQLite with Drizzle. Four tables cover the essentials:
 
 | Table | Purpose |
 |-------|---------|
@@ -218,23 +262,23 @@ On session resume, the harness reconstructs the message array from storage. The 
 
 ### 3. Project Knowledge (Durable Files)
 
-The third problem is the hardest: how does the agent know project-specific conventions, architecture decisions, and constraints that weren't in any conversation?
+The third kind of memory is project knowledge: conventions, architecture decisions, and constraints that may never have appeared in the conversation.
 
 Claude Code uses `CLAUDE.md` — a markdown file at the project root prepended to every system prompt. Other agents (Codex, Cursor, GitHub Copilot) use `AGENTS.md`, the open standard OpenAI originated for Codex CLI in 2025 and donated to the Linux Foundation. Different filenames, identical concept: a human-maintained file that survives compaction because it lives on disk, not in the message array.
 
-One non-obvious research finding on AGENTS.md across 138 real repos: LLM-generated versions *reduce* agent task success rates and increase inference cost by 20%+. Human-written minimal ones give only +4% improvement — and only when precise. The file should contain only what the agent cannot infer from the codebase. Everything else is noise that actively degrades performance.
+A study of AGENTS.md files across 138 repositories found an awkward result: LLM-generated files *reduced* task success and increased inference cost by 20%+. Minimal human-written files improved success by only +4%, and only when they were precise. The useful version of this file contains what the agent cannot infer from the repository. Everything else is expensive noise.
 
-In Archer, `.agents/config` serves the same role. The pattern is identical across every serious agent: durable files on disk become persistent project knowledge, immune to compaction.
+Archer uses `.agents/config` for the same job. Keeping this knowledge on disk also means it survives conversation compaction.
 
 ---
 
 ## Context Compaction: Controlled Amnesia
 
-When the context window fills up, the harness has to decide what to forget. This is the compaction problem, and different agents solve it differently.
+Sooner or later, the message history no longer fits. The harness then has to decide what it is willing to forget.
 
-The naive solution — truncate from the front — destroys coherence. The model loses the original task, early constraints, and half the conversation.
+Dropping messages from the front is easy and usually terrible. The model loses the original request, early constraints, and half-finished decisions.
 
-Serious implementations use a summarization strategy:
+A more useful strategy looks like this:
 
 ```
 compaction_trigger:
@@ -248,15 +292,15 @@ compaction_trigger:
 
 Claude Code fires at ~92% capacity. In Archer, `compaction-policy.ts` splits the message array into `protectTokens` (recent context, kept verbatim) and `prunableTokens` (older context, summarized into a `CompactContinuationArtifact`).
 
-The key insight is that tool results decay in value much faster than assistant reasoning. A file listing from 20 turns ago is noise. The decision the agent made based on that listing is signal. Compaction should preserve decisions and discard raw observations.
+The practical lesson is that raw observations age badly. A file listing from 20 turns ago is usually noise; the decision made from that listing may still matter. Good compaction keeps the decision and lets the listing go.
 
 ---
 
 ## The Two-Phase Routing Problem
 
-Not every user message requires the full agent loop. "What does this function return?" needs a single LLM call. "Refactor the auth module" needs 30 tool calls across 15 turns. Treating these the same is wasteful and slow.
+Not every message deserves the full machinery. "What does this function return?" may need one model call. "Refactor the auth module" may need 30 tool calls across 15 turns. Treating both the same makes simple questions feel strangely expensive.
 
-In Archer, I built explicit intent routing to handle this:
+Archer handles this with explicit intent routing:
 
 **Phase 1: Fast-path detection**
 
@@ -272,21 +316,22 @@ If heuristics are ambiguous, a small, fast model resolves the intent via a struc
 
 Each intent maps to a different execution path with different tool sets, different approval thresholds, and different token budgets. A `direct-answer` turn never touches the filesystem. A `change` turn gets full tool access.
 
-This is the difference between an agent that feels responsive and one that kicks off a 30-second planning phase for every input.
+Without that split, even a quick question can trigger a 30-second planning ceremony.
 
 ---
 
 ## Multi-Provider LLM Abstraction
 
-Production coding agents don't hardcode to one provider. The model you want for fast interactive coding (Gemini Flash) is not the same as what you want for complex refactoring (Claude Opus). Users have API keys for different providers. Costs vary by an order of magnitude.
+Hardcoding one provider works until you want a faster model for small tasks, a stronger one for a refactor, or simply need to use the API key you already have. Costs vary by an order of magnitude, and model strengths move quickly.
+Its not just switiching between the providers, its also the different models available from each provider. Frtontier labs harnesses are built around their own models, while open-source harnesses like OpenCode or Archer are built around the models available from the providers they support.
 
-The right abstraction is a provider-agnostic interface that resolves at runtime:
+Archer resolves a provider-agnostic model handle at runtime:
 
 ```typescript
 resolveLanguageModel({ provider, modelId, apiKey }): LanguageModel
 ```
 
-In Archer, I used the Vercel AI SDK for this — unified interface across OpenAI, Anthropic, Google, DeepSeek, and OpenRouter with one consistent `streamText` call. Provider resolution reads from environment variables:
+I used the Vercel AI SDK for this. It gives Archer one `streamText` interface across OpenAI, Anthropic, Google, DeepSeek, and OpenRouter. Provider resolution reads from environment variables:
 
 ```
 ARCHER_PROVIDER=anthropic
@@ -294,94 +339,68 @@ ANTHROPIC_API_KEY=sk-ant-...
 AGENT_MODEL=claude-3-5-sonnet-latest
 ```
 
-The LLM call itself is identical regardless of provider. The harness doesn't know or care which model it's calling — it sends messages and tool definitions, receives a response with optional tool calls, and continues the loop.
+Provider APIs differ in message formats, tool definitions, streaming events, and supported features. A provider adapter hides those differences from the agent core by exposing a common contract: send messages and available tools, then return text, tool calls, usage, and finish metadata.
 
-One non-obvious optimization here: prompt caching. Stable system prompts and tool definition arrays that don't change between turns can be cached at ~90% cost reduction on repeated reads. This is structural — you don't cache specific responses, you cache the *prefix* that's identical across every call in a session.
+Prompt caching is especially valuable here. System prompts and tool definitions repeat across turns, so providers can cache that stable prefix at roughly 90% lower cost on repeated reads. You are not caching answers; you are avoiding payment for processing the same setup over and over.
 
-Model choice matters here beyond benchmarks. DeepSeek R1/V4 is a good example: it consistently performs well in harness contexts despite a smaller training corpus than frontier closed-source models. The reason is that it was RL-trained against actual sandboxed agentic environments at scale — tool call schema compliance gets optimized as an outcome, not pattern-matched from examples. For a harness that depends entirely on reliable structured output, that training signal matters more than raw knowledge breadth.
+Model choice also matters beyond benchmark scores. DeepSeek R1/V4 is a good example: it performs well in harnesses despite a smaller training corpus than frontier closed-source models. It was RL-trained against sandboxed agentic environments at scale, so reliable tool use was optimized as an outcome. In a harness, that can matter more than raw knowledge breadth.
+
+---
+
+## Web Tools: Bringing in Current Context
+
+Models are trained on bounded snapshots of data, and even older knowledge can be incomplete or stale. That is a problem for coding agents: the package confidently recommended by the model may already be deprecated, and the API signature may have changed months ago.
+
+Web tools close part of that gap. Search discovers sources; fetch reads a specific page. Both return results like any other tool, alongside current context from the repository and installed package documentation.
+
+The harness still has to decide *when* to search:
+
+- **Automatic triggers** (search on any library version question) — over-fires, burns tokens on irrelevant queries
+- **Model-driven** (model calls the search tool when it decides to) — fails when the model doesn't know what it doesn't know. If training data contained confidently wrong information, the model won't think to verify.
+- **User-explicit** (`/web` command) — requires the user to notice the knowledge gap themselves
+
+Of course, the web brings its own problems. Pages can be wrong, outdated, or contain prompt-injection attempts. The harness has to limit returned content, preserve source links, and treat page instructions as untrusted data.
+
+Archer exposes Tavily, Exa, and its own Archer Scout behind one pluggable web-capability interface. Archer Scout provides a built-in free search option with limited source coverage; users can connect another provider when they need broader results. The agent sees one normalized search tool regardless of which provider handles the request.
 
 ---
 
 ## The TUI Layer: Making It Usable
 
-A terminal UI for an agent is not a cosmetic decision. It's load-bearing infrastructure.
+A terminal UI looked cosmetic until Archer had more than one thing happening at a time.
 
-The agent loop produces a stream of events: tool invocations, token streams, approval requests, compaction events, errors. Without structured rendering, this is a wall of JSON. The TUI translates that event stream into something a developer can actually monitor and respond to.
+The loop produces tool invocations, token streams, approval requests, compaction events, and errors. Without structured rendering, the user gets a wall of JSON and no clear sense of whether the agent is waiting, working, or stuck.
 
-The critical moments the TUI must handle:
+Four moments matter most:
 
 1. **Approval prompts** — the user must see exactly what the agent is about to do and make a real-time decision. A bad UX here means users rubber-stamp everything, defeating the permission system.
 2. **Streaming output** — LLM responses stream token by token. Buffering to completion before display creates a worse experience than streaming, but raw streaming needs layout management.
 3. **Tool result display** — showing a full 500-line file diff vs. a summary vs. nothing is a UX decision with real consequences for how much the user understands what's happening.
 4. **Cost tracking** — token counts and estimated USD cost should be visible after every turn. The user needs to know what they're spending.
 
-In Archer, the TUI is built on OpenTUI — a React-inspired terminal rendering framework. Events from the harness map to UI components: tool invocation blocks, approval dialogs, streaming text panels, cost footers. The TUI never blocks the agent loop; it renders asynchronously while execution continues.
+Archer's TUI is built on OpenTUI. Harness events become tool blocks, approval dialogs, streaming text, and cost footers. Rendering stays separate from execution, so the interface can update without blocking the loop.
 
 ---
 
-## A Single Turn, Unwrapped
+## Building Your Own Harness
 
-Abstract architecture is easier to understand with a concrete example. Here's exactly what happens when you type `"fix the auth bug in auth.ts"` into a coding agent:
+If I were starting again, I would still begin with the loop. Then I would draw the boundaries early: provider differences behind one adapter; every tool call through validation, policy, approval, and sandbox execution; conversation history persisted from the start; compaction added before long sessions make it urgent.
 
-**1. Intent routing** — the harness sees an imperative verb (`fix`) and a specific file. Fast-path heuristic: classify as `change`. No LLM call yet.
-
-**2. Context assembly** — harness loads AGENTS.md / CLAUDE.md, recent session messages from SQLite, and the tool definitions array. Builds the system prompt. Checks if tokens are already near threshold — if so, compacts before the first LLM call.
-
-**3. First LLM call** — model receives system prompt + message history + tool definitions. Responds with two tool calls: `ReadFile("auth.ts")` and `Grep("authenticate", ".")`.
-
-**4. Parallel execution** — both are read tools. Harness runs them in parallel. Permission policy auto-approves (reads are never blocked). Results come back: file contents + grep matches.
-
-**5. Results appended** — tool results added to message array. Second LLM call made with updated context.
-
-**6. Model plans the fix** — responds with `Edit("auth.ts", patch)`. This is a write tool.
-
-**7. Policy check** — harness hits the permission policy: file write → `ask`. Policy calls `decidePathAccess("auth.ts", "write")` → `ask`. TUI renders a diff of the proposed change.
-
-**8. User approves** — harness applies the patch. Tool result appended. Third LLM call.
-
-**9. Verification** — model calls `Bash("npm test")`. Shell execution → static analysis runs first. Checks for dangerous patterns: none found. Still `ask` because it's a shell command. TUI shows the command. User approves.
-
-**10. Sandbox execution** — command runs inside OS sandbox. Filesystem and network restrictions apply even though it was approved at the policy layer.
-
-**11. Tests pass** — result appended. Fourth LLM call. Model produces a text-only response (no more tool calls) — that's the exit condition for the loop.
-
-**12. Persist** — turn result written to SQLite: intent (`change`), status (`completed`), token count, estimated USD cost. TUI renders the final summary.
-
-Twelve distinct steps. Four LLM calls. Two approval prompts. One loop iteration per LLM call. Every step lives in a different layer of the harness.
+A useful first version needs only a model interface, a small toolset for reading, patching, and running commands, a permission policy, and a durable message store. The library choices matter less than keeping those responsibilities separate.
 
 ---
 
-## Building Your Own: What the Stack Actually Looks Like
+## The Model Is Not the Product
 
-If you wanted to build a coding agent with this architecture today, the stack choices that matter:
+The part that took me longest to internalize was how little of the final experience comes from the loop itself.
 
-**LLM abstraction:** Vercel AI SDK. Provider-agnostic, handles streaming, structured output, and tool call formatting across all major providers. Saves weeks of integration work.
-
-**Agent core:** `@openharness/core` or roll your own loop around `streamText` with tool execution callbacks. The loop itself is 100 lines; the infrastructure around it is 10,000.
-
-**Storage:** SQLite for local-first persistence. Drizzle ORM for type-safe schema management. Session and message tables are table stakes; turn metrics and compaction artifacts require design.
-
-**Terminal UI:** OpenTUI (React bindings for the terminal) or Ink. Both let you write declarative component trees that render to ANSI. State management is identical to a web app — events flow in, components render.
-
-**Sandbox/policy:** Write your own. The logic is simple but the judgments are project-specific. Static shell command analysis + path escaping detection + configurable approval modes covers 95% of cases.
-
-**Tool set:** Start with bash, file read/write, and git. Web fetch and MCP integration can be added later. The tool schema design matters more than the tool count — a well-described bash tool beats six poorly described specialized tools.
-
-The infrastructure is not glamorous. Compaction policy, approval queues, cost tracking, session resume — none of this shows up in demos. But it's what separates a weekend project from something you can actually run on a real codebase.
-
----
-
-## The Real Architecture Insight
-
-Here's the thing that took a while to internalize: the model is the smallest part of the system.
-
-The clearest proof: take the exact same model and run it in two different harnesses. Claude Sonnet in Claude Code completes a benchmark task in **33K tokens**. The same Claude Sonnet in Cursor uses **188K tokens** for the identical task — 5.5x more. Same model. Different context management, different tool schema design, different compaction strategy. The harness accounts for the entire difference.
+Take the exact same model and run it in two different harnesses. Claude Sonnet in Claude Code completes a benchmark task in **33K tokens**. The same Claude Sonnet in Cursor uses **188K tokens** for the identical task — 5.5x more. Same model; different context management, tool design, and compaction.
 
 On SWE-bench Verified, Claude Code hits 72.5%. Cursor with the same underlying Claude model sits at 55-62%. That gap is not the model — it's twelve steps of harness engineering applied differently.
 
-And it cuts the other way too. Claude Opus 4.7 scores **91.1% in Cursor's harness** versus 87.2% in Claude Code's own harness. Cursor's context orchestration sometimes extracts more from a model than the model maker's own tooling. The harness gap is now larger than the model tier gap.
+It cuts the other way too. Claude Opus 4.7 scores **91.1% in Cursor's harness** versus 87.2% in Claude Code's own harness. Sometimes another product's orchestration gets more from a model than the model maker's own tooling.
 
-Swapping GPT-4o for Claude Sonnet in a well-built harness takes ten lines. Replacing the permission policy, improving compaction, or redesigning tool schemas takes weeks. The quality of a coding agent is almost entirely a function of harness engineering — context management, approval UX, tool design, routing decisions.
+Swapping GPT-4o for Claude Sonnet in a well-built harness takes ten lines. Replacing the permission policy, improving compaction, or redesigning tool schemas takes weeks. That is where most of the engineering lives.
 
 The LLM is a black box with a text interface. The harness is the engineering.
 
@@ -389,12 +408,12 @@ The LLM is a black box with a text interface. The harness is the engineering.
 
 ## Archer: My Attempt at Replicating This
 
-Everything in this post came from building [Archer](https://github.com/adarshaacharya/archer) — my own attempt to understand how a coding harness actually works by writing one from scratch. It's not competing with Claude Code or Codex CLI. It's a learning project that forced me to confront every problem described above: compaction thresholds, approval queues, provider abstraction, intent routing, session persistence.
+Everything in this post came from building [Archer](https://github.com/adarshaacharya/archer) to understand how a coding harness works from the inside. It forced me to deal with compaction thresholds, approval queues, provider abstraction, intent routing, and session persistence instead of treating them as implementation details for later.
 
-It's BYOK, multi-provider, runs in the terminal, and has all the pieces — but the honest framing is that it's a study in harness engineering, not a frontier product. Building it taught me that compaction policy is harder than it looks, that the approval UX determines whether users actually trust the agent, and that context management is where every naive implementation eventually breaks.
+Archer is BYOK, multi-provider, and runs in the terminal. More importantly, it remains a study in harness engineering rather than a frontier product. Building it taught me that compaction is harder than it looks, approval UX decides whether users actually read approvals, and every naive context strategy eventually runs into a wall.
 
 If you want to understand what makes these systems tick, reading a working implementation is faster than reading architecture docs.
 
 ---
 
-*The architecture patterns described here — harness separation, compaction strategies, two-phase routing, provider abstraction — are drawn from analysis of Claude Code, Codex CLI, and open-source agent implementations. The field is moving fast; specific implementation details will change, but the structural problems are durable.*
+*A note on scope: the patterns here come from building Archer and studying Claude Code, Codex CLI, and open-source agents. The implementations will keep changing. The surrounding problems probably will not.*
