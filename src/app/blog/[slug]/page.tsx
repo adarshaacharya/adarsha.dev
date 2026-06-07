@@ -29,7 +29,8 @@ export async function generateMetadata(props: {
     return;
   }
 
-  const ogImage = `${siteMetadata.siteUrl}/og?title=${blog.title}`;
+  const ogImage = new URL("/og", siteMetadata.siteUrl);
+  ogImage.searchParams.set("title", blog.title);
 
   return {
     title: blog.title,
@@ -45,7 +46,7 @@ export async function generateMetadata(props: {
       authors: siteMetadata.author,
       images: [
         {
-          url: ogImage,
+          url: ogImage.toString(),
           width: 1200,
           height: 630,
           alt: blog.title,
@@ -56,7 +57,7 @@ export async function generateMetadata(props: {
       card: "summary_large_image",
       title: blog.title,
       description: blog.summary,
-      images: [ogImage],
+      images: [ogImage.toString()],
     },
   };
 }
