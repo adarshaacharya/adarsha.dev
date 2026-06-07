@@ -37,8 +37,8 @@ The harness is the orchestration layer that wraps the LLM. The model only sees t
 
 <Image
   src={"/_static/blogs/coding-agent-harness/diagram-harness.png"}
-  width={1280}
-  height={720}
+  width={450}
+  height={450}
   alt="Coding agent harness architecture — data flow from user input through intent router, LLM loop, tool executor, permission policy, OS sandbox, compaction, and SQLite persistence"
 />
 
@@ -250,8 +250,8 @@ That gap changed how I think about sandboxing. It is not an optional security fe
 
 <Image
   src={"/_static/blogs/coding-agent-harness/diagram-memory.png"}
-  width={1280}
-  height={720}
+  width={450}
+  height={450}
   alt="Coding agent memory layers — from volatile message array through compaction artifact to persistent SQLite and permanent project files"
 />
 
@@ -430,6 +430,16 @@ Archer is BYOK, multi-provider, and runs in the terminal. More importantly, it r
 
 If you want to understand what makes these systems tick, reading a working implementation is faster than reading architecture docs.
 
+
+## References
+
+- [Source Code for Archer](https://github.com/adarshaacharya/archer)
+- [Evaluating AGENTS.md: Are Repository-Level Context Files Helpful for Coding Agents?](https://arxiv.org/abs/2602.11988)
+
+
+
 ---
 
 *A note on scope: the patterns here come from building Archer and studying Claude Code, Codex CLI, and open-source agents. The implementations will keep changing. The surrounding problems probably will not.*
+
+
