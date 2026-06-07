@@ -35,7 +35,12 @@ That runtime is the harness. Everything else is built on top of it.
 
 The harness is the orchestration layer that wraps the LLM. The model only sees text — it cannot execute code, touch files, or call APIs on its own. The harness bridges the model's text output into real system operations and feeds the results back.
 
-![Coding agent harness architecture — data flow from user input through intent router, LLM loop, tool executor, permission policy, OS sandbox, compaction, and SQLite persistence](./diagram-harness.png)
+<Image
+  src={"/_static/blogs/coding-agent-harness/diagram-harness.png"}
+  width={1280}
+  height={720}
+  alt="Coding agent harness architecture — data flow from user input through intent router, LLM loop, tool executor, permission policy, OS sandbox, compaction, and SQLite persistence"
+/>
 
 I think of the harness as an opinionated process manager. A minimal harness contains:
 
@@ -207,7 +212,12 @@ The policy is separate from the tool executor by design. You can swap in a stric
 
 ## The Sandbox: The Boundary Between Intent and Side Effects
 
-![Coding agent sandbox — permission policy at the app layer and OS sandbox at the kernel layer operating independently](./diagram-sandbox.png)
+<Image
+  src={"/_static/blogs/coding-agent-harness/diagram-sandbox.png"}
+  width={1280}
+  height={720}
+  alt="Coding agent sandbox — permission policy at the app layer and OS sandbox at the kernel layer operating independently"
+/>
 
 The first Archer prototype treated approval as the safety system. If a command looked risky, ask the user. If they approved it, run the command. That felt reasonable until I noticed the obvious hole: approval controls intent, not capability.
 
@@ -238,7 +248,12 @@ That gap changed how I think about sandboxing. It is not an optional security fe
 
 "Memory" sounded like one feature when I started. It turned out to be three unrelated problems sharing a name.
 
-![Coding agent memory layers — from volatile message array through compaction artifact to persistent SQLite and permanent project files](./diagram-memory.png)
+<Image
+  src={"/_static/blogs/coding-agent-harness/diagram-memory.png"}
+  width={1280}
+  height={720}
+  alt="Coding agent memory layers — from volatile message array through compaction artifact to persistent SQLite and permanent project files"
+/>
 
 ### 1. In-Session Context (The Message Array)
 
