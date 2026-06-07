@@ -1,5 +1,6 @@
+import { readFile } from "fs/promises";
+import { join } from "path";
 import { NextRequest } from "next/server";
-import { siteMetadata } from "@/data/siteMetadata";
 import { ImageResponse } from "next/og";
 
 export async function GET(req: NextRequest) {
@@ -11,12 +12,13 @@ export async function GET(req: NextRequest) {
       ? searchParams.get("title")?.slice(0, 100)
       : "Blog";
 
-    const groteskRegular = await fetch(
-      new URL(
-        "../../../public/_static/fonts/SpaceGrotesk-Regular.ttf",
-        import.meta.url,
+    const [groteskRegular, bgImage] = await Promise.all([
+      readFile(
+        join(process.cwd(), "public/_static/fonts/SpaceGrotesk-Regular.ttf"),
       ),
-    ).then((res) => res.arrayBuffer());
+      readFile(join(process.cwd(), "public/_static/blog-og-card.png")),
+    ]);
+    const bgDataUrl = `data:image/png;base64,${bgImage.toString("base64")}`;
 
     return new ImageResponse(
       (
@@ -29,7 +31,7 @@ export async function GET(req: NextRequest) {
             alignItems: "flex-start",
             justifyContent: "center",
             color: "white",
-            backgroundImage: `url(${siteMetadata.siteUrl}/_static/blog-og-card.png)`,
+            backgroundImage: `url(${bgDataUrl})`,
           }}
         >
           <div
