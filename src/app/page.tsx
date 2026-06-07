@@ -19,21 +19,21 @@ export default function Home() {
     .slice(0, 2);
 
   return (
-    <div className="space-y-12">
-      <section className="space-y-6">
-        <div className="flex items-center gap-6">
+    <div className="space-y-8">
+      <section className="space-y-4">
+        <div className="flex items-center gap-4">
           <Image
             src="/_static/me.jpg"
-            width={120}
-            height={120}
+            width={80}
+            height={80}
             alt="Adarsha Acharya"
-            className="rounded-2xl transition-all duration-300 hover:scale-105"
+            className="rounded-xl transition-all duration-300 hover:scale-105"
             priority
           />
-          <div className="flex-1 space-y-4">
-            <h1 className="text-2xl font-bold">Adarsha Acharya</h1>
+          <div className="flex-1 space-y-2">
+            <h1 className="text-xl font-bold">Adarsha Acharya</h1>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               {SOCIALS.map((social) => (
                 <SocialLink
                   key={social.label}
@@ -47,42 +47,33 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="space-y-4 text-muted-foreground leading-relaxed">
+        <div className="space-y-3 text-muted-foreground leading-normal text-sm">
           <p>
-            I&apos;m a fullstack software engineer specializing in building web
-            applications powered by modern JavaScript technologies and AI-driven
-            features.
+            Fullstack software engineer specializing in building web applications with modern JavaScript and AI-driven features. Worked on multiple startups across insurance, iGaming, and video streaming domains, with active contributions to open source.
           </p>
           <p>
-            Over the years, I&apos;ve worked on multiple startups to build and
-            launch end-to-end products in insurance, iGaming, and video
-            streaming domains, and have actively contributed to various open
-            source projects.
-          </p>
-          <p>
-            If you have an exciting project or role that aligns with my
-            expertise, please reach out at{" "}
+            Reach out at{" "}
             <a
               href="mailto:hi@adarsha.dev"
               className="font-medium text-foreground underline underline-offset-4 hover:text-primary transition-colors"
             >
               hi@adarsha.dev
             </a>{" "}
-            or through any of my social channels.
+            for exciting projects or opportunities.
           </p>
         </div>
 
-        <div className="flex gap-3">
-          <Button variant="outline" asChild>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" asChild>
             <a href={LINKS.RESUME} target="_blank" rel="noopener noreferrer">
-              <Download className="h-4 w-4 mr-2" />
+              <Download className="h-3.5 w-3.5 mr-1.5" />
               Resume
             </a>
           </Button>
-          <Button variant="outline" asChild>
+          <Button variant="outline" size="sm" asChild>
             <Link href="/projects">
               View Projects
-              <ArrowRight className="h-4 w-4 ml-2" />
+              <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
             </Link>
           </Button>
         </div>
@@ -90,15 +81,15 @@ export default function Home() {
 
       <Separator />
 
-      <section className="space-y-2">
+      <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-semibold tracking-tight">
+          <h2 className="text-xl font-semibold tracking-tight">
             Latest Posts
           </h2>
-          <Button variant="ghost" asChild>
-            <Link href="/blog">
-              View all posts
-              <ArrowRight className="h-4 w-4 ml-2" />
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/blog" className="text-sm">
+              View all
+              <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
             </Link>
           </Button>
         </div>
@@ -108,7 +99,7 @@ export default function Home() {
             <Link
               key={blog.slug}
               href={`/blog/${blog.slug}`}
-              className="block hover:bg-muted/30 transition-colors duration-200 rounded-lg -mx-4 px-4"
+              className="block hover:bg-muted/30 transition-colors duration-200 rounded-lg -mx-2 px-2"
             >
               <BlogListItem blog={blog} />
             </Link>

@@ -75,7 +75,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <main className="mx-4  px-2 md:px-0 lg:mx-auto flex flex-col justify-between min-h-screen">
+            <main className="mx-4 px-1 md:px-0 lg:mx-auto flex flex-col justify-between min-h-screen">
               <Header />
               {children}
               <Suspense fallback={null}>
