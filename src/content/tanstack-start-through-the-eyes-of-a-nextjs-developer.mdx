@@ -114,6 +114,41 @@ src/routes/
 
 The underscore prefix (`_layout.tsx`) is TanStack's way of marking pathless layout routes — routes that wrap children without adding a URL segment.
 
+### Search Params: Typed by Default
+
+In Next.js, search params are untyped strings. You reach for `useSearchParams()` and get `ReadonlyURLSearchParams` — a key-value string map with no schema. Most teams end up installing `nuqs` to get type safety and serialization.
+
+```tsx
+// Next.js — no types, no validation, manual parsing
+const searchParams = useSearchParams()
+const page = Number(searchParams.get('page') ?? '1')
+const sort = searchParams.get('sort') as 'asc' | 'desc' // casting
+```
+
+TanStack Router has typed search params built into the route definition. You define a schema once via `validateSearch` and every read is typed — no casting, no extra library.
+
+```tsx
+import { z } from 'zod'
+
+export const Route = createFileRoute('/posts')({
+  validateSearch: z.object({
+    page: z.number().catch(1),
+    sort: z.enum(['asc', 'desc']).catch('desc'),
+    q: z.string().optional(),
+  }),
+  component: function Posts() {
+    const { page, sort, q } = Route.useSearch() // fully typed
+    return <PostList page={page} sort={sort} query={q} />
+  },
+})
+
+// Navigation — TypeScript enforces valid search params
+<Link to="/posts" search={{ page: 2, sort: 'asc' }}>Next</Link>
+// TS error if you pass page: 'two' or sort: 'random'
+```
+
+This is one of the most immediately productive parts of TanStack Router for Next.js developers. Filters, pagination, tabs driven by URL — all typed end to end.
+
 ---
 
 ## Data Fetching: The Trap That Gets Everyone
@@ -173,6 +208,50 @@ The loader calls the server function. The server function has the boundary. This
 | Good for | Fetching data for SSR + client nav | DB queries, auth checks, secrets |
 | Can be cached by TanStack Query | ✓ | ✓ (via loader) |
 | Direct database access | ✗ | ✓ |
+
+---
+
+## Route Guards and Auth: Two Levels, Not One
+
+In Next.js, auth protection lives in two places that do not talk to each other: `middleware.ts` for redirects at the edge, and manual session checks inside each Server Action or Route Handler. The two levels are separate concerns with separate APIs.
+
+TanStack Start makes the two levels explicit and composable.
+
+**Level 1 — `beforeLoad`:** runs before the route loads, on both server and client. Redirect unauthenticated users before any data fetching happens.
+
+```tsx
+// src/routes/dashboard/_layout.tsx
+export const Route = createFileRoute('/dashboard/_layout')({
+  beforeLoad: async ({ context, location }) => {
+    if (!context.auth.isAuthenticated) {
+      throw redirect({
+        to: '/login',
+        search: { redirect: location.href }, // preserve intended destination
+      })
+    }
+  },
+  component: DashboardLayout,
+})
+```
+
+**Level 2 — server function middleware:** protects the data itself. Even if someone bypasses the UI redirect, the server function rejects the request.
+
+```tsx
+const withAuth = createMiddleware().server(async ({ next, context }) => {
+  const session = await getServerSession()
+  if (!session) throw redirect({ to: '/login' })
+  return next({ context: { user: session.user } })
+})
+
+const getUserData = createServerFn()
+  .middleware([withAuth])
+  .handler(async ({ context }) => {
+    // context.user is typed and guaranteed — no null check needed
+    return db.user.findUnique({ where: { id: context.user.id } })
+  })
+```
+
+The `beforeLoad` guard is a UX concern. The server function middleware is a security concern. Next.js developers often collapse these into one layer (`middleware.ts`) and then scatter defensive checks through their actions. TanStack's two-level model forces the separation and makes both layers testable in isolation.
 
 ---
 
@@ -420,6 +499,58 @@ The `_` prefix makes this a pathless layout route — it wraps `/dashboard/*` wi
 
 Nested layouts work by nesting `Outlet` components. The mental model is the same.
 
+### `__root.tsx`: Where Providers Live
+
+In Next.js, `app/layout.tsx` is where you mount global providers — `QueryClientProvider`, theme, auth context, toast, etc. TanStack's equivalent is `src/routes/__root.tsx`.
+
+```tsx
+// src/routes/__root.tsx
+import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
+import { QueryClient } from '@tanstack/react-query'
+
+interface RouterContext {
+  queryClient: QueryClient
+}
+
+export const Route = createRootRouteWithContext<RouterContext>()({
+  component: function Root() {
+    return (
+      <>
+        <Outlet />
+        <TanStackRouterDevtools />
+      </>
+    )
+  },
+})
+```
+
+The `createRootRouteWithContext` pattern is worth paying attention to. The `RouterContext` type you define here flows into every route — `beforeLoad`, `loader`, and server functions all receive `context` typed to this interface. It is how `queryClient` ends up available in every loader without prop drilling or a global variable.
+
+### Error Boundaries
+
+Next.js has `error.tsx` — a file-based error boundary that Next.js attaches to the route segment automatically.
+
+```tsx
+// app/dashboard/error.tsx — Next.js
+'use client'
+export default function Error({ error, reset }) {
+  return <button onClick={reset}>Something went wrong: {error.message}</button>
+}
+```
+
+TanStack uses `errorComponent` on the route definition:
+
+```tsx
+export const Route = createFileRoute('/dashboard')({
+  errorComponent: ({ error, reset }) => (
+    <button onClick={reset}>Something went wrong: {error.message}</button>
+  ),
+  component: Dashboard,
+})
+```
+
+Same concept, co-located with the route instead of a separate file. You can also set a global error component on `__root.tsx` as a fallback.
+
 ---
 
 ## The Honest Problems
@@ -435,6 +566,8 @@ TanStack Start is v1. Tanner Linsley and the team shipped it in March 2026 after
 **ISR is entirely manual.** The `revalidate: 60` shorthand does not exist. You manage Cache-Control headers yourself. For most SaaS apps this is fine. For a media site serving millions of pages, it is real work.
 
 **APIs still evolving.** v1 is stable but the framework is young. Patterns around error handling, streaming, and deployment adapters have less community consensus than equivalent Next.js patterns.
+
+**No built-in image optimization.** Next.js ships `<Image>` with automatic AVIF/WebP conversion, lazy loading, layout shift prevention, and on-the-fly resizing. TanStack Start has nothing equivalent. You bring your own — Unpic works well, Cloudflare Images if you are on that stack, or a third-party CDN. It is not a blocker but it is real setup work Next.js gives you for free.
 
 ---
 
@@ -459,7 +592,20 @@ Before you write your first route, internalize these:
   Route.useParams() returns exactly what the route declares
 
 □ search params need a schema
-  Define it in validateSearch — don't reach for useSearchParams()
+  validateSearch replaces useSearchParams() + nuqs — typed, validated, built in
+
+□ Auth is two layers, not one
+  beforeLoad guards the UX, server function middleware guards the data
+  Both are required — one without the other is incomplete
+
+□ __root.tsx is your app/layout.tsx
+  Providers, QueryClient context, global error boundary all go here
+
+□ error.tsx → errorComponent on the route
+  Co-located with route definition, not a separate file
+
+□ No built-in <Image> component
+  Bring your own — Unpic, Cloudflare Images, or a CDN solution
 
 □ No implicit cache — TanStack Query owns this
   staleTime, gcTime, invalidateQueries — all in the data layer
