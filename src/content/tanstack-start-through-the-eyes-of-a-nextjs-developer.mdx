@@ -1,0 +1,502 @@
+---
+title: "TanStack Start Through the Eyes of a Next.js Developer"
+summary: "A comprehensive mental model for Next.js developers stepping into TanStack Start — how routing, data fetching, rendering patterns, caching, and server functions map across."
+publishedAt: 2026-06-12
+---
+
+I have been building with React and Next.js for years and I genuinely like it. The App Router DX is good. File-system routing clicks. Server Components reduced a whole category of prop-drilling problems. I was not looking for a reason to leave.
+
+But somewhere along the way, my Next.js apps started accumulating TanStack tools. TanStack Query for data fetching. TanStack Form for complex form state. TanStack Table for data grids. At some point I was using more of the TanStack ecosystem than I was using Next.js-specific APIs. That made trying TanStack Start feel less like switching frameworks and more like following a thread I was already holding.
+
+So I tried it. This is what I found.
+
+TanStack Start is the philosophical inverse of Next.js. Nothing is implicit. Every boundary is declared. The server is something you reach for, not something you live in by default.
+
+That reversal is the entire mental model shift. Everything else follows from it.
+
+---
+
+## The Philosophy: Router-First, Not Framework-First
+
+Most full-stack frameworks pick a rendering model and build routing around it. Next.js picked server rendering, then built a router to serve that model. Pages Router, then App Router — the router exists to wire up the rendering pipeline.
+
+TanStack Start did the opposite. TanStack Router came first — a standalone, fully type-safe client-side router with typed params, search params, loaders, and prefetching. Start was built on top of it to add the server layer: SSR, streaming, server functions, server routes, and deployment adapters.
+
+The implication is significant. **The router is not infrastructure in TanStack Start. It is the application.** Start is what happens when you give TanStack Router a server.
+
+This is why the framework describes itself as "Router-first." Not because routing is the only concern, but because every other concern — data fetching, server functions, caching, code splitting — is designed around the router's type system, not the other way around.
+
+Next.js's App Router is a file system that generates routes. TanStack Router is a type system that generates a route tree. Both are file-based. The difference is what the output is used for.
+
+---
+
+## Bootstrapping: The Official CLI and Add-ons
+
+TanStack has an official CLI — `create-tsrouter-app` — that scaffolds a project and lets you compose your stack from a set of first-party add-ons at init time.
+
+```bash
+npx @tanstack/cli create my-app --add-ons clerk,drizzle,tanstack-query
+```
+
+Available add-ons include authentication (Clerk, Better Auth), database (Drizzle ORM), UI (shadcn/ui, Tailwind), and TanStack Query. You pick what you need. Nothing is bundled by default.
+
+Compare this to `create-next-app`, which scaffolds a Next.js project with no opinions about auth, database, or UI. Both are correct choices — Next.js expects you to reach for third-party solutions separately. TanStack's CLI makes those choices composable at the start.
+
+The most common production stack in the TanStack ecosystem right now is: Better Auth + Drizzle + PostgreSQL (Neon or Supabase) + shadcn/ui + TanStack Query. Not because the framework mandates it — because these tools share the same philosophy of explicit, composable primitives.
+
+---
+
+## The One Thing You Need to Internalize
+
+```
+Next.js:      server by default → opt into client  ("use client")
+TanStack Start: client by default → opt into server (createServerFn)
+```
+
+This is not a syntax difference. It changes how you think about every piece of code you write. In Next.js, the question is "does this need to run on the client?" In TanStack Start, the question is "does this need to run on the server?"
+
+The second question is harder to answer incorrectly.
+
+---
+
+## Routing: From File Convention to Type Contract
+
+Next.js routing is a file system convention. The folder structure `app/blog/[slug]/page.tsx` creates a route `/blog/:slug`. This is intuitive, but the type system has no idea what `slug` is.
+
+```tsx
+// Next.js — params typed as Promise<Record<string, string>>
+// You're casting, trusting convention, or reaching for a type helper
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}) {
+  const { slug } = await params
+  // TypeScript trusts you that `slug` exists. It has no way to verify.
+}
+```
+
+TanStack Router generates a fully typed route tree at build time. Every path param, every search param, every loader return type flows through TypeScript without a single manual annotation.
+
+```tsx
+// TanStack Start — params are typed from route definition
+export const Route = createFileRoute('/blog/$slug')({
+  loader: async ({ params }) => {
+    // params.slug is string — TypeScript knows because the route says so
+    return fetchPost(params.slug)
+  },
+  component: function BlogPost() {
+    const { slug } = Route.useParams() // typed
+    const post = Route.useLoaderData() // typed to loader return value
+    return <article>{post.title}</article>
+  },
+})
+```
+
+Misspell `slg` instead of `slug`? Compile error. Forget to handle a search param? TypeScript catches it. This is not a convenience feature — it eliminates an entire class of runtime bugs that Next.js apps ship regularly.
+
+### The Generated Route Tree
+
+TanStack Router generates a `routeTree.gen.ts` file that is the source of truth for your app's type system. You do not edit this file. The router reads your `src/routes/` directory and writes it automatically on every dev server reload.
+
+```
+src/routes/
+  __root.tsx           → root layout + providers
+  index.tsx            → /
+  blog/
+    index.tsx          → /blog
+    $slug.tsx          → /blog/:slug
+  dashboard/
+    _layout.tsx        → layout for /dashboard/*
+    index.tsx          → /dashboard
+    settings.tsx       → /dashboard/settings
+```
+
+The underscore prefix (`_layout.tsx`) is TanStack's way of marking pathless layout routes — routes that wrap children without adding a URL segment.
+
+---
+
+## Data Fetching: The Trap That Gets Everyone
+
+This is where most Next.js developers get burned in their first week.
+
+In Next.js, a Server Component is server-only by definition. You fetch inside it and the data never touches the client bundle.
+
+```tsx
+// Next.js — this runs ONLY on the server, always
+export default async function Dashboard() {
+  const user = await db.user.findUnique({ where: { id: session.userId } })
+  return <DashboardView user={user} />
+}
+```
+
+TanStack Start route loaders look similar but behave differently. **Loaders are isomorphic.** They run on the server during SSR and in the browser after hydration for client-side navigations.
+
+```tsx
+// ⚠️ This looks safe but is not
+export const Route = createFileRoute('/dashboard')({
+  loader: async () => {
+    // During SSR: runs on server, env var exists, works
+    // During client navigation: runs in browser, env var is undefined
+    // Worse: if bundled, the variable value ships to the client
+    const conn = new DatabaseClient(process.env.DATABASE_URL)
+    return conn.query('SELECT * FROM users')
+  },
+})
+```
+
+The fix is explicit: wrap server-only logic in `createServerFn`.
+
+```tsx
+const getDashboardData = createServerFn().handler(async () => {
+  // This ONLY runs on the server, regardless of when it's called
+  const conn = new DatabaseClient(process.env.DATABASE_URL)
+  return conn.query('SELECT * FROM users')
+})
+
+export const Route = createFileRoute('/dashboard')({
+  loader: () => getDashboardData(),
+  component: function Dashboard() {
+    const data = Route.useLoaderData()
+    return <DashboardView data={data} />
+  },
+})
+```
+
+The loader calls the server function. The server function has the boundary. This is explicit, this is auditable, and it does not silently change behavior based on navigation type.
+
+### Loader vs Server Function: When to Use Each
+
+| | Loader | Server Function |
+|---|---|---|
+| Runs isomorphically | ✓ | ✗ (server only) |
+| Good for | Fetching data for SSR + client nav | DB queries, auth checks, secrets |
+| Can be cached by TanStack Query | ✓ | ✓ (via loader) |
+| Direct database access | ✗ | ✓ |
+
+---
+
+## Rendering Patterns: The Full Map
+
+If you have internalized Next.js's rendering vocabulary (SSR, SSG, ISR, PPR, RSC), here is how it maps.
+
+### SSR → SSR (default)
+
+Both frameworks render on the server by default. TanStack Start's `beforeLoad` and `loader` run on the server during the initial request, then the component renders to HTML.
+
+```tsx
+export const Route = createFileRoute('/posts')({
+  loader: async () => {
+    // Runs on server for initial load, browser for navigations
+    return fetchPosts()
+  },
+})
+```
+
+### SSG → Static Prerendering (with caveats)
+
+TanStack Start has static prerendering support, but as of v1 it has rough edges. If you are building a documentation site or a content-heavy blog that needs real SSG, TanStack Start is not the right tool today. This is a real limitation, not a gap that configuration can paper over.
+
+```tsx
+// app.config.ts — opt a route into static prerendering
+export default defineConfig({
+  prerender: {
+    routes: ['/about', '/blog'],
+    crawlLinks: true,
+  },
+})
+```
+
+### ISR → Cache-Control Headers (manual)
+
+Next.js ISR is `revalidate: 60` and you stop thinking about it. TanStack Start has no ISR abstraction. You control stale-while-revalidate behavior through Cache-Control headers directly on your server functions or route responses.
+
+```tsx
+// No magic number, you own the cache headers
+const getPost = createServerFn({ method: 'GET' })
+  .handler(async ({ context }) => {
+    context.response.headers.set(
+      'Cache-Control',
+      'public, max-age=60, stale-while-revalidate=300'
+    )
+    return fetchPost()
+  })
+```
+
+This is more work. It is also unambiguous.
+
+### RSC → RSC as Data (experimental, different mental model)
+
+TanStack Start added React Server Components support in April 2026. But the implementation is deliberately different from Next.js's.
+
+In Next.js, RSC is a rendering primitive. The server owns the component tree and sends HTML. The client hydrates. Caching is framework-managed.
+
+In TanStack Start, RSC is treated as a React Flight stream — server-rendered fragments the client fetches, caches, and composes into its own UI tree. They fit into the same caching model as regular data, so you can cache them with TanStack Router's built-in cache or TanStack Query directly.
+
+```tsx
+// TanStack Start RSC — server component as a data stream
+import { createServerFn } from '@tanstack/start'
+
+// Server component rendered on the server, streamed to client
+async function UserProfile({ userId }: { userId: string }) {
+  const user = await db.user.findUnique({ where: { id: userId } })
+  return <div>{user.name}</div>
+}
+```
+
+The key difference: TanStack does not want RSC wrapped in black-box conventions with special rules. Heavy components that need server data stay out of the client bundle — but they behave like data, not like a separate rendering model layered on top of your app.
+
+This is experimental as of writing. If your architecture depends on RSC in production, Next.js's implementation is more mature. But the "TanStack has no RSC" characterization is no longer accurate.
+
+### Selective SSR
+
+This is something Next.js does not have a clean API for. TanStack Start lets you opt individual routes out of SSR entirely.
+
+```tsx
+export const Route = createFileRoute('/admin/analytics')({
+  ssr: false, // renders client-side only, no server HTML
+  loader: () => fetchAnalytics(),
+})
+```
+
+Useful for authenticated dashboards where server-rendering adds latency with no SEO benefit.
+
+---
+
+## Caching: The Part Next.js Keeps Getting Wrong
+
+Next.js caching has been rewritten three times across v13, v14, and v15. The community memes about it. The docs are long because the behavior is genuinely complex.
+
+The system has four layers — Request Memoization, Data Cache, Full Route Cache, Router Cache — each with its own invalidation semantics and its own way to silently serve stale data.
+
+```tsx
+// Next.js — layered implicit caching
+const data = await fetch('/api/posts', {
+  next: { revalidate: 60, tags: ['posts'] }
+})
+
+// To invalidate, call this from a Server Action or Route Handler:
+revalidateTag('posts')
+
+// But wait — does this invalidate the Data Cache? The Full Route Cache?
+// Both? Does it work inside middleware? What about the Router Cache?
+// The answer is: it depends, and the docs have a table for this.
+```
+
+TanStack Start does not have framework-level caching. Caching belongs in the data layer and TanStack Query is the data layer.
+
+```tsx
+// Caching lives in queryOptions, not in fetch()
+const postsQueryOptions = queryOptions({
+  queryKey: ['posts'],
+  queryFn: fetchPosts,
+  staleTime: 60_000,       // serve from cache for 60s
+  gcTime: 5 * 60_000,      // keep in memory for 5min
+})
+
+// Prefetch in loader (runs on server for SSR)
+export const Route = createFileRoute('/posts')({
+  loader: ({ context: { queryClient } }) =>
+    queryClient.ensureQueryData(postsQueryOptions),
+  component: function Posts() {
+    const { data } = useSuspenseQuery(postsQueryOptions)
+    return <PostList posts={data} />
+  },
+})
+
+// Invalidate after mutation — explicit, predictable
+async function handleDelete(id: string) {
+  await deletePost({ data: { id } })
+  await queryClient.invalidateQueries({ queryKey: ['posts'] })
+}
+```
+
+One caching system. One invalidation API. No table of which layer gets invalidated by which API.
+
+The tradeoff: you set up TanStack Query in your router context explicitly. It is a few lines of configuration. After that, it is the same cache you already understand if you have used TanStack Query in any React app.
+
+---
+
+## Server Actions vs `createServerFn`
+
+Both are RPC. The design decisions differ in ways that matter at scale.
+
+### Next.js Server Actions
+
+```tsx
+// Collocated with the component, implicit POST, no validation built in
+async function deletePost(id: string) {
+  'use server'
+  
+  // Auth check is manual every time
+  const session = await getServerSession()
+  if (!session) throw new Error('Unauthorized')
+  
+  await db.post.delete({ where: { id } })
+  revalidatePath('/posts')
+}
+
+export function PostCard({ id }: { id: string }) {
+  return (
+    <form action={() => deletePost(id)}>
+      <button type="submit">Delete</button>
+    </form>
+  )
+}
+```
+
+The colocation is ergonomic. The problem is scale: auth checks are repeated across every action, there is no standard way to compose middleware, and the `'use server'` directive is a compiler hint that can behave unexpectedly.
+
+### TanStack `createServerFn`
+
+```tsx
+// auth middleware — write once, compose everywhere
+const withAuth = createMiddleware().server(async ({ next }) => {
+  const session = await getServerSession()
+  if (!session) throw redirect({ to: '/login' })
+  return next({ context: { user: session.user } })
+})
+
+// Server function with explicit method, validator, middleware
+const deletePost = createServerFn({ method: 'POST' })
+  .middleware([withAuth])
+  .validator(z.object({ id: z.string() }))
+  .handler(async ({ data, context }) => {
+    // context.user is typed and guaranteed by middleware
+    await db.post.delete({
+      where: { id: data.id, authorId: context.user.id },
+    })
+  })
+
+// Usage — called like any async function
+await deletePost({ data: { id: postId } })
+```
+
+The middleware chain is the real advantage. In Next.js, you have `middleware.ts` for edge-layer stuff and manual session checks inside each action. TanStack's middleware composes at the function level — auth, logging, rate limiting, input validation all in one chain. That chain is testable in isolation.
+
+---
+
+## Layouts and Outlets
+
+This one is quick. Next.js developers pick it up in a few minutes.
+
+```tsx
+// Next.js — app/dashboard/layout.tsx
+// Next.js finds this file automatically, wraps children
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <div className="dashboard">
+      <Sidebar />
+      <main>{children}</main>
+    </div>
+  )
+}
+```
+
+```tsx
+// TanStack Start — src/routes/dashboard/_layout.tsx
+// Explicit Outlet instead of children prop
+import { Outlet, createFileRoute } from '@tanstack/react-router'
+
+export const Route = createFileRoute('/dashboard/_layout')({
+  component: function DashboardLayout() {
+    return (
+      <div className="dashboard">
+        <Sidebar />
+        <main>
+          <Outlet /> {/* child routes render here */}
+        </main>
+      </div>
+    )
+  },
+})
+```
+
+The `_` prefix makes this a pathless layout route — it wraps `/dashboard/*` without adding `/_layout` to the URL. Same concept as Next.js route groups `(groupName)`, different syntax.
+
+Nested layouts work by nesting `Outlet` components. The mental model is the same.
+
+---
+
+## The Honest Problems
+
+TanStack Start is v1. Tanner Linsley and the team shipped it in March 2026 after a long beta. The API is stable. The framework is production-ready for the right use cases. But there are real limitations worth naming.
+
+**RSC is experimental.** TanStack Start shipped RSC support in April 2026, but it is experimental and the mental model differs from Next.js. TanStack treats RSC as a data stream cached like any other query, not as a server-first rendering primitive. If your app depends on Next.js-style RSC conventions in production today, the maturity gap is real.
+
+**Static generation is rough.** Static prerendering works for simple cases but the API is not fully documented and you will hit edge cases with dynamic data. Do not build a docs site or content marketing site on TanStack Start today.
+
+**Ecosystem gap.** Next.js has years of community answers, third-party integrations, and boilerplates. TanStack Start v1 is new. When you hit a problem, you are more likely to be reading source code or opening a GitHub issue than finding a Stack Overflow answer. Budget 4-8 weeks of elevated friction for a team new to the TanStack Router ecosystem.
+
+**ISR is entirely manual.** The `revalidate: 60` shorthand does not exist. You manage Cache-Control headers yourself. For most SaaS apps this is fine. For a media site serving millions of pages, it is real work.
+
+**APIs still evolving.** v1 is stable but the framework is young. Patterns around error handling, streaming, and deployment adapters have less community consensus than equivalent Next.js patterns.
+
+---
+
+## The Mental Model Reset: A Checklist for Next.js Developers
+
+Before you write your first route, internalize these:
+
+```
+□ Loaders are isomorphic — run on server (SSR) AND browser (navigation)
+  Never access DB, secrets, or Node APIs directly in a loader
+
+□ Secrets → createServerFn
+  If it would break if bundled to the client, wrap it in createServerFn
+
+□ "use server" → createServerFn({ method: 'POST' })
+  Explicit method, explicit validator, explicit middleware
+
+□ layout.tsx → pathless route + <Outlet />
+  _layout.tsx wraps children without adding a URL segment
+
+□ params are typed — no casting needed
+  Route.useParams() returns exactly what the route declares
+
+□ search params need a schema
+  Define it in validateSearch — don't reach for useSearchParams()
+
+□ No implicit cache — TanStack Query owns this
+  staleTime, gcTime, invalidateQueries — all in the data layer
+
+□ Middleware chains on server functions
+  Auth, logging, validation — compose once, use everywhere
+
+□ RSC exists but works differently
+  TanStack RSC = Flight stream cached like data, not a server-first rendering model
+  Still experimental — don't depend on Next.js RSC conventions mapping 1:1
+
+□ SSG is not production-ready for all use cases
+  Test your static prerendering setup before committing to it
+```
+
+---
+
+## The Actual Decision
+
+Not "which is better." What does your app actually need.
+
+**Your data fetching pattern determines a lot.** If your pages are mostly server-rendered with minimal client interactivity — think content sites, marketing pages, documentation — RSC's ability to colocate fetch calls inside the component tree with zero client JavaScript is a real architectural advantage. TanStack's RSC is experimental. Next.js's is not. Stay on Next.js.
+
+If your app is a SaaS dashboard, an admin panel, an authenticated product — heavy client interactivity, user-specific data, mutations everywhere — you are fighting against Next.js's server-first defaults. Every `"use client"` directive, every `revalidatePath` call, every cache tag you manage is friction for an app that is fundamentally client-driven. TanStack Start is built for this shape.
+
+**TypeScript discipline matters.** In Next.js, `useParams()` returns `ReadonlyURLSearchParams`. You cast. You trust the filename. You write a type helper or use a library like `nuqs` for search params. TanStack Router generates a complete type-safe contract from your route tree — params, search params, loader return types, all inferred. If you have ever written `const { id } = params as { id: string }` and felt bad about it, TanStack's routing is a meaningful upgrade, not a preference.
+
+**The caching story is genuinely different.** Next.js's cache has four layers with independent invalidation semantics. `revalidatePath` invalidates the Full Route Cache. `revalidateTag` invalidates the Data Cache. The Router Cache (client-side) has its own TTL you cannot invalidate imperatively. If you have debugged a page showing stale data where three of four caches were warm, you know this complexity. TanStack has no framework cache. TanStack Query has one cache. Invalidation is `queryClient.invalidateQueries`. That is the whole API.
+
+**Deployment target is a real constraint.** If you run on Vercel, Next.js has first-class support for edge functions, ISR, and incremental deploys with no configuration. That is a legitimate reason to stay. If you are deploying to Cloudflare Workers, self-hosted Node, or a Docker container on EC2, Next.js's adapter story is workable but the Vercel-centric defaults add friction. TanStack Start's adapter model is deployment-agnostic by design.
+
+**The ecosystem gap is real but narrow.** Next.js has three years of App Router-specific libraries, patterns, and Stack Overflow answers. TanStack Start v1 is months old. If a third-party library ships a `"use server"` integration or a Next.js-specific hook, you are adapting it or skipping it. This matters less than it sounds for most apps — the core primitives (auth, database, email, payments) all have framework-agnostic APIs. But if your app has deep Next.js-specific dependencies, audit them before committing to a move.
+
+---
+
+The framework is not better. The mental model is different. Next.js optimizes for productivity on the happy path. TanStack Start optimizes for predictability when you need to understand what is happening.
+
+Most of the things I like about TanStack Start are subtractions. Less magic. Less implicit behavior. Less framework-level caching to debug. That is a tradeoff, not a free win — you get predictability in exchange for more explicit code.
+
+Whether that tradeoff is worth making depends on your team and your app. But if you have ever spent an afternoon debugging Next.js cache behavior and wished the framework just did less, TanStack Start is worth an honest look.
