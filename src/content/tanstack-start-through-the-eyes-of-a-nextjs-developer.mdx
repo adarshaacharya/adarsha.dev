@@ -4,9 +4,11 @@ summary: "A comprehensive mental model for Next.js developers stepping into TanS
 publishedAt: 2026-06-12
 ---
 
-I have been building with React and Next.js for years and I genuinely like it. The App Router DX is good. File-system routing clicks. Server Components reduced a whole category of prop-drilling problems. I was not looking for a reason to leave.
+My first encounter with Next.js was genuinely exciting. Before it, setting up a React project meant wrestling with webpack configs, wiring up Babel, figuring out code splitting yourself — or reaching for Create React App, which solved the setup problem but handed you a black box you could not customize without ejecting into a wall of config. When Next.js arrived with file-system routing, API routes, and SSR that actually worked, it felt like the framework React had always needed. CRA was officially deprecated in February 2025. Few people mourned it.
 
-But somewhere along the way, my Next.js apps started accumulating TanStack tools. TanStack Query for data fetching. TanStack Form for complex form state. TanStack Table for data grids. At some point I was using more of the TanStack ecosystem than I was using Next.js-specific APIs. That made trying TanStack Start feel less like switching frameworks and more like following a thread I was already holding.
+Next.js has been my default for full-stack React work since the App Router shipped. The reasons are mundane and practical: the ecosystem is mature, deploying to Vercel is frictionless, and Server Components let you strip JavaScript from pages that do not need it — genuinely useful for content-heavy routes where you used to reach for getStaticProps and hope for the best.
+
+But somewhere along the way, parts of my Next.js apps started filling up with TanStack tools. TanStack Query for server state. TanStack Form for anything with real validation logic. TanStack Table for anything that needed sorting or filtering. By the time TanStack Start was production-ready, curiosity was the only reason I needed — I was already living in the ecosystem, and I wanted to understand what the full picture looked like without Next.js in the middle.
 
 So I tried it. This is what I found.
 
@@ -557,17 +559,17 @@ Same concept, co-located with the route instead of a separate file. You can also
 
 TanStack Start is v1. Tanner Linsley and the team shipped it in March 2026 after a long beta. The API is stable. The framework is production-ready for the right use cases. But there are real limitations worth naming.
 
-**RSC is experimental.** TanStack Start shipped RSC support in April 2026, but it is experimental and the mental model differs from Next.js. TanStack treats RSC as a data stream cached like any other query, not as a server-first rendering primitive. If your app depends on Next.js-style RSC conventions in production today, the maturity gap is real.
+**1. RSC is experimental.** TanStack Start shipped RSC support in April 2026, but it is experimental and the mental model differs from Next.js. TanStack treats RSC as a data stream cached like any other query, not as a server-first rendering primitive. If your app depends on Next.js-style RSC conventions in production today, the maturity gap is real.
 
-**Static generation is rough.** Static prerendering works for simple cases but the API is not fully documented and you will hit edge cases with dynamic data. Do not build a docs site or content marketing site on TanStack Start today.
+**2. Static generation is rough.** Static prerendering works for simple cases but the API is not fully documented and you will hit edge cases with dynamic data. Do not build a docs site or content marketing site on TanStack Start today.
 
-**Ecosystem gap.** Next.js has years of community answers, third-party integrations, and boilerplates. TanStack Start v1 is new. When you hit a problem, you are more likely to be reading source code or opening a GitHub issue than finding a Stack Overflow answer. Budget 4-8 weeks of elevated friction for a team new to the TanStack Router ecosystem.
+**3. Ecosystem gap.** Next.js has years of community answers, third-party integrations, and boilerplates. TanStack Start v1 is new. When you hit a problem, you are more likely to be reading source code or opening a GitHub issue than finding a Stack Overflow answer. Budget 4-8 weeks of elevated friction for a team new to the TanStack Router ecosystem.
 
-**ISR is entirely manual.** The `revalidate: 60` shorthand does not exist. You manage Cache-Control headers yourself. For most SaaS apps this is fine. For a media site serving millions of pages, it is real work.
+**4. ISR is entirely manual.** The `revalidate: 60` shorthand does not exist. You manage Cache-Control headers yourself. For most SaaS apps this is fine. For a media site serving millions of pages, it is real work.
 
-**APIs still evolving.** v1 is stable but the framework is young. Patterns around error handling, streaming, and deployment adapters have less community consensus than equivalent Next.js patterns.
+**5. APIs still evolving.** v1 is stable but the framework is young. Patterns around error handling, streaming, and deployment adapters have less community consensus than equivalent Next.js patterns.
 
-**No built-in image optimization.** Next.js ships `<Image>` with automatic AVIF/WebP conversion, lazy loading, layout shift prevention, and on-the-fly resizing. TanStack Start has nothing equivalent. You bring your own — Unpic works well, Cloudflare Images if you are on that stack, or a third-party CDN. It is not a blocker but it is real setup work Next.js gives you for free.
+**6. No built-in image optimization.** Next.js ships `<Image>` with automatic AVIF/WebP conversion, lazy loading, layout shift prevention, and on-the-fly resizing. TanStack Start has nothing equivalent. You bring your own — Unpic works well, Cloudflare Images if you are on that stack, or a third-party CDN. It is not a blocker but it is real setup work Next.js gives you for free.
 
 ---
 
@@ -627,17 +629,17 @@ Before you write your first route, internalize these:
 
 Not "which is better." What does your app actually need.
 
-**Your data fetching pattern determines a lot.** If your pages are mostly server-rendered with minimal client interactivity — think content sites, marketing pages, documentation — RSC's ability to colocate fetch calls inside the component tree with zero client JavaScript is a real architectural advantage. TanStack's RSC is experimental. Next.js's is not. Stay on Next.js.
+**1. Data fetching shape.** If your pages are mostly server-rendered with minimal client interactivity — content sites, marketing pages, documentation — RSC's ability to colocate fetch calls inside the component tree with zero client JavaScript is a real architectural advantage. TanStack's RSC is experimental. Next.js's is not. Stay on Next.js.
 
 If your app is a SaaS dashboard, an admin panel, an authenticated product — heavy client interactivity, user-specific data, mutations everywhere — you are fighting against Next.js's server-first defaults. Every `"use client"` directive, every `revalidatePath` call, every cache tag you manage is friction for an app that is fundamentally client-driven. TanStack Start is built for this shape.
 
-**TypeScript discipline matters.** In Next.js, `useParams()` returns `ReadonlyURLSearchParams`. You cast. You trust the filename. You write a type helper or use a library like `nuqs` for search params. TanStack Router generates a complete type-safe contract from your route tree — params, search params, loader return types, all inferred. If you have ever written `const { id } = params as { id: string }` and felt bad about it, TanStack's routing is a meaningful upgrade, not a preference.
+**2. TypeScript discipline.** In Next.js, `useParams()` returns `ReadonlyURLSearchParams`. You cast. You trust the filename. You write a type helper or use a library like `nuqs` for search params. TanStack Router generates a complete type-safe contract from your route tree — params, search params, loader return types, all inferred. If you have ever written `const { id } = params as { id: string }` and felt bad about it, TanStack's routing is a meaningful upgrade, not a preference.
 
-**The caching story is genuinely different.** Next.js's cache has four layers with independent invalidation semantics. `revalidatePath` invalidates the Full Route Cache. `revalidateTag` invalidates the Data Cache. The Router Cache (client-side) has its own TTL you cannot invalidate imperatively. If you have debugged a page showing stale data where three of four caches were warm, you know this complexity. TanStack has no framework cache. TanStack Query has one cache. Invalidation is `queryClient.invalidateQueries`. That is the whole API.
+**3. Caching complexity.** Next.js's cache has four layers with independent invalidation semantics. `revalidatePath` invalidates the Full Route Cache. `revalidateTag` invalidates the Data Cache. The Router Cache (client-side) has its own TTL you cannot invalidate imperatively. If you have debugged a page showing stale data where three of four caches were warm, you know this complexity. TanStack has no framework cache. TanStack Query has one cache. Invalidation is `queryClient.invalidateQueries`. That is the whole API.
 
-**Deployment target is a real constraint.** If you run on Vercel, Next.js has first-class support for edge functions, ISR, and incremental deploys with no configuration. That is a legitimate reason to stay. If you are deploying to Cloudflare Workers, self-hosted Node, or a Docker container on EC2, Next.js's adapter story is workable but the Vercel-centric defaults add friction. TanStack Start's adapter model is deployment-agnostic by design.
+**4. Deployment target.** If you run on Vercel, Next.js has first-class support for edge functions, ISR, and incremental deploys with no configuration. That is a legitimate reason to stay. If you are deploying to Cloudflare Workers, self-hosted Node, or a Docker container on EC2, Next.js's adapter story is workable but the Vercel-centric defaults add friction. TanStack Start's adapter model is deployment-agnostic by design.
 
-**The ecosystem gap is real but narrow.** Next.js has three years of App Router-specific libraries, patterns, and Stack Overflow answers. TanStack Start v1 is months old. If a third-party library ships a `"use server"` integration or a Next.js-specific hook, you are adapting it or skipping it. This matters less than it sounds for most apps — the core primitives (auth, database, email, payments) all have framework-agnostic APIs. But if your app has deep Next.js-specific dependencies, audit them before committing to a move.
+**5. Ecosystem depth.** Next.js has three years of App Router-specific libraries, patterns, and Stack Overflow answers. TanStack Start v1 is months old. If a third-party library ships a `"use server"` integration or a Next.js-specific hook, you are adapting it or skipping it. This matters less than it sounds for most apps — the core primitives (auth, database, email, payments) all have framework-agnostic APIs. But if your app has deep Next.js-specific dependencies, audit them before committing to a move.
 
 ---
 
