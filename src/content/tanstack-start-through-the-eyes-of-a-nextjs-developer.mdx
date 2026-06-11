@@ -204,6 +204,8 @@ export const Route = createFileRoute('/dashboard')({
 
 The loader calls the server function. The server function has the boundary. This is explicit, this is auditable, and it does not silently change behavior based on navigation type.
 
+TanStack Start goes further than just `createServerFn`. The framework also gives you `createServerOnlyFn`, `createClientOnlyFn`, and import-protection rules so environment mistakes fail loudly instead of turning into accidental leaks. That fits the same philosophy: execution boundaries are something you declare, not something you infer from a file ending up on the server.
+
 ### Loader vs Server Function: When to Use Each
 
 | | Loader | Server Function |
@@ -255,7 +257,7 @@ const getUserData = createServerFn()
   })
 ```
 
-The `beforeLoad` guard is a UX concern. The server function middleware is a security concern. In Next.js, teams often blur those concerns between `proxy.ts` and ad hoc checks inside actions. TanStack's two-level model makes the split harder to ignore.
+The `beforeLoad` guard is a UX concern. The server function middleware is a security concern. In Next.js, teams often blur those concerns between `proxy.ts` (aka `middleware.ts`) and ad hoc checks inside actions. TanStack's two-level model makes the split harder to ignore.
 
 ---
 
@@ -575,6 +577,10 @@ export const Route = createFileRoute('/dashboard')({
 
 Same concept, co-located with the route instead of a separate file. You can also set a global error component on `__root.tsx` as a fallback.
 
+### Client-Only UI
+
+The same explicitness shows up on the client side too. If something truly depends on the browser — localStorage, timezone, analytics scripts, DOM-only widgets — TanStack Start gives you `ClientOnly` and `useHydrated` instead of pretending SSR and hydration will sort it out for you automatically.
+
 ---
 
 ## Form Actions and Mutation State
@@ -707,7 +713,7 @@ export const Route = createFileRoute('/blog/$slug')({
 })
 ```
 
-Not as tightly integrated as Next.js — `@unhead/react` is a third-party library rather than a framework primitive. SEO-heavy apps will feel this gap.
+Not as tightly integrated as Next.js — `@unhead/react` is a third-party library rather than a framework primitive. That said, TanStack Start does have dedicated SEO docs, so this is more "bring your own head management primitive" than "figure it out yourself from scratch."
 
 ---
 
@@ -741,6 +747,9 @@ Before you write your first route, internalize these:
 
 □ Secrets → createServerFn
   If it would break if bundled to the client, wrap it in createServerFn
+
+□ Server-only and client-only code are explicit
+  `createServerOnlyFn`, `createClientOnlyFn`, and import protection exist to make environment mistakes obvious
 
 □ search params need a schema
   Params and search params are route contracts, not loose strings you parse by hand
