@@ -4,7 +4,7 @@ summary: "A comprehensive mental model for Next.js developers stepping into TanS
 publishedAt: 2026-06-11
 ---
 
-My first encounter with Next.js was genuinely exciting. Before it, setting up a React project meant wrestling with webpack configs, wiring up Babel, figuring out code splitting yourself — or reaching for Create React App, which solved the setup problem but handed you a black box you could not customize without ejecting into a wall of config. When Next.js arrived with file-system routing, API routes, and SSR that actually worked, it felt like the framework React had always needed. CRA was officially deprecated in February 2025. Few people mourned it.
+My first encounter with Next.js was genuinely exciting. Before it, React setup still meant too much wiring: webpack, Babel, code splitting, or Create React App and its sealed black box. When Next.js arrived with file-system routing, API routes, and SSR that actually worked, it felt like the framework React had always needed. CRA was officially deprecated in February 2025. Few people mourned it.
 
 Next.js has been my default for full-stack React work since the App Router shipped. The reasons are mundane and practical: the ecosystem is mature, deploying to Vercel is frictionless, and Server Components let you strip JavaScript from pages that do not need it — genuinely useful for content-heavy routes where you used to reach for getStaticProps and hope for the best.
 
@@ -20,13 +20,13 @@ That reversal is the entire mental model shift. Everything else follows from it.
 
 ## The Philosophy: Router-First, Not Framework-First
 
-Most full-stack frameworks pick a rendering model and build routing around it. Next.js picked server rendering, then built a router to serve that model. Pages Router, then App Router — the router exists to wire up the rendering pipeline.
+Most full-stack frameworks pick a rendering model first and build routing around it. Next.js did. Pages Router, then App Router — the router exists to serve the rendering pipeline.
 
-TanStack Start did the opposite. TanStack Router came first — a standalone, fully type-safe client-side router with typed params, search params, loaders, and prefetching. Start was built on top of it to add the server layer: SSR, streaming, server functions, server routes, and deployment adapters.
+TanStack Start came from the other direction. TanStack Router existed first as a standalone, fully type-safe router with typed params, search params, loaders, and prefetching. Start adds the server layer on top: SSR, streaming, server functions, server routes, and deployment adapters.
 
 The implication is significant. **The router is not infrastructure in TanStack Start. It is the application.** Start is what happens when you give TanStack Router a server.
 
-This is why the framework describes itself as "Router-first." Not because routing is the only concern, but because every other concern — data fetching, server functions, caching, code splitting — is designed around the router's type system, not the other way around.
+This is why the framework describes itself as "Router-first." Not because routing is the only concern, but because everything else — data fetching, server functions, caching, code splitting — is organized around the router's type system, not the other way around.
 
 Next.js's App Router is a file system that generates routes. TanStack Router is a type system that generates a route tree. Both are file-based. The difference is what the output is used for.
 
@@ -742,30 +742,12 @@ Before you write your first route, internalize these:
 □ Secrets → createServerFn
   If it would break if bundled to the client, wrap it in createServerFn
 
-□ "use server" → createServerFn({ method: 'POST' })
-  Explicit method, explicit validator, explicit middleware
-
-□ layout.tsx → pathless route + <Outlet />
-  _layout.tsx wraps children without adding a URL segment
-
-□ params are typed — no casting needed
-  Route.useParams() returns exactly what the route declares
-
 □ search params need a schema
-  validateSearch replaces useSearchParams() + nuqs — typed, validated, built in
+  Params and search params are route contracts, not loose strings you parse by hand
 
 □ Auth is two layers, not one
   `beforeLoad` guards the UX, server function middleware guards the data
   In practice, you usually want both
-
-□ __root.tsx is your app/layout.tsx
-  Providers, QueryClient context, global error boundary all go here
-
-□ error.tsx → errorComponent on the route
-  Co-located with route definition, not a separate file
-
-□ No built-in <Image> component
-  Bring your own — Unpic, Cloudflare Images, or a CDN solution
 
 □ Router cache first, TanStack Query optional
   The router gives you a loader cache; Query adds background refetching and shared client cache
@@ -779,6 +761,16 @@ Before you write your first route, internalize these:
 
 □ Test static prerendering against your real content model
   Especially if you are building a docs site or a content-heavy marketing site
+```
+
+If you just want the quickest 1:1 translation layer in your head:
+
+```
+layout.tsx           → pathless route + <Outlet />
+app/layout.tsx       → __root.tsx
+error.tsx            → errorComponent
+"use server" action  → createServerFn(...)
+route.ts             → createServerFileRoute(...)
 ```
 
 ---
