@@ -4,11 +4,11 @@ summary: "Understand TanStack Start from a Next.js developer’s perspective: it
 publishedAt: 2026-06-11
 ---
 
-My first encounter with Next.js was exciting. Before it, React setup still meant too much wiring: webpack, Babel, code splitting, or Create React App and its sealed black box. When Next.js arrived with file-system routing, API routes, and SSR that actually worked, it felt like the framework React had always needed. CRA was officially deprecated in February 2025. Few people mourned it.
+My first encounter with Next.js was exciting. Before it, React setup meant too much wiring: webpack, Babel, code splitting, or Create React App's sealed black box. When Next.js arrived with file-system routing, API routes, and SSR that actually worked, it felt like the framework React had always needed.
 
-Next.js has been my default for full-stack React work since the App Router shipped. The reasons are mundane and practical: the ecosystem is mature, deploying to Vercel is frictionless, and Server Components let you strip JavaScript from pages that do not need it — useful for content-heavy routes where you used to reach for getStaticProps and hope for the best.
+Next.js has been my default for full-stack React work since the App Router shipped. The ecosystem is mature, deploying to Vercel is frictionless, and Server Components let you strip JavaScript from pages that don't need it — genuinely useful for content-heavy routes.
 
-But somewhere along the way, parts of my Next.js apps started filling up with TanStack tools. TanStack Query for server state. TanStack Form for anything with real validation logic. TanStack Table for anything that needed sorting or filtering. By the time TanStack Start hit RC, curiosity was the only reason I needed — I was already living in the ecosystem, and I wanted to understand what the full picture looked like without Next.js in the middle.
+But somewhere along the way, my Next.js apps started filling up with TanStack tools. Query for server state. Form for validation. Table for sorting and filtering. By the time TanStack Start hit RC, I was already living in the ecosystem. I wanted to see what the full picture looked like without Next.js in the middle.
 
 So I tried it. This is what I found.
 
