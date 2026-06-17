@@ -1,9 +1,8 @@
 import { AnimatedBlogList } from "@/components/blog/animated-blog-list";
 import { Pagination } from "@/components/blog/pagination";
 import { SearchInput } from "../../components/blog/search-input";
-import { allBlogs } from "contentlayer/generated";
 import { generatePageMetadata } from "../seo";
-import { ENV } from "@/lib/env";
+import { getPublishedBlogs } from "@/lib/blog";
 
 export const metadata = generatePageMetadata({
   title: "Blog",
@@ -11,7 +10,6 @@ export const metadata = generatePageMetadata({
     "Explore my blog posts on Javascript, Typescript, React.js, Next.js, Prisma, Nest.js, AI , LLMs and more.",
 });
 
-const isProd = ENV.NODE_ENV === "production";
 const BLOG_POSTS_PER_PAGE = 6;
 
 export default async function Blog({
@@ -24,22 +22,15 @@ export default async function Blog({
   const searchQuery = resolvedSearchParams.search?.toString() || "";
   const page = typeof pageParam === "string" ? parseInt(pageParam, 10) || 1 : 1;
 
-  const blogs = allBlogs.sort((a, b) => {
-    if (new Date(a.publishedAt) > new Date(b.publishedAt)) {
-      return -1;
-    }
-    return 1;
-  });
-
-  const undraftedBlogs = isProd ? blogs.filter((blog) => !blog.draft) : blogs;
+  const blogs = getPublishedBlogs();
 
   const filteredBlogs = searchQuery
-    ? undraftedBlogs.filter(
+    ? blogs.filter(
         (blog) =>
           blog.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
           blog.summary.toLowerCase().includes(searchQuery.toLowerCase()),
       )
-    : undraftedBlogs;
+    : blogs;
 
   const totalPages = Math.ceil(filteredBlogs.length / BLOG_POSTS_PER_PAGE);
   const currentPage = page > totalPages ? 1 : page;

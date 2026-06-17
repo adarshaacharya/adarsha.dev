@@ -28,28 +28,44 @@ export function Footer() {
           </div>
         )}
 
-        <div className="space-y-2 text-sm text-muted-foreground">
-          <p>
-            ©{" "}
-            <a
-              href={siteMetadata.social.x}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-foreground transition-colors"
-            >
-              Adarsha Acharya
-            </a>
-            . All rights reserved.
-          </p>
+        <div className="w-full overflow-x-auto text-sm text-muted-foreground">
+          <div className="flex min-w-max items-center justify-between gap-6 text-left">
+            <p>
+              ©{" "}
+              <a
+                href={siteMetadata.social.x}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-foreground transition-colors"
+              >
+                Adarsha Acharya
+              </a>
+              . All rights reserved.
+            </p>
 
-          <a
-            href={siteMetadata.repo}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block hover:text-foreground transition-colors underline underline-offset-4"
-          >
-            View source code
-          </a>
+            <div className="flex items-center gap-4 justify-end">
+              <a
+                href="/sitemap.xml"
+                className="inline-block hover:text-foreground transition-colors underline underline-offset-4"
+              >
+                Sitemap
+              </a>
+              <a
+                href="/feed.xml"
+                className="inline-block hover:text-foreground transition-colors underline underline-offset-4"
+              >
+                RSS feed
+              </a>
+              <a
+                href={siteMetadata.repo}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block hover:text-foreground transition-colors underline underline-offset-4"
+              >
+                Source code
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </footer>
