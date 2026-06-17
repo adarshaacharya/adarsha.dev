@@ -54,14 +54,16 @@ Add-ons cover auth (Clerk, Better Auth), database (Drizzle), UI (shadcn/ui, Tail
 
 ## The One Thing You Need to Internalize
 
-```
-Next.js:        components are Server Components by default → opt into client ("use client")
-TanStack Start: components are isomorphic React by default → opt into server (createServerFn)
-```
 
-To be precise: TanStack Start still SSRs the initial request. The difference is that components are regular React — they run on both server and client, not server-only. The server is a layer you reach for explicitly via `createServerFn`, not the default execution context for every component.
+👉 **Next.js:** components are Server Components by default → opt into client ("use client")
 
-In Next.js, the question is "does this component need to run on the client?" In TanStack Start, the question is "does this logic need to run only on the server?"
+👉 **TanStack Start:** components are isomorphic React by default → opt into server (createServerFn)
+
+
+TanStack Start still SSRs the initial request. The difference is that components are regular React — they run on both server and client, not server-only. 
+The server is a layer you reach for explicitly via `createServerFn`, not the default execution context for every component.
+
+> In Next.js, the question is "does this component need to run on the client?" In TanStack Start, the question is "does this logic need to run only on the server?"
 
 The second question is harder to answer incorrectly.
 
@@ -718,21 +720,6 @@ TanStack Start is still in Release Candidate status. It is serious enough to eva
 
 **You bring more of the web platform yourself.** Image optimization is the clearest example. Next.js gives you more batteries here; TanStack Start expects you to choose the pieces you want.
 
----
-
-## The 1:1 Translation Layer
-
-If you keep one thing handy while porting your mental model over, make it this:
-
-```
-layout.tsx           → pathless route + <Outlet />
-app/layout.tsx       → __root.tsx
-error.tsx            → errorComponent
-"use server" action  → createServerFn(...)
-route.ts             → createServerFileRoute(...)
-```
-
-The two traps that aren't on that table, because they have no Next.js equivalent: loaders are isomorphic (never touch a DB, secret, or Node API directly in one — wrap it in `createServerFn`), and auth is two layers (`beforeLoad` guards the UX, server function middleware guards the data — you usually want both).
 
 ---
 
