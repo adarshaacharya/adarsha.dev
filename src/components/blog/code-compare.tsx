@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { CopyIcon, CheckIcon } from "./code-block";
 
 /**
  * Side-by-side code comparison rendered as a single toggle.
@@ -20,6 +21,7 @@ import * as React from "react";
  * </CodeCompare>
  *
  * Both blocks keep their build-time shiki highlighting; only the active one is shown.
+ * Copy lives in the tab bar (the per-block overlay button is hidden inside panels via CSS).
  */
 export function CodeCompare({
   labels = ["Next.js", "TanStack Start"],
@@ -42,10 +44,10 @@ export function CodeCompare({
   }
 
   const handleCopy = async () => {
-    const code = panelRef.current?.querySelector("pre")?.innerText;
-    if (!code) return;
+    const text = panelRef.current?.querySelector("pre")?.innerText;
+    if (!text) return;
     try {
-      await navigator.clipboard.writeText(code);
+      await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
@@ -54,7 +56,7 @@ export function CodeCompare({
   };
 
   return (
-    <div className="my-8 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700">
+    <div className="group my-8 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700">
       <div
         role="tablist"
         aria-label="Code comparison"
@@ -79,11 +81,10 @@ export function CodeCompare({
         <button
           type="button"
           onClick={handleCopy}
-          aria-label="Copy code"
-          className="ml-auto mr-2 flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-neutral-500 transition-colors hover:bg-neutral-200/60 hover:text-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700/60 dark:hover:text-neutral-200"
+          aria-label={copied ? "Copied" : "Copy code"}
+          className="ml-auto mr-3 flex items-center justify-center rounded-md p-1.5 text-neutral-500 opacity-0 transition-all hover:text-neutral-900 focus-visible:opacity-100 group-hover:opacity-100 max-md:opacity-100 dark:text-neutral-400 dark:hover:text-neutral-100"
         >
           {copied ? <CheckIcon /> : <CopyIcon />}
-          {copied ? "Copied" : "Copy"}
         </button>
       </div>
       {blocks.map((block, i) => (
@@ -97,42 +98,5 @@ export function CodeCompare({
         </div>
       ))}
     </div>
-  );
-}
-
-function CopyIcon() {
-  return (
-    <svg
-      width="13"
-      height="13"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-    </svg>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg
-      width="13"
-      height="13"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
   );
 }

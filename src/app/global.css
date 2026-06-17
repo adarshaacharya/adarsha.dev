@@ -266,3 +266,7 @@ table {
 .code-compare-panel [data-rehype-pretty-code-title] {
   @apply rounded-none border-x-0 border-t-0;
 }
+/* Inside the compare toggle, copy lives in the tab bar — hide the per-block overlay button */
+.code-compare-panel figure > button {
+  display: none;
+}

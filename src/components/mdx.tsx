@@ -4,6 +4,7 @@ import Image from "next/image";
 import { getMDXComponent } from "next-contentlayer2/hooks";
 import { BlogComments } from "./blog/blog-comments";
 import { CodeCompare } from "./blog/code-compare";
+import { CodeBlock } from "./blog/code-block";
 
 function CustomLink(props: { href: string; children: React.ReactNode }) {
   const { href, ...rest } = props;
@@ -41,6 +42,7 @@ const components = {
   a: CustomLink,
   Callout,
   CodeCompare,
+  figure: CodeBlock,
 };
 
 export function Mdx({ code }: { code: string }) {
