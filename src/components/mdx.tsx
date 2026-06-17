@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getMDXComponent } from "next-contentlayer2/hooks";
 import { BlogComments } from "./blog/blog-comments";
+import { CodeCompare } from "./blog/code-compare";
 
 function CustomLink(props: { href: string; children: React.ReactNode }) {
   const { href, ...rest } = props;
@@ -39,6 +40,7 @@ const components = {
   Image: RoundedImage,
   a: CustomLink,
   Callout,
+  CodeCompare,
 };
 
 export function Mdx({ code }: { code: string }) {

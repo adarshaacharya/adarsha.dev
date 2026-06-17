@@ -69,7 +69,9 @@ The second question is harder to answer incorrectly.
 
 ## Routing: From File Convention to Type Contract
 
-Next.js routing is a file system convention. The folder structure `app/blog/[slug]/page.tsx` creates a route `/blog/:slug`. This is intuitive, but the type system has no idea what `slug` is.
+Next.js routing is a file system convention. The folder structure `app/blog/[slug]/page.tsx` creates a route `/blog/:slug`. This is intuitive, but the type system has no idea what `slug` is. TanStack Router generates a fully typed route tree at build time instead — every path param, search param, and loader return type flows through TypeScript with no manual annotation:
+
+<CodeCompare labels={["Next.js", "TanStack Start"]}>
 
 ```tsx
 // Next.js — params typed as Promise<Record<string, string>>
@@ -83,8 +85,6 @@ export default async function Page({
   // TypeScript trusts you that `slug` exists. It has no way to verify.
 }
 ```
-
-TanStack Router generates a fully typed route tree at build time. Every path param, every search param, every loader return type flows through TypeScript without a single manual annotation.
 
 ```tsx
 // TanStack Start — params are typed from route definition
@@ -100,6 +100,8 @@ export const Route = createFileRoute('/blog/$slug')({
   },
 })
 ```
+
+</CodeCompare>
 
 Misspell `slg` instead of `slug`? Compile error. Pass the wrong search param shape during navigation? TypeScript catches it. This is not a convenience feature — it eliminates an entire class of runtime bugs that Next.js apps ship regularly.
 
@@ -124,7 +126,9 @@ The underscore prefix (`_layout.tsx`) is TanStack's way of marking pathless layo
 
 ### Search Params: Typed by Default
 
-In Next.js, search params are untyped strings. You reach for `useSearchParams()` and get `ReadonlyURLSearchParams` — a key-value string map with no schema. Most teams end up installing `nuqs` to get type safety and serialization.
+In Next.js, search params are untyped strings — `useSearchParams()` returns `ReadonlyURLSearchParams`, a key-value string map with no schema, so most teams install `nuqs` for type safety and serialization. TanStack Router builds typed search params into the route definition: you define a schema once via `validateSearch` and every read is typed — no casting, no extra library.
+
+<CodeCompare labels={["Next.js", "TanStack Start"]}>
 
 ```tsx
 // Next.js — no types, no validation, manual parsing
@@ -132,8 +136,6 @@ const searchParams = useSearchParams()
 const page = Number(searchParams.get('page') ?? '1')
 const sort = searchParams.get('sort') as 'asc' | 'desc' // casting
 ```
-
-TanStack Router has typed search params built into the route definition. You define a schema once via `validateSearch` and every read is typed — no casting, no extra library.
 
 ```tsx
 import { z } from 'zod'
@@ -154,6 +156,8 @@ export const Route = createFileRoute('/posts')({
 <Link to="/posts" search={{ page: 2, sort: 'asc' }}>Next</Link>
 // TS error if you pass page: 'two' or sort: 'random'
 ```
+
+</CodeCompare>
 
 This is one of the most productive parts of TanStack Router for Next.js developers. Filters, pagination, tabs driven by URL — all typed end to end.
 
@@ -362,6 +366,10 @@ Useful for authenticated dashboards where server-rendering adds latency with no 
 
 Next.js caching has gone through significant revisions. The four-layer model (Request Memoization, Data Cache, Full Route Cache, Router Cache) that shipped with the App Router is now the "Previous Model" in the docs. Next.js 16 replaced it with the `'use cache'` directive — an opt-in approach where nothing is cached by default, and you explicitly mark components, functions, or entire files as cached.
 
+This is a meaningful improvement — the implicit four-layer model was a real source of confusion, and Next.js 16's `'use cache'` is now philosophically closer to TanStack's approach than it used to be. TanStack Start has two caching layers: TanStack Router's built-in loader cache (per-route, configurable staleTime), and optionally TanStack Query for more granular control. You do not need Query to get caching — the router handles it. Query becomes useful when you need background refetching, window-focus revalidation, or shared cache across components.
+
+<CodeCompare labels={["Next.js", "TanStack Start"]}>
+
 ```tsx
 // Next.js 16 — new opt-in 'use cache' model
 // app.config: cacheComponents: true
@@ -375,10 +383,6 @@ async function getPosts() {
 // vs old model: implicit caching via fetch() options, multiple layers,
 // revalidateTag/revalidatePath with non-obvious scope
 ```
-
-This is a meaningful improvement — the implicit four-layer model was a real source of confusion. That said, Next.js 16's `'use cache'` and TanStack's approach are now philosophically closer than they used to be.
-
-TanStack Start has two caching layers: TanStack Router's built-in loader cache (per-route, configurable staleTime), and optionally TanStack Query for more granular control. You do not need TanStack Query to get caching — the router handles it. Query becomes useful when you need background refetching, window-focus revalidation, or shared cache across multiple components.
 
 ```tsx
 // Caching lives in queryOptions, not in fetch()
@@ -406,15 +410,17 @@ async function handleDelete(id: string) {
 }
 ```
 
+</CodeCompare>
+
 The tradeoff either way: one cache with an explicit API, versus Next.js 16's opt-in `'use cache'` which is simpler than before but still compiler-magic.
 
 ---
 
 ## Server Actions vs `createServerFn`
 
-Both are RPC. The design decisions differ in ways that matter at scale.
+Both are RPC. The design decisions differ in ways that matter at scale. A Next.js Server Action is colocated and ergonomic; `createServerFn` trades that colocation for an explicit method, validator, and composable middleware chain.
 
-### Next.js Server Actions
+<CodeCompare labels={["Next.js", "TanStack Start"]}>
 
 ```tsx
 // Collocated with the component, implicit POST, no validation built in
@@ -437,10 +443,6 @@ export function PostCard({ id }: { id: string }) {
   )
 }
 ```
-
-The colocation is ergonomic. The problem is scale: auth checks are repeated across every action, there is no standard way to compose middleware, and the `'use server'` directive is a compiler hint that can behave unexpectedly.
-
-### TanStack `createServerFn`
 
 ```tsx
 // auth middleware — write once, compose everywhere
@@ -465,7 +467,9 @@ const deletePost = createServerFn({ method: 'POST' })
 await deletePost({ data: { id: postId } })
 ```
 
-The middleware chain is the real advantage. In Next.js, you still end up splitting concerns between edge-layer redirects and manual checks inside actions or route handlers. TanStack's middleware composes at the function level — auth, logging, rate limiting, input validation all in one chain. That chain is testable in isolation.
+</CodeCompare>
+
+The Next.js colocation is ergonomic, but the problem is scale: auth checks repeat across every action, there is no standard way to compose middleware, and `'use server'` is a compiler hint that can behave unexpectedly. The middleware chain is TanStack's real advantage — auth, logging, rate limiting, and validation compose at the function level, in one chain, testable in isolation. In Next.js you still split those concerns between edge-layer redirects and manual checks inside actions.
 
 ---
 
@@ -525,7 +529,9 @@ The `createRootRouteWithContext` pattern is worth paying attention to. The `Rout
 
 ### Error Boundaries
 
-Next.js has `error.tsx` — a file-based error boundary that Next.js attaches to the route segment automatically.
+Next.js has `error.tsx` — a file-based error boundary it attaches to the route segment automatically. TanStack uses `errorComponent` on the route definition:
+
+<CodeCompare labels={["Next.js", "TanStack Start"]}>
 
 ```tsx
 // app/dashboard/error.tsx — Next.js
@@ -535,8 +541,6 @@ export default function Error({ error, reset }) {
 }
 ```
 
-TanStack uses `errorComponent` on the route definition:
-
 ```tsx
 export const Route = createFileRoute('/dashboard')({
   errorComponent: ({ error, reset }) => (
@@ -545,6 +549,8 @@ export const Route = createFileRoute('/dashboard')({
   component: Dashboard,
 })
 ```
+
+</CodeCompare>
 
 Same concept, co-located with the route instead of a separate file. You can also set a global error component on `__root.tsx` as a fallback.
 
@@ -556,7 +562,9 @@ The same explicitness shows up on the client side too. If something truly depend
 
 ## Form Actions and Mutation State
 
-Next.js 16 has a native form action pattern built on React 19's `useActionState`:
+Next.js 16 has a native form action pattern built on React 19's `useActionState`. TanStack Start has no direct equivalent — the idiomatic approach is `createServerFn` called from a regular submit handler, combined with TanStack Form for state:
+
+<CodeCompare labels={["Next.js", "TanStack Start"]}>
 
 ```tsx
 // Next.js — form action + useActionState for pending/error state
@@ -583,8 +591,6 @@ export function CreatePostForm() {
   )
 }
 ```
-
-TanStack Start has no direct equivalent to this pattern. The idiomatic approach is `createServerFn` called from a regular submit handler, combined with TanStack Form for state management:
 
 ```tsx
 // TanStack Start — server function + TanStack Form
@@ -615,13 +621,17 @@ export function CreatePostForm() {
 }
 ```
 
+</CodeCompare>
+
 More explicit, more composable — but also more setup. If you are used to the ergonomics of Next.js form actions for simple mutations, TanStack's approach feels heavier until you have TanStack Form set up as a standard.
 
 ---
 
 ## Route Handlers vs Server Routes
 
-Next.js has `route.ts` files for API endpoints:
+Next.js has `route.ts` files for API endpoints; TanStack Start uses `createServerFileRoute` for the same purpose:
+
+<CodeCompare labels={["Next.js", "TanStack Start"]}>
 
 ```ts
 // app/api/posts/route.ts — Next.js
@@ -630,8 +640,6 @@ export async function GET(request: Request) {
   return Response.json(posts)
 }
 ```
-
-TanStack Start uses `createServerFileRoute` for the same purpose:
 
 ```ts
 // src/routes/api/posts.ts — TanStack Start
@@ -645,13 +653,17 @@ export const ServerRoute = createServerFileRoute('/api/posts').methods({
 })
 ```
 
+</CodeCompare>
+
 Functionally identical. The distinction: TanStack server routes and server functions are separate concepts. Server routes are for public-facing HTTP endpoints (REST APIs, webhooks). Server functions are for internal client-server RPC. Do not use server functions as API endpoints for external consumers — they have CSRF protection and serialization constraints that assume a same-origin TanStack client.
 
 ---
 
 ## Metadata and SEO
 
-Next.js has a built-in Metadata API — you export `metadata` or `generateMetadata` from any page or layout:
+Next.js has a built-in Metadata API — you export `metadata` or `generateMetadata` from any page or layout. TanStack Start uses `@unhead/react` (or `react-helmet-async`) for document head management:
+
+<CodeCompare labels={["Next.js", "TanStack Start"]}>
 
 ```tsx
 // Next.js — built-in metadata API
@@ -668,8 +680,6 @@ export async function generateMetadata({ params }) {
 }
 ```
 
-TanStack Start uses `@unhead/react` (or `react-helmet-async`) for document head management:
-
 ```tsx
 // TanStack Start — useHead from @unhead/react
 import { useHead } from '@unhead/react'
@@ -683,6 +693,8 @@ export const Route = createFileRoute('/blog/$slug')({
   },
 })
 ```
+
+</CodeCompare>
 
 Not as tightly integrated as Next.js — `@unhead/react` is a third-party library rather than a framework primitive. That said, TanStack Start does have dedicated SEO docs, so this is more "bring your own head management primitive" than "figure it out yourself from scratch."
 

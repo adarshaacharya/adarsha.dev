@@ -258,3 +258,11 @@ table {
 [data-rehype-pretty-code-title] + pre {
   @apply mt-0 rounded-t-none border-t-0;
 }
+
+/* Code comparison toggle — strip the inner code-block card so it merges into the outer toggle frame */
+.code-compare-panel pre {
+  @apply m-0 rounded-none border-0 border-x-0 border-b-0;
+}
+.code-compare-panel [data-rehype-pretty-code-title] {
+  @apply rounded-none border-x-0 border-t-0;
+}
