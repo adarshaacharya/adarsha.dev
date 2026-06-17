@@ -30,11 +30,9 @@ That reversal is the entire mental model shift. Everything else follows from it.
 
 Most full-stack frameworks pick a rendering model first and build routing around it. Next.js did. Pages Router, then App Router — the router exists to serve the rendering pipeline.
 
-TanStack Start came from the other direction. TanStack Router existed first as a standalone, fully type-safe router with typed params, search params, loaders, and prefetching. Start adds the server layer on top: SSR, streaming, server functions, server routes, and deployment adapters.
+TanStack Start came from the other direction. TanStack Router existed first as a standalone, fully type-safe router. Start adds the server layer on top: SSR, streaming, server functions, deployment adapters.
 
-The implication is significant. **The router is not infrastructure in TanStack Start. It is the application.** Start is what happens when you give TanStack Router a server.
-
-This is why the framework describes itself as "Router-first." Not because routing is the only concern, but because everything else — data fetching, server functions, caching, code splitting — is organized around the router's type system, not the other way around.
+**The router is not infrastructure in TanStack Start. It is the application.** Everything else — data fetching, server functions, caching, code splitting — is organized around the router's type system, not the other way around.
 
 Next.js's App Router is a file system that generates routes. TanStack Router is a type system that generates a route tree. Both are file-based. The difference is what the output is used for.
 
@@ -48,7 +46,7 @@ The official CLI — `create-tsrouter-app` — scaffolds a project and lets you 
 npx @tanstack/cli create my-app --add-ons clerk,drizzle,tanstack-query
 ```
 
-Add-ons cover auth (Clerk, Better Auth), database (Drizzle), UI (shadcn/ui, Tailwind), and TanStack Query — you pick what you need, nothing is bundled by default. Where `create-next-app` leaves auth/db/UI for you to wire up separately, TanStack's CLI makes those choices composable up front. A common stack — Better Auth + Drizzle + PostgreSQL (Neon/Supabase) + shadcn/ui + TanStack Query — emerges not because the framework mandates it, but because these tools share the same explicit, composable philosophy.
+Add-ons cover auth (Clerk, Better Auth), database (Drizzle), UI (shadcn/ui, Tailwind), TanStack Query and more — you pick what you need, nothing is bundled by default. Where `create-next-app` leaves auth/db/UI for you to wire up separately, TanStack's CLI makes those choices composable up front.
 
 ---
 
