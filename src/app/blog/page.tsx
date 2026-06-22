@@ -7,10 +7,10 @@ import { getPublishedBlogs } from "@/lib/blog";
 export const metadata = generatePageMetadata({
   title: "Blog",
   description:
-    "Explore my blog posts on Javascript, Typescript, React.js, Next.js, Prisma, Nest.js, AI , LLMs and more.",
+    "Thoughts on TypeScript, React, Next.js, AI, and modern web development.",
 });
 
-const BLOG_POSTS_PER_PAGE = 6;
+const BLOG_POSTS_PER_PAGE = 8;
 
 export default async function Blog({
   searchParams,
@@ -41,25 +41,22 @@ export default async function Blog({
   );
 
   return (
-    <div className="space-y-10 md:space-y-12">
-      <section className="space-y-8 md:space-y-10">
-        <div className="space-y-5 md:space-y-6">
-          <div className="space-y-2 md:space-y-3">
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight leading-tight">
-              Blog
-            </h1>
-            <p className="text-muted-foreground max-w-3xl text-sm md:text-base">
-              Thoughts on software development, web technologies, Generative AI, and
-              engineering practices.
-            </p>
-          </div>
-          <SearchInput />
-        </div>
+    <div className="py-4 space-y-10">
+      <div className="space-y-1">
+        <h1 className="text-3xl font-black tracking-tight" style={{ letterSpacing: "-0.03em" }}>
+          Writing
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {blogs.length} posts on TypeScript, React, AI, and what I learn building things.
+        </p>
+      </div>
 
-        <div className="max-w-5xl">
-          <AnimatedBlogList posts={currentPosts} />
-        </div>
-      </section>
+      <SearchInput />
+
+      <div>
+        <AnimatedBlogList posts={currentPosts} />
+      </div>
+
       {totalPages > 1 && (
         <Pagination currentPage={currentPage} totalPages={totalPages} />
       )}

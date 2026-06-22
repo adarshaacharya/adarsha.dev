@@ -12,10 +12,8 @@ module.exports = {
   theme: {
   	extend: {
   		fontFamily: {
-  			sans: [
-  				'var(--font-space-grotesk)',
-                    ...fontFamily.sans
-                ]
+  			sans: ['var(--font-geist)', ...fontFamily.sans],
+  			serif: ['var(--font-spectral)', ...fontFamily.serif],
   		},
   		typography: {
   			quoteless: {
