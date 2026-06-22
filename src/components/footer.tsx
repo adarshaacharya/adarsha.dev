@@ -56,6 +56,9 @@ export function Footer() {
               >
                 RSS feed
               </a>
+              <a href="/privacy" className="inline-block hover:text-foreground transition-colors underline underline-offset-4">
+                Privacy Policy
+              </a>
               <a
                 href={siteMetadata.repo}
                 target="_blank"
