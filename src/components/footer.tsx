@@ -56,7 +56,10 @@ export function Footer() {
               >
                 RSS feed
               </a>
-              <a href="/privacy" className="inline-block hover:text-foreground transition-colors underline underline-offset-4">
+              <a
+                href="/privacy"
+                className="inline-block hover:text-foreground transition-colors underline underline-offset-4"
+              >
                 Privacy Policy
               </a>
               <a
