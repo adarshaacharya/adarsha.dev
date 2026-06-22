@@ -15,7 +15,7 @@ export function Footer() {
 
       <div className="flex flex-col items-center space-y-4 text-center">
         {!isHomePage && (
-          <div className="flex space-x-4">
+          <div className="flex flex-wrap items-center justify-center gap-4">
             {SOCIALS.map((social) => (
               <SocialLink
                 key={social.label}
@@ -28,9 +28,9 @@ export function Footer() {
           </div>
         )}
 
-        <div className="w-full overflow-x-auto text-sm text-muted-foreground">
-          <div className="flex min-w-max items-center justify-between gap-6 text-left">
-            <p>
+        <div className="w-full text-sm text-muted-foreground">
+          <div className="grid gap-4 text-center md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:text-left">
+            <p className="text-balance">
               ©{" "}
               <a
                 href={siteMetadata.social.x}
@@ -43,7 +43,7 @@ export function Footer() {
               . All rights reserved.
             </p>
 
-            <div className="flex items-center gap-4 justify-end">
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 md:justify-end">
               <a
                 href="/sitemap.xml"
                 className="inline-block hover:text-foreground transition-colors underline underline-offset-4"
