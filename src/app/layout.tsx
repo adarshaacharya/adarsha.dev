@@ -40,7 +40,14 @@ export const metadata: Metadata = {
     description: siteMetadata.description,
     url: "./",
     siteName: siteMetadata.title,
-    images: [siteMetadata.socialBanner],
+    images: [
+      {
+        url: `${siteMetadata.siteUrl}/og?title=${encodeURIComponent(siteMetadata.title)}`,
+        width: 1200,
+        height: 630,
+        alt: siteMetadata.title,
+      },
+    ],
     locale: "en_US",
     type: "website",
   },
@@ -58,7 +65,7 @@ export const metadata: Metadata = {
   twitter: {
     title: siteMetadata.title,
     card: "summary_large_image",
-    images: [siteMetadata.socialBanner],
+    images: [`${siteMetadata.siteUrl}/og?title=${encodeURIComponent(siteMetadata.title)}`],
   },
 };
 

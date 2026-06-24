@@ -14,6 +14,17 @@ export function generatePageMetadata({
   image,
   ...rest
 }: OwnProps): Metadata {
+  const ogImage = image
+    ? [{ url: image, width: 1200, height: 630, alt: title }]
+    : [
+        {
+          url: `${siteMetadata.siteUrl}/og?title=${encodeURIComponent(title)}`,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ];
+
   return {
     title,
     openGraph: {
@@ -21,14 +32,14 @@ export function generatePageMetadata({
       description: description || siteMetadata.description,
       url: "./",
       siteName: siteMetadata.title,
-      images: image ? [image] : [siteMetadata.socialBanner],
+      images: ogImage,
       locale: "en_US",
       type: "website",
     },
     twitter: {
       title: `${title} | ${siteMetadata.title}`,
       card: "summary_large_image",
-      images: image ? [image] : [siteMetadata.socialBanner],
+      images: ogImage.map((img) => img.url),
     },
     ...rest,
   };
