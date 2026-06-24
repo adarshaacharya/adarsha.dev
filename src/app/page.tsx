@@ -47,7 +47,7 @@ export default function Home() {
         {/* Bio */}
         <div className="space-y-2.5 text-muted-foreground leading-relaxed text-sm max-w-lg">
           <p>
-            I build full-stack TypeScript applications with a focus on AI integrations and great DX. Shipped products in insurance, iGaming, and video streaming. Currently building in the open.
+            I build full-stack TypeScript applications with a focus on AI integrations and great DX. Shipped products across multiple startups and domains. Currently building in the open.
           </p>
           <p>
             Drop me a line at{" "}

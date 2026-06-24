@@ -32,7 +32,7 @@ export default function About() {
         <h1 className="font-serif text-4xl md:text-5xl tracking-tight">About</h1>
         <div className="space-y-3 text-muted-foreground leading-relaxed text-sm max-w-xl">
           <p>
-            I&apos;m a fullstack engineer based in Kathmandu, Nepal. I&apos;ve spent the last few years building production web apps — across domains. Currently focused on building AI-powered products and tools.
+            I&apos;m a fullstack engineer based in Kathmandu, Nepal. I&apos;ve spent the last few years building production web apps — across insurance, iGaming, and video streaming domains. Currently focused on building AI-powered products and tools.
           </p>
           <p>
             Outside of work I build open source tools, contribute to projects I use, and write about things I learn. The blog started as personal notes and turned into something people actually read.
