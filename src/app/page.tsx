@@ -19,60 +19,69 @@ export default function Home() {
     .slice(0, 4);
 
   return (
-    <div className="space-y-8">
-      <section className="space-y-4">
-        <div className="flex items-center gap-4">
-          <Image
-            src="/_static/me.jpg"
-            width={80}
-            height={80}
-            alt="Adarsha Acharya"
-            className="rounded-xl transition-all duration-300 hover:scale-105"
-            priority
-          />
-          <div className="flex-1 space-y-2">
-            <h1 className="text-xl font-bold">Adarsha Acharya</h1>
+    <div className="space-y-10">
+      <section className="space-y-5 pt-2">
+        {/* Avatar */}
+        <Image
+          src="/_static/me.jpg"
+          width={52}
+          height={52}
+          alt="Adarsha Acharya"
+          className="rounded-full ring-2 ring-border"
+          priority
+        />
 
-            <div className="flex items-center gap-3">
-              {SOCIALS.map((social) => (
-                <SocialLink
-                  key={social.label}
-                  aria-label={`Follow on ${social.label}`}
-                  href={social.href}
-                  icon={social.icon}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                />
-              ))}
-            </div>
+        {/* Name */}
+        <div className="space-y-2">
+          <h1 className="font-serif text-5xl sm:text-6xl tracking-tight leading-[1.05]">
+            Adarsha<br />Acharya
+          </h1>
+          <div className="flex items-center gap-3">
+            <div className="h-px w-8 bg-primary flex-shrink-0" />
+            <p className="text-sm text-muted-foreground">
+              Fullstack Engineer · AI & Web · Nepal
+            </p>
           </div>
         </div>
 
-        <div className="space-y-3 text-muted-foreground leading-normal text-sm">
+        {/* Bio */}
+        <div className="space-y-2.5 text-muted-foreground leading-relaxed text-sm max-w-lg">
           <p>
-            Fullstack software engineer specializing in building web applications with modern JavaScript and AI-driven features. Worked on multiple startups across insurance, iGaming, and video streaming domains, with active contributions to open source.
+            I build full-stack TypeScript applications with a focus on AI integrations and great DX. Shipped products in insurance, iGaming, and video streaming. Currently building in the open.
           </p>
           <p>
-            Reach out at{" "}
+            Drop me a line at{" "}
             <a
               href="mailto:hi@adarsha.dev"
               className="font-medium text-foreground underline underline-offset-4 hover:text-primary transition-colors"
             >
               hi@adarsha.dev
             </a>{" "}
-            for exciting projects or opportunities.
+            — always happy to talk about interesting problems.
           </p>
         </div>
 
-        <div className="flex gap-2">
+        {/* Social links + CTAs */}
+        <div className="flex flex-wrap items-center gap-4">
+          {SOCIALS.map((social) => (
+            <SocialLink
+              key={social.label}
+              aria-label={`Follow on ${social.label}`}
+              href={social.href}
+              icon={social.icon}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            />
+          ))}
+          <div className="w-px h-4 bg-border" />
           <Button variant="outline" size="sm" asChild>
             <a href={LINKS.RESUME} target="_blank" rel="noopener noreferrer">
               <Download className="h-3.5 w-3.5 mr-1.5" />
               Resume
             </a>
           </Button>
-          <Button variant="outline" size="sm" asChild>
+          <Button size="sm" asChild>
             <Link href="/projects">
-              View Projects
+              Projects
               <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
             </Link>
           </Button>
@@ -81,25 +90,25 @@ export default function Home() {
 
       <Separator />
 
-      <section className="space-y-3">
+      <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold tracking-tight">
-            Latest Posts
+          <h2 className="text-xs font-semibold tracking-widest uppercase text-muted-foreground">
+            Recent Writing
           </h2>
           <Button variant="ghost" size="sm" asChild>
-            <Link href="/blog" className="text-sm">
-              View all
-              <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+            <Link href="/blog" className="text-xs text-muted-foreground hover:text-foreground">
+              All posts
+              <ArrowRight className="h-3 w-3 ml-1" />
             </Link>
           </Button>
         </div>
 
-        <div className="divide-y divide-border/40">
+        <div>
           {blogs.map((blog) => (
             <Link
               key={blog.slug}
               href={`/blog/${blog.slug}`}
-              className="block hover:bg-muted/30 transition-colors duration-200 rounded-lg -mx-2 px-2"
+              className="block border-l-2 border-transparent hover:border-primary pl-4 -ml-4 transition-all duration-200"
             >
               <BlogListItem blog={blog} />
             </Link>

@@ -15,7 +15,11 @@ module.exports = {
   			sans: [
   				'var(--font-space-grotesk)',
                     ...fontFamily.sans
-                ]
+                ],
+  			serif: [
+  				'var(--font-instrument-serif)',
+  				...fontFamily.serif
+  			]
   		},
   		typography: {
   			quoteless: {

@@ -31,8 +31,8 @@ function RoundedImage(props: { alt: string; src: string }) {
 
 function Callout(props: { emoji: string; children: React.ReactNode }) {
   return (
-    <div className="mb-8 flex items-center rounded border border-neutral-200 bg-neutral-50 p-1 px-4 py-3 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100">
-      <div className="mr-4 flex w-4 items-center">{props.emoji}</div>
+    <div className="mb-8 flex items-start rounded-lg border border-border bg-muted/60 px-4 py-3 text-sm text-foreground">
+      <div className="mr-3 mt-0.5 flex w-4 shrink-0 items-center">{props.emoji}</div>
       <div className="callout w-full">{props.children}</div>
     </div>
   );
@@ -53,7 +53,7 @@ export function Mdx({ code }: { code: string }) {
   return (
     <React.Fragment>
       {/* https://github.com/tailwindlabs/tailwindcss-typography#overriding-max-width */}
-      <article className="prose prose-neutral dark:prose-invert prose-quoteless  max-w-none">
+      <article className="prose prose-slate dark:prose-invert prose-quoteless max-w-none">
         <React.Suspense fallback={null}>
           <Content components={components} />
         </React.Suspense>

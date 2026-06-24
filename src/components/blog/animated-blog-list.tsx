@@ -64,7 +64,7 @@ export function AnimatedBlogList({ posts }: AnimatedBlogListProps) {
         >
           <Link
             href={`/blog/${blog.slug}`}
-            className="block hover:bg-muted/20 transition-colors duration-200 rounded-lg -mx-2 md:-mx-4 px-2 md:px-4"
+            className="block border-l-2 border-transparent hover:border-primary pl-4 -ml-4 transition-all duration-200"
           >
             <BlogListItem blog={blog} />
           </Link>

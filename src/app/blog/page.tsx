@@ -45,20 +45,17 @@ export default async function Blog({
       <section className="space-y-8 md:space-y-10">
         <div className="space-y-5 md:space-y-6">
           <div className="space-y-2 md:space-y-3">
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight leading-tight">
+            <h1 className="font-serif text-4xl md:text-5xl tracking-tight leading-tight">
               Blog
             </h1>
-            <p className="text-muted-foreground max-w-3xl text-sm md:text-base">
-              Thoughts on software development, web technologies, Generative AI, and
-              engineering practices.
+            <p className="text-muted-foreground max-w-xl text-sm md:text-base leading-relaxed">
+              Technical writing on TypeScript, React, Next.js, and AI. Things I wish someone had written for me.
             </p>
           </div>
           <SearchInput />
         </div>
 
-        <div className="max-w-5xl">
-          <AnimatedBlogList posts={currentPosts} />
-        </div>
+        <AnimatedBlogList posts={currentPosts} />
       </section>
       {totalPages > 1 && (
         <Pagination currentPage={currentPage} totalPages={totalPages} />

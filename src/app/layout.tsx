@@ -5,19 +5,27 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { TailwindIndicator } from "@/components/tailwind-indicator";
-import { Space_Grotesk } from "next/font/google";
+import { Space_Grotesk, Instrument_Serif } from "next/font/google";
 import { siteMetadata } from "@/data/siteMetadata";
 import Head from "./head";
 import { ENV } from "@/lib/env";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { ChatBot } from "@/components/bot/chat-bot";
-import { Toaster, toast } from 'sonner';
+import { Toaster } from 'sonner';
 import { Metadata } from "next/dist/types";
 
 const space_grotesk = Space_Grotesk({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-space-grotesk",
+});
+
+const instrument_serif = Instrument_Serif({
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+  display: "swap",
+  variable: "--font-instrument-serif",
 });
 
 export const metadata: Metadata = {
@@ -64,18 +72,20 @@ export default function RootLayout({
       <Head />
       <body
         className={cn(
-          "min-h-screen w-full antialiased dark:bg-zinc-950 dark:text-gray-100",
+          "min-h-screen w-full antialiased",
+          space_grotesk.variable,
+          instrument_serif.variable,
           space_grotesk.className,
         )}
       >
         <Suspense fallback={null}>
           <ThemeProvider
             attribute="class"
-            defaultTheme="dark" // default to dark mode, can be light, dark, system
+            defaultTheme="dark"
             enableSystem
             disableTransitionOnChange
           >
-            <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 sm:px-6 xl:max-w-4xl 2xl:max-w-5xl">
+            <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 sm:px-6 md:max-w-4xl xl:max-w-5xl">
               <Header />
               <div className="flex-1">{children}</div>
               <Suspense fallback={null}>
