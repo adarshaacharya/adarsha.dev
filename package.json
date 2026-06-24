@@ -40,7 +40,7 @@
     "class-validator": "^0.14.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.0.0",
-    "contentlayer2": "^0.5.3",
+    "contentlayer2": "^0.5.8",
     "dotenv": "^16.5.0",
     "eslint": "9.19.0",
     "framer-motion": "^12.4.7",
