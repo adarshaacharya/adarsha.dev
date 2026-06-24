@@ -22,14 +22,14 @@ export function SearchInput() {
   }, 300);
 
   return (
-    <div className="relative mb-8">
-      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+    <div className="relative max-w-xs">
+      <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/60" />
       <Input
         type="text"
         onChange={(e) => debouncedSearch(e.target.value)}
         defaultValue={searchParams.get("search")?.toString()}
-        placeholder="Search articles..."
-        className="pl-10"
+        placeholder="Search..."
+        className="pl-9 h-8 text-sm bg-transparent"
       />
     </div>
   );

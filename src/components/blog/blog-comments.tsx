@@ -1,8 +1,12 @@
 "use client";
 
 import Giscus from "@giscus/react";
+import { useTheme } from "next-themes";
 
 export const BlogComments = () => {
+  const { resolvedTheme } = useTheme();
+  const giscusTheme = resolvedTheme === "dark" ? "dark_dimmed" : "light";
+
   return (
     <Giscus
       repo="adarshaacharya/portfolio-giscus"
@@ -13,7 +17,7 @@ export const BlogComments = () => {
       reactionsEnabled="1"
       emitMetadata="0"
       inputPosition="top"
-      theme="preferred_color_scheme"
+      theme={giscusTheme}
       lang="en"
       loading="lazy"
     />

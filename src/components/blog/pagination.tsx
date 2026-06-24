@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { PaginationButton } from "./pagination-button";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 interface PaginationProps {
   currentPage: number;
@@ -21,82 +22,56 @@ export function Pagination({
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentPage]);
 
-  const generatePageNumbers = () => {
-    const delta = 2;
-    const range = [];
-    const rangeWithDots = [];
-
-    for (
-      let i = Math.max(2, currentPage - delta);
-      i <= Math.min(totalPages - 1, currentPage + delta);
-      i++
-    ) {
-      range.push(i);
-    }
-
-    if (currentPage - delta > 2) {
-      rangeWithDots.push(1, "...");
-    } else {
-      rangeWithDots.push(1);
-    }
-
-    rangeWithDots.push(...range);
-
-    if (currentPage + delta < totalPages - 1) {
-      rangeWithDots.push("...", totalPages);
-    } else if (totalPages > 1) {
-      rangeWithDots.push(totalPages);
-    }
-
-    return rangeWithDots;
-  };
-
-  const pageNumbers = generatePageNumbers();
+  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
 
   return (
-    <nav className="flex items-center justify-center gap-2 mt-12">
-      <PaginationButton
-        href={
-          currentPage > 1 ? `${basePath}?page=${currentPage - 1}` : undefined
-        }
-        isDisabled={currentPage <= 1}
-      >
-        <ChevronLeft className="h-4 w-4" />
-      </PaginationButton>
+    <nav className="flex items-center justify-center gap-6 mt-10 text-sm">
+      {currentPage > 1 ? (
+        <Link
+          href={`${basePath}?page=${currentPage - 1}`}
+          className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ChevronLeft className="h-3.5 w-3.5" />
+          Prev
+        </Link>
+      ) : (
+        <span className="flex items-center gap-1 text-muted-foreground/30 select-none">
+          <ChevronLeft className="h-3.5 w-3.5" />
+          Prev
+        </span>
+      )}
 
-      {pageNumbers.map((page, index) => {
-        if (page === "...") {
-          return (
-            <span
-              key={`ellipsis-${index}`}
-              className="px-3 py-2 text-muted-foreground"
-            >
-              ...
-            </span>
-          );
-        }
-
-        return (
-          <PaginationButton
+      <div className="flex items-center gap-3">
+        {pages.map((page) => (
+          <Link
             key={page}
             href={`${basePath}?page=${page}`}
-            isActive={page === currentPage}
+            className={cn(
+              "tabular-nums transition-colors",
+              page === currentPage
+                ? "text-primary font-semibold underline underline-offset-4 decoration-primary/60"
+                : "text-muted-foreground hover:text-foreground",
+            )}
           >
             {page}
-          </PaginationButton>
-        );
-      })}
+          </Link>
+        ))}
+      </div>
 
-      <PaginationButton
-        href={
-          currentPage < totalPages
-            ? `${basePath}?page=${currentPage + 1}`
-            : undefined
-        }
-        isDisabled={currentPage >= totalPages}
-      >
-        <ChevronRight className="h-4 w-4" />
-      </PaginationButton>
+      {currentPage < totalPages ? (
+        <Link
+          href={`${basePath}?page=${currentPage + 1}`}
+          className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Next
+          <ChevronRight className="h-3.5 w-3.5" />
+        </Link>
+      ) : (
+        <span className="flex items-center gap-1 text-muted-foreground/30 select-none">
+          Next
+          <ChevronRight className="h-3.5 w-3.5" />
+        </span>
+      )}
     </nav>
   );
 }

@@ -4,48 +4,50 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Light mode — barely warm white, amber accent */
+    --background: 38 18% 97%;
+    --foreground: 222 28% 13%;
+    --card: 38 20% 99%;
+    --card-foreground: 222 28% 13%;
+    --popover: 38 20% 99%;
+    --popover-foreground: 222 28% 13%;
+    --primary: 37 80% 44%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 38 15% 93%;
+    --secondary-foreground: 222 28% 13%;
+    --muted: 38 15% 93%;
+    --muted-foreground: 215 14% 48%;
+    --accent: 37 80% 44%;
+    --accent-foreground: 0 0% 98%;
     --destructive: 0 72.2% 50.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 47.4% 11.2%;
-    --radius: 0.5rem;
+    --destructive-foreground: 0 0% 98%;
+    --border: 38 15% 88%;
+    --input: 38 15% 88%;
+    --ring: 37 80% 44%;
+    --radius: 0.375rem;
   }
 
   .dark {
-    --background: 0 0% 7%;
-    --foreground: 0 0% 95%;
-    --card: 0 0% 7%;
-    --card-foreground: 0 0% 95%;
-    --popover: 0 0% 7%;
-    --popover-foreground: 0 0% 95%;
-    --primary: 0 0% 95%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 95%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 60%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 95%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 95%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 80%;
+    /* Dark mode — deep slate-navy, amber accent */
+    --background: 222 22% 9%;
+    --foreground: 210 15% 93%;
+    --card: 222 18% 12%;
+    --card-foreground: 210 15% 93%;
+    --popover: 222 18% 12%;
+    --popover-foreground: 210 15% 93%;
+    --primary: 37 85% 55%;
+    --primary-foreground: 222 22% 9%;
+    --secondary: 220 16% 16%;
+    --secondary-foreground: 210 15% 93%;
+    --muted: 220 16% 16%;
+    --muted-foreground: 215 14% 54%;
+    --accent: 37 85% 55%;
+    --accent-foreground: 222 22% 9%;
+    --destructive: 0 62.8% 45%;
+    --destructive-foreground: 210 15% 93%;
+    --border: 220 16% 20%;
+    --input: 220 16% 20%;
+    --ring: 37 85% 55%;
   }
 }
 
@@ -58,6 +60,11 @@
     font-feature-settings:
       "rlig" 1,
       "calt" 1;
+  }
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 3px;
+    border-radius: 3px;
   }
 }
 
@@ -80,14 +87,13 @@
     @apply bg-muted-foreground/30;
   }
 
-  /* Firefox */
   .scrollbar-thin {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--muted)) transparent;
   }
 }
 
-/* Prose dark mode improvements */
+/* Prose dark mode */
 @layer components {
   .dark .prose.dark\:prose-invert {
     --tw-prose-body: hsl(var(--foreground) / 0.9);
@@ -123,11 +129,11 @@
 }
 
 .prose a {
-  @apply decoration-neutral-400 decoration-[0.1em] underline-offset-2 transition-all dark:decoration-neutral-600;
+  @apply underline decoration-border decoration-[0.1em] underline-offset-2 transition-all hover:decoration-primary/60 hover:text-foreground;
 }
 
 .prose .anchor:after {
-  @apply text-neutral-300 dark:text-neutral-700;
+  @apply text-muted-foreground/40;
   content: "#";
 }
 
@@ -136,27 +142,30 @@
 }
 
 .prose pre {
-  @apply bg-neutral-50 dark:bg-neutral-900 rounded-lg overflow-x-auto border;
-}
-
-/* Dark mode fix for code blocks */
-.dark .prose pre,
-.dark .prose pre[class*="language-"] {
-  background-color: rgb(10, 10, 10) !important;
+  @apply overflow-x-auto rounded-lg border border-neutral-200 dark:border-[hsl(220,16%,18%)];
 }
 
 .prose code {
-  @apply px-1 py-0.5 rounded-lg;
+  @apply px-1.5 py-0.5 rounded-md bg-muted/80 dark:bg-muted text-sm;
 }
 
 .prose pre code {
-  @apply p-0 text-neutral-800;
+  @apply rounded-none bg-transparent p-0;
   border: initial;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
-.dark .prose pre code {
-  color: rgb(229 229 229);
+/* Code blocks — single surface, border hugs the code */
+.prose [data-rehype-pretty-code-figure] {
+  @apply my-8 overflow-hidden rounded-lg border border-neutral-200 dark:border-[hsl(220,16%,18%)];
+}
+
+.prose [data-rehype-pretty-code-figure] pre {
+  @apply m-0 border-0 bg-transparent p-0;
+}
+
+.prose [data-rehype-pretty-code-figure] pre code {
+  @apply rounded-none bg-neutral-100 p-3 dark:bg-[hsl(220,16%,14%)];
 }
 
 .prose code span {
@@ -170,11 +179,11 @@
 .prose h2,
 h3,
 h4 {
-  @apply font-medium tracking-tighter !important;
+  @apply font-medium tracking-tight !important;
 }
 
 .prose strong {
-  @apply font-medium;
+  @apply font-semibold;
 }
 
 .prose > :first-child {
@@ -222,19 +231,26 @@ table {
 }
 
 /* Rehype pretty code */
-[data-rehype-pretty-code-fragment] code {
-  @apply grid min-w-full break-words rounded-none border-0 bg-transparent p-0 text-sm text-neutral-800;
+[data-rehype-pretty-code-figure] code {
+  @apply grid min-w-full break-words rounded-none border-0 p-3 text-sm;
+  @apply bg-neutral-100 dark:bg-[hsl(220,16%,14%)];
   counter-reset: line;
   box-decoration-break: clone;
 }
 
-.dark [data-rehype-pretty-code-fragment] code {
-  color: rgb(229 229 229);
+/* Dual-theme token color switching via Shiki CSS variables */
+code[data-theme*=' '],
+code[data-theme*=' '] span {
+  color: var(--shiki-light);
 }
-[data-rehype-pretty-code-fragment] .line {
+.dark code[data-theme*=' '],
+.dark code[data-theme*=' '] span {
+  color: var(--shiki-dark);
+}
+[data-rehype-pretty-code-figure] .line {
   @apply py-1;
 }
-[data-rehype-pretty-code-fragment] [data-line-numbers] > .line::before {
+[data-rehype-pretty-code-figure] [data-line-numbers] > .line::before {
   counter-increment: line;
   content: counter(line);
   display: inline-block;
@@ -243,30 +259,36 @@ table {
   text-align: right;
   color: gray;
 }
-[data-rehype-pretty-code-fragment] .line--highlighted {
-  @apply bg-slate-500 bg-opacity-10;
+[data-rehype-pretty-code-figure] .line--highlighted {
+  @apply bg-primary/5;
 }
-[data-rehype-pretty-code-fragment] .line-highlighted span {
+[data-rehype-pretty-code-figure] .line-highlighted span {
   @apply relative;
 }
-[data-rehype-pretty-code-fragment] .word--highlighted {
-  @apply rounded-md bg-slate-500 bg-opacity-10 p-1;
+[data-rehype-pretty-code-figure] .word--highlighted {
+  @apply rounded-md bg-primary/10 p-1;
 }
 [data-rehype-pretty-code-title] {
-  @apply rounded-t-lg border border-[#333333] bg-[#1c1c1c] px-4 py-3 font-mono text-xs font-medium text-neutral-200;
+  @apply rounded-t-lg border border-[#262f3e] bg-[#161c28] px-4 py-3 font-mono text-xs font-medium text-neutral-400;
 }
 [data-rehype-pretty-code-title] + pre {
   @apply mt-0 rounded-t-none border-t-0;
 }
 
-/* Code comparison toggle — strip the inner code-block card so it merges into the outer toggle frame */
+/* Code comparison toggle */
+.code-compare-panel figure,
 .code-compare-panel pre {
-  @apply m-0 rounded-none border-0 border-x-0 border-b-0;
+  @apply m-0 rounded-none border-0 bg-transparent p-0;
+}
+.code-compare-panel [data-rehype-pretty-code-figure] {
+  @apply my-0 border-0;
+}
+.code-compare-panel code {
+  @apply grid rounded-none p-3 bg-neutral-100 dark:bg-[hsl(220,16%,14%)];
 }
 .code-compare-panel [data-rehype-pretty-code-title] {
   @apply rounded-none border-x-0 border-t-0;
 }
-/* Inside the compare toggle, copy lives in the tab bar — hide the per-block overlay button */
 .code-compare-panel figure > button {
   display: none;
 }

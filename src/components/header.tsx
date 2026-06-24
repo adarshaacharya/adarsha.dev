@@ -16,6 +16,9 @@ const navItems = {
   "/projects": {
     name: "Projects",
   },
+  "/about": {
+    name: "About",
+  },
 };
 
 export function Header() {
@@ -25,9 +28,9 @@ export function Header() {
   }
 
   return (
-    <header className="mb-6 mt-4 sm:mt-6">
+    <header className="mb-8 mt-5 sm:mt-7">
       <nav className="flex w-full items-center justify-between">
-        <div className="flex items-center space-x-6">
+        <div className="flex items-center space-x-7">
           {Object.entries(navItems).map(([path, { name }]) => {
             const isActive = path === pathname;
             return (
@@ -35,8 +38,10 @@ export function Header() {
                 key={path}
                 href={path}
                 className={cn(
-                  "text-sm font-medium transition-colors hover:text-foreground",
-                  isActive ? "text-foreground" : "text-muted-foreground",
+                  "relative text-sm font-medium transition-colors pb-0.5",
+                  isActive
+                    ? "text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[1.5px] after:rounded-full after:bg-primary"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {name}

@@ -12,10 +12,14 @@ export const metadata = generatePageMetadata({
 
 export default function Projects() {
   return (
-    <div className="space-y-20 lg:space-y-28">
+    <div className="space-y-12">
       {/* Web Applications Section */}
-      <section className="space-y-8 lg:space-y-10">
-        <h2 className="text-2xl font-semibold tracking-tight">
+      <section className="space-y-6">
+        <div className="space-y-1">
+          <h1 className="font-serif text-4xl md:text-5xl tracking-tight">Projects</h1>
+          <p className="text-sm text-muted-foreground">Things I've built and shipped — web apps, packages, and tools.</p>
+        </div>
+        <h2 className="text-xs font-semibold tracking-widest uppercase text-muted-foreground pt-2">
           Web Applications
         </h2>
         <AnimatedProjectsList projects={WEB_APPS} type="web-apps" />
@@ -23,9 +27,8 @@ export default function Projects() {
 
       <Separator />
 
-      {/* Tools & Packages Section */}
-      <section className="space-y-8 lg:space-y-10">
-        <h2 className="text-2xl font-semibold tracking-tight">
+      <section className="space-y-6">
+        <h2 className="text-xs font-semibold tracking-widest uppercase text-muted-foreground">
           Tools & Packages
         </h2>
         <AnimatedProjectsList projects={TOOLS} type="tools" />

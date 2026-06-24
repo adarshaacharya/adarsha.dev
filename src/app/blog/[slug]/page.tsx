@@ -11,12 +11,6 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft, Calendar, Clock } from "lucide-react";
 
-// export async function generateStaticParams() {
-//   const paths = allBlogs.map((blog) => ({ slug: blog.slug }));
-
-//   return paths;
-// }
-
 export const generateStaticParams = async () =>
   allBlogs.map((blog) => ({ slug: blog._raw.flattenedPath }));
 
@@ -76,27 +70,30 @@ export default async function Blog(props: {
 
   return (
     <article className="space-y-8">
-      <Button variant="ghost" size="sm" asChild className="mb-4">
+      <Button variant="ghost" size="sm" asChild className="-ml-2">
         <Link href="/blog">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to blog
+          <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
+          Back
         </Link>
       </Button>
 
-      <header className="space-y-4">
-        <h1 className="text-4xl font-bold tracking-tight">
+      <header className="space-y-5">
+        <h1 className="font-serif text-4xl sm:text-5xl tracking-tight leading-[1.1]">
           <Balancer>{blog.title}</Balancer>
         </h1>
-        <p className="text-lg text-muted-foreground">{blog.summary}</p>
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <Calendar className="h-4 w-4" />
+        <p className="text-base text-muted-foreground leading-relaxed max-w-2xl">
+          {blog.summary}
+        </p>
+        <div className="flex items-center gap-4 text-sm text-muted-foreground/70">
+          <div className="flex items-center gap-1.5">
+            <Calendar className="h-3.5 w-3.5" />
             <time dateTime={blog.publishedAt}>
               {formatDate(blog.publishedAt)}
             </time>
           </div>
-          <div className="flex items-center gap-1">
-            <Clock className="h-4 w-4" />
+          <span>·</span>
+          <div className="flex items-center gap-1.5">
+            <Clock className="h-3.5 w-3.5" />
             <span>{blog.readingTime.text}</span>
           </div>
         </div>
