@@ -5,7 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { TailwindIndicator } from "@/components/tailwind-indicator";
-import { Space_Grotesk, Instrument_Serif } from "next/font/google";
+import { Geist, Instrument_Serif } from "next/font/google";
 import { siteMetadata } from "@/data/siteMetadata";
 import Head from "./head";
 import { ENV } from "@/lib/env";
@@ -14,10 +14,10 @@ import { ChatBot } from "@/components/bot/chat-bot";
 import { Toaster } from 'sonner';
 import { Metadata } from "next/dist/types";
 
-const space_grotesk = Space_Grotesk({
+const geist = Geist({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-space-grotesk",
+  variable: "--font-geist",
 });
 
 const instrument_serif = Instrument_Serif({
@@ -73,9 +73,9 @@ export default function RootLayout({
       <body
         className={cn(
           "min-h-screen w-full antialiased",
-          space_grotesk.variable,
+          geist.variable,
           instrument_serif.variable,
-          space_grotesk.className,
+          geist.className,
         )}
       >
         <Suspense fallback={null}>

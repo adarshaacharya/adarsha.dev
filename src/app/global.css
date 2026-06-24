@@ -142,13 +142,7 @@
 }
 
 .prose pre {
-  @apply bg-muted/60 dark:bg-card rounded-lg overflow-x-auto border;
-}
-
-/* Dark mode code blocks — slate-navy tint */
-.dark .prose pre,
-.dark .prose pre[class*="language-"] {
-  background-color: hsl(222, 22%, 7%) !important;
+  @apply overflow-x-auto rounded-lg border border-neutral-200 dark:border-[hsl(220,16%,18%)];
 }
 
 .prose code {
@@ -156,13 +150,22 @@
 }
 
 .prose pre code {
-  @apply p-0 bg-transparent text-neutral-800;
+  @apply rounded-none bg-transparent p-0;
   border: initial;
   line-height: 1.6;
 }
 
-.dark .prose pre code {
-  color: hsl(210, 15%, 88%);
+/* Code blocks — single surface, border hugs the code */
+.prose [data-rehype-pretty-code-figure] {
+  @apply my-8 overflow-hidden rounded-lg border border-neutral-200 dark:border-[hsl(220,16%,18%)];
+}
+
+.prose [data-rehype-pretty-code-figure] pre {
+  @apply m-0 border-0 bg-transparent p-0;
+}
+
+.prose [data-rehype-pretty-code-figure] pre code {
+  @apply rounded-none bg-neutral-100 p-3 dark:bg-[hsl(220,16%,14%)];
 }
 
 .prose code span {
@@ -228,19 +231,26 @@ table {
 }
 
 /* Rehype pretty code */
-[data-rehype-pretty-code-fragment] code {
-  @apply grid min-w-full break-words rounded-none border-0 bg-transparent p-0 text-sm text-neutral-800;
+[data-rehype-pretty-code-figure] code {
+  @apply grid min-w-full break-words rounded-none border-0 p-3 text-sm;
+  @apply bg-neutral-100 dark:bg-[hsl(220,16%,14%)];
   counter-reset: line;
   box-decoration-break: clone;
 }
 
-.dark [data-rehype-pretty-code-fragment] code {
-  color: hsl(210, 15%, 88%);
+/* Dual-theme token color switching via Shiki CSS variables */
+code[data-theme*=' '],
+code[data-theme*=' '] span {
+  color: var(--shiki-light);
 }
-[data-rehype-pretty-code-fragment] .line {
+.dark code[data-theme*=' '],
+.dark code[data-theme*=' '] span {
+  color: var(--shiki-dark);
+}
+[data-rehype-pretty-code-figure] .line {
   @apply py-1;
 }
-[data-rehype-pretty-code-fragment] [data-line-numbers] > .line::before {
+[data-rehype-pretty-code-figure] [data-line-numbers] > .line::before {
   counter-increment: line;
   content: counter(line);
   display: inline-block;
@@ -249,13 +259,13 @@ table {
   text-align: right;
   color: gray;
 }
-[data-rehype-pretty-code-fragment] .line--highlighted {
+[data-rehype-pretty-code-figure] .line--highlighted {
   @apply bg-primary/5;
 }
-[data-rehype-pretty-code-fragment] .line-highlighted span {
+[data-rehype-pretty-code-figure] .line-highlighted span {
   @apply relative;
 }
-[data-rehype-pretty-code-fragment] .word--highlighted {
+[data-rehype-pretty-code-figure] .word--highlighted {
   @apply rounded-md bg-primary/10 p-1;
 }
 [data-rehype-pretty-code-title] {
@@ -266,8 +276,15 @@ table {
 }
 
 /* Code comparison toggle */
+.code-compare-panel figure,
 .code-compare-panel pre {
-  @apply m-0 rounded-none border-0 border-x-0 border-b-0;
+  @apply m-0 rounded-none border-0 bg-transparent p-0;
+}
+.code-compare-panel [data-rehype-pretty-code-figure] {
+  @apply my-0 border-0;
+}
+.code-compare-panel code {
+  @apply grid rounded-none p-3 bg-neutral-100 dark:bg-[hsl(220,16%,14%)];
 }
 .code-compare-panel [data-rehype-pretty-code-title] {
   @apply rounded-none border-x-0 border-t-0;

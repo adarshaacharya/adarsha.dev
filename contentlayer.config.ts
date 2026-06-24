@@ -64,7 +64,10 @@ export default makeSource({
       [
         rehypePrettyCode as any,
         {
-          theme: "one-dark-pro",
+          theme: {
+            dark: "one-dark-pro",
+            light: "github-light",
+          },
           keepBackground: false,
      
 
