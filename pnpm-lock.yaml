@@ -30,6 +30,9 @@ dependencies:
   '@radix-ui/react-slot':
     specifier: ^1.2.3
     version: 1.2.4(@types/react@19.0.8)(react@19.2.4)
+  '@shadcn/react':
+    specifier: ^0.2.0
+    version: 0.2.0(@types/react@19.0.8)(react@19.2.4)
   '@types/node':
     specifier: 20.8.6
     version: 20.8.6
@@ -2139,6 +2142,21 @@ packages:
   /@rtsao/scc@1.1.0:
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
     dev: true
+
+  /@shadcn/react@0.2.0(@types/react@19.0.8)(react@19.2.4):
+    resolution: {integrity: sha512-g/LMtyL0eiHCHkOCelhYf32RC5nTMdtUNag1ZQRhSDCW+jnHxDY1Dajk7P6zJosOg8z2N4wzfKOY5sh54QTDYA==}
+    peerDependencies:
+      '@types/react': 19.0.8
+      react: '>=19'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      react:
+        optional: true
+    dependencies:
+      '@types/react': 19.0.8
+      react: 19.2.4
+    dev: false
 
   /@shikijs/core@2.5.0:
     resolution: {integrity: sha512-uu/8RExTKtavlpH7XqnVYBrfBkUc20ngXiX9NSrBhOVZYv/7XQRKUyhtkeflY5QsxC0GbJThCerruZfsUaSldg==}

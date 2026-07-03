@@ -22,6 +22,7 @@
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-separator": "^1.1.7",
     "@radix-ui/react-slot": "^1.2.3",
+    "@shadcn/react": "^0.2.0",
     "@types/node": "20.8.6",
     "@types/react": "19.0.8",
     "@types/react-dom": "19.0.3",
