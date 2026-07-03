@@ -40,3 +40,5 @@ next-env.d.ts
 .env
 
 .content-collections
+
+.pnpm-store
