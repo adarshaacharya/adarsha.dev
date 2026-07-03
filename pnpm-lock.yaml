@@ -147,6 +147,9 @@ dependencies:
   use-debounce:
     specifier: ^10.0.4
     version: 10.1.0(react@19.2.4)
+  use-stick-to-bottom:
+    specifier: ^1.1.6
+    version: 1.1.6(react@19.2.4)
   zod:
     specifier: ^3.25.76
     version: 3.25.76
@@ -11001,6 +11004,14 @@ packages:
       detect-node-es: 1.1.0
       react: 19.2.4
       tslib: 2.8.1
+    dev: false
+
+  /use-stick-to-bottom@1.1.6(react@19.2.4):
+    resolution: {integrity: sha512-z3Up8jYQGTkUCsGBnwg6/wj70KgXoW5Kz1AAc1j8MtQuYMBo6ZsdhrIXoegxa7gaMMilgQYyTohTrt3p94jHog==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+    dependencies:
+      react: 19.2.4
     dev: false
 
   /use-sync-external-store@1.6.0(react@19.2.4):
