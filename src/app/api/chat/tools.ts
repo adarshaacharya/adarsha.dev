@@ -11,6 +11,19 @@ const CONTENT_DIR = path.join(process.cwd(), "src/content");
 const MAX_POST_CHARS = 16000;
 const MAX_CODE_CHARS = 3000;
 const MAX_CODE_RESULT_CHARS = 12000;
+const MAX_REMOTE_CONTENT_CHARS = 30000;
+const REMOTE_CONTENT_CACHE_MS = 15 * 60 * 1000;
+
+const remoteContentCache = new Map<
+  string,
+  {
+    expiresAt: number;
+    fetchedAt: string;
+    requestedUrl: string;
+    fetchUrl: string;
+    content: string;
+  }
+>();
 
 type BlogFile = {
   slug: string;
@@ -96,6 +109,116 @@ function compactContent(content: string, maxChars = MAX_POST_CHARS) {
     .slice(0, maxChars);
 }
 
+function getConfiguredRemoteUrls() {
+  return [
+    ...Object.values(LINKS),
+    siteMetadata.siteUrl,
+    `${siteMetadata.siteUrl}/resume`,
+    ...WEB_APPS.flatMap((project) => [project.demo, project.repo]),
+    ...TOOLS.flatMap((item) => [item.demo, item.repo]),
+  ].filter((url): url is string => Boolean(url));
+}
+
+function normalizeUrl(url: string) {
+  const parsed = new URL(url);
+  parsed.hash = "";
+  return parsed.toString().replace(/\/$/, "");
+}
+
+function getGoogleDocsExportUrl(url: string) {
+  const parsed = new URL(url);
+  const documentId = parsed.pathname.match(/\/document\/d\/([^/]+)/)?.[1];
+
+  if (!documentId) return null;
+
+  return `https://docs.google.com/document/d/${documentId}/export?format=txt`;
+}
+
+function resolveAllowedRemoteUrl(url: string) {
+  const requestedUrl = normalizeUrl(url);
+  const resumePageUrl = normalizeUrl(`${siteMetadata.siteUrl}/resume`);
+  const configuredUrls = new Set(getConfiguredRemoteUrls().map(normalizeUrl));
+
+  if (!configuredUrls.has(requestedUrl)) {
+    throw new Error("URL is not in the configured portfolio allowlist.");
+  }
+
+  const targetUrl = requestedUrl === resumePageUrl ? LINKS.RESUME : url;
+  const googleDocsExportUrl = getGoogleDocsExportUrl(targetUrl);
+
+  return {
+    requestedUrl,
+    fetchUrl: googleDocsExportUrl ?? targetUrl,
+  };
+}
+
+function decodeHtmlEntities(content: string) {
+  return content
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+}
+
+function extractRemoteText(content: string, contentType: string | null) {
+  if (!contentType?.includes("text/html")) {
+    return compactContent(content, MAX_REMOTE_CONTENT_CHARS);
+  }
+
+  const text = content
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ");
+
+  return compactContent(decodeHtmlEntities(text), MAX_REMOTE_CONTENT_CHARS);
+}
+
+async function fetchAllowedRemoteContent(url: string) {
+  const { requestedUrl, fetchUrl } = resolveAllowedRemoteUrl(url);
+  const cacheKey = normalizeUrl(fetchUrl);
+  const cached = remoteContentCache.get(cacheKey);
+
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached;
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+
+  try {
+    const response = await fetch(fetchUrl, {
+      headers: {
+        accept: "text/plain,text/markdown,text/html;q=0.8,*/*;q=0.5",
+        "user-agent": "adarsha.dev portfolio assistant",
+      },
+      redirect: "follow",
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Remote URL returned HTTP ${response.status}.`);
+    }
+
+    const contentType = response.headers.get("content-type");
+    const content = extractRemoteText(await response.text(), contentType);
+    const fetchedAt = new Date().toISOString();
+    const result = {
+      expiresAt: Date.now() + REMOTE_CONTENT_CACHE_MS,
+      fetchedAt,
+      requestedUrl,
+      fetchUrl,
+      content,
+    };
+
+    remoteContentCache.set(cacheKey, result);
+    return result;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 function normalizeCodeResult(value: unknown) {
   const serialized =
     typeof value === "string" ? value : JSON.stringify(value, null, 2);
@@ -122,6 +245,15 @@ function assertSafePortfolioCode(code: string) {
 
 async function buildPortfolioCorpus() {
   const blogs = await readBlogFiles();
+  const remoteResume = await fetchAllowedRemoteContent(LINKS.RESUME).catch(
+    (error) => ({
+      fetchedAt: null,
+      requestedUrl: normalizeUrl(LINKS.RESUME),
+      fetchUrl: LINKS.RESUME,
+      content: "",
+      error: error instanceof Error ? error.message : "Unknown error",
+    }),
+  );
 
   const files: PortfolioCorpusFile[] = [
     ...blogs.map((blog) => ({
@@ -171,6 +303,11 @@ async function buildPortfolioCorpus() {
       content: [
         `Resume redirect: ${siteMetadata.siteUrl}/resume`,
         `Google Docs resume: ${LINKS.RESUME}`,
+        remoteResume.content
+          ? `Live resume content fetched at ${remoteResume.fetchedAt}:\n${remoteResume.content}`
+          : `Live resume content unavailable: ${
+              "error" in remoteResume ? remoteResume.error : "No content found"
+            }`,
       ].join("\n"),
     },
     {
@@ -264,6 +401,36 @@ function executePortfolioCodeInSandbox(code: string, corpus: unknown) {
 }
 
 export const portfolioTools = {
+  fetchPortfolioUrlContent: tool({
+    description:
+      "Fetch readable text from a configured portfolio URL. Only URLs already present in portfolio configuration/data are allowed, including the public resume link and future configured project/tool/contact links. Use this when live remote content may be newer than local metadata.",
+    inputSchema: z.object({
+      url: z
+        .string()
+        .url()
+        .describe("A URL from the configured portfolio allowlist."),
+      maxChars: z.number().int().min(500).max(12000).default(6000),
+    }),
+    execute: async ({ url, maxChars }) => {
+      try {
+        const result = await fetchAllowedRemoteContent(url);
+
+        return {
+          ok: true,
+          requestedUrl: result.requestedUrl,
+          fetchUrl: result.fetchUrl,
+          fetchedAt: result.fetchedAt,
+          content: result.content.slice(0, maxChars),
+        };
+      } catch (error) {
+        return {
+          ok: false,
+          url,
+          error: error instanceof Error ? error.message : "Unknown error",
+        };
+      }
+    },
+  }),
   executePortfolioCode: tool({
     description:
       "CodeAct-style tool for all portfolio lookups. Write a small synchronous JavaScript function body to inspect Adarsha's allowlisted portfolio corpus. Use it to search content, list blog posts/projects/tools, read a blog/project/tool/metadata file by path, get contact links from metadata/contact, or get the resume link. Available API: portfolio.listFiles(), portfolio.readFile(path), portfolio.search(query, limit), portfolio.getResumeLink(). Return only serializable data. No imports, network, filesystem, process, async, eval, or shell access.",

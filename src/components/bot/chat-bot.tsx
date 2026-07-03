@@ -10,6 +10,7 @@ import { ChatForm } from "./chat-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DefaultChatTransport } from "ai";
+import { cn } from "@/lib/utils";
 
 export function ChatBot() {
   const [open, setOpen] = useState(false);
@@ -37,14 +38,22 @@ export function ChatBot() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-            className="fixed bottom-24 right-4 sm:right-8 w-[90vw] sm:w-[400px] z-50"
+            className={cn(
+              "fixed z-50 transition-[inset,width,max-width] duration-300",
+              isExpanded
+                ? "inset-x-3 bottom-20 top-4 mx-auto w-auto max-w-5xl sm:inset-x-6 sm:top-6 lg:left-auto lg:right-8 lg:w-[min(920px,calc(100vw-4rem))]"
+                : "bottom-24 right-4 w-[calc(100vw-2rem)] sm:right-8 sm:w-[420px]",
+            )}
           >
             <Card
-              className={`${
-                isExpanded ? "h-[700px]" : "h-[600px]"
-              } flex flex-col shadow-xl transition-all duration-300`}
+              className={cn(
+                "flex flex-col overflow-hidden rounded-xl border bg-background/95 shadow-xl backdrop-blur transition-[height,box-shadow] duration-300",
+                isExpanded
+                  ? "h-full shadow-2xl"
+                  : "h-[min(620px,calc(100vh-8rem))]",
+              )}
             >
-              <CardHeader className="pb-3 px-4 border-b">
+              <CardHeader className="border-b px-4 py-3 sm:px-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <motion.div
@@ -76,6 +85,12 @@ export function ChatBot() {
                       <CardTitle className="text-sm font-semibold">
                         Chat with Adarsha
                       </CardTitle>
+                      {isExpanded ? (
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          Portfolio assistant for projects, writing, and
+                          contact details
+                        </p>
+                      ) : null}
                     </motion.div>
                   </div>
 
@@ -113,6 +128,7 @@ export function ChatBot() {
                   messages={messages}
                   status={status}
                   onPromptClick={handlePromptClick}
+                  isExpanded={isExpanded}
                 />
                 <ChatForm
                   open={open}
@@ -121,6 +137,7 @@ export function ChatBot() {
                   input={input}
                   setInput={setInput}
                   sendMessage={sendMessage}
+                  isExpanded={isExpanded}
                 />
               </CardContent>
             </Card>

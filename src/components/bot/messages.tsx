@@ -13,25 +13,38 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from "@/components/ui/message-scroller";
+import { cn } from "@/lib/utils";
 
 type Props = {
   messages: UIMessage[];
   status: "submitted" | "streaming" | "ready" | "error";
   onPromptClick?: (prompt: string) => void;
+  isExpanded?: boolean;
 };
 
 export const Messages = ({
   messages,
   status,
   onPromptClick = () => {},
+  isExpanded = false,
 }: Props) => {
   const hasMessages = messages.length > 0;
 
   return (
     <MessageScrollerProvider autoScroll defaultScrollPosition="end">
       <MessageScroller className="flex-1">
-        <MessageScrollerViewport className="px-4 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
-          <MessageScrollerContent className="gap-4 py-4">
+        <MessageScrollerViewport
+          className={cn(
+            "scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted",
+            isExpanded ? "px-4 sm:px-6" : "px-4",
+          )}
+        >
+          <MessageScrollerContent
+            className={cn(
+              "gap-4 py-4",
+              isExpanded && "mx-auto w-full max-w-3xl gap-5 py-6",
+            )}
+          >
             {!hasMessages && (
               <MessageScrollerItem>
                 <Greeting onPromptClick={onPromptClick} />
