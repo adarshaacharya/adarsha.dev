@@ -1,4 +1,4 @@
-import { generatePageMetadata } from "../seo";
+import { generatePageMetadata } from "@/app/seo";
 import { Separator } from "@/components/ui/separator";
 
 export const metadata = generatePageMetadata({
