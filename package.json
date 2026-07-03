@@ -41,7 +41,7 @@
     "framer-motion": "^12.4.7",
     "lucide-react": "^0.477.0",
     "next": "16.2.10",
-    "next-contentlayer2": "^0.5.3",
+    "next-contentlayer2": "^0.5.8",
     "next-themes": "^0.2.1",
     "postcss": "8.4.29",
     "radix-ui": "^1.6.1",
