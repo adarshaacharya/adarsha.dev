@@ -2,7 +2,11 @@
 
 import React from "react";
 import { motion, Variants } from "framer-motion";
-import { cn } from "@/lib/utils";
+import {
+  Marker,
+  MarkerContent,
+  MarkerIcon,
+} from "@/components/ui/marker";
 
 const dotVariants: Variants = {
   initial: { opacity: 0.4, scale: 0.8 },
@@ -23,33 +27,32 @@ export function ThinkingMessage() {
       initial={{ opacity: 0, y: 5 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className="flex items-start gap-2"
     >
-      <div className="flex h-7 w-7 shrink-0 select-none items-center justify-center rounded-full bg-muted text-muted-foreground text-xs font-medium">
-        A
-      </div>
-      <div className="rounded-lg px-3 py-2 bg-muted flex items-center space-x-1">
-        <motion.span
-          className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50"
-          variants={dotVariants}
-          initial="initial"
-          animate="animate"
-        />
-        <motion.span
-          className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50"
-          variants={dotVariants}
-          initial="initial"
-          animate="animate"
-          transition={{ delay: 0.2 }}
-        />
-        <motion.span
-          className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50"
-          variants={dotVariants}
-          initial="initial"
-          animate="animate"
-          transition={{ delay: 0.4 }}
-        />
-      </div>
+      <Marker role="status" className="px-1">
+        <MarkerIcon className="flex items-center gap-1">
+          <motion.span
+            className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50"
+            variants={dotVariants}
+            initial="initial"
+            animate="animate"
+          />
+          <motion.span
+            className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50"
+            variants={dotVariants}
+            initial="initial"
+            animate="animate"
+            transition={{ delay: 0.2 }}
+          />
+          <motion.span
+            className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50"
+            variants={dotVariants}
+            initial="initial"
+            animate="animate"
+            transition={{ delay: 0.4 }}
+          />
+        </MarkerIcon>
+        <MarkerContent>Thinking</MarkerContent>
+      </Marker>
     </motion.div>
   );
 }

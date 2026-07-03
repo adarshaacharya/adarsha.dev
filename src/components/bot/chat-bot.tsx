@@ -47,7 +47,6 @@ export function ChatBot() {
               <CardHeader className="pb-3 px-4 border-b">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    {/* Status indicator */}
                     <motion.div
                       className="relative"
                       initial={{ opacity: 0 }}
@@ -69,41 +68,22 @@ export function ChatBot() {
                       />
                     </motion.div>
 
-                    {/* Title */}
                     <motion.div
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.1 }}
                     >
                       <CardTitle className="text-sm font-semibold">
-                        <motion.span
-                          animate={{
-                            backgroundPosition: [
-                              "0% 50%",
-                              "100% 50%",
-                              "0% 50%",
-                            ],
-                          }}
-                          transition={{
-                            duration: 3,
-                            repeat: Infinity,
-                            ease: "linear",
-                          }}
-                          className="bg-gradient-to-r from-foreground via-primary to-foreground bg-[length:200%_100%] bg-clip-text text-transparent"
-                        >
-                          Chat with Adarsha
-                        </motion.span>
+                        Chat with Adarsha
                       </CardTitle>
                     </motion.div>
                   </div>
 
-                  {/* Action buttons */}
                   <div className="flex items-center gap-1">
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="icon-sm"
                       onClick={() => setIsExpanded(!isExpanded)}
-                      className="h-7 w-7 p-0 hover:bg-muted"
                       title={isExpanded ? "Collapse" : "Expand"}
                     >
                       {isExpanded ? (
@@ -117,9 +97,8 @@ export function ChatBot() {
                     </Button>
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="icon-sm"
                       onClick={() => setOpen(false)}
-                      className="h-7 w-7 p-0 hover:bg-muted"
                       title="Close"
                     >
                       <X className="h-3.5 w-3.5" />
@@ -171,7 +150,6 @@ export function ChatBot() {
           }}
           className="relative"
         >
-          {/* Pulsing ring highlight */}
           <motion.div
             className="absolute inset-0 rounded-full border-2 border-primary/30"
             animate={{
@@ -223,18 +201,7 @@ export function ChatBot() {
               {open ? (
                 <X className="h-5 w-5" />
               ) : (
-                <motion.div
-                  animate={{
-                    scale: [1, 1.2, 1],
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: [0.4, 0, 0.2, 1],
-                  }}
-                >
-                  <MessageSquare className="h-5 w-5" />
-                </motion.div>
+                <MessageSquare className="h-5 w-5" />
               )}
             </motion.div>
             <span className="sr-only">Toggle chat</span>
