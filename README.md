@@ -6,11 +6,11 @@ This is my personal website and blog built using:
 - Styling : [Tailwind CSS](https://tailwindcss.com/)
 - Markdown : [MDX](https://mdxjs.com/) and [Contentlayer](https://contentlayer.dev/)
 - Deployment: [Vercel](https://vercel.com/)
-- AI Bot : [OpenAI](https://openai.com/), [LangChain](https://langchain.com/), [Qdrant](https://qdrant.tech/)
+- AI Bot : [AI SDK](https://ai-sdk.dev/) and [DeepSeek](https://www.deepseek.com/)
 
 ## Running Locally
 
-This application requires Node.js v16.13+.
+This application requires Node.js 22+.
 
 ```bash
 git clone https://github.com/adarshaacharya/adarsha.dev
@@ -19,13 +19,6 @@ pnpm install
 pnpm dev
 ```
 
-## Generate embeddings
-
-To generate embeddings for the blog posts, run the following command:
-
-```bash
-pnpm run gen:embeddings
-```
 
 ## Templating Project
 

@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type Props = {
   open: boolean;
@@ -14,6 +15,7 @@ type Props = {
   input: string;
   setInput: (value: string) => void;
   sendMessage: (message: { text: string }) => void;
+  isExpanded?: boolean;
 };
 
 export function ChatForm({
@@ -23,6 +25,7 @@ export function ChatForm({
   input,
   setInput,
   sendMessage,
+  isExpanded = false,
 }: Props) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -44,50 +47,62 @@ export function ChatForm({
 
   return (
     <div className="border-t">
-      <div className="p-4">
-        <form onSubmit={handleSubmit} className="relative">
-          <Textarea
-            ref={inputRef}
-            rows={1}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask me anything..."
-            className="min-h-[48px] max-h-[120px] resize-none rounded-full pr-12 py-3 border-2 focus-visible:ring-0 focus-visible:ring-offset-0"
-            disabled={status === "streaming"}
-            onKeyDown={(e) => {
-              if (
-                e.key === "Enter" &&
-                !e.shiftKey &&
-                !e.nativeEvent.isComposing
-              ) {
-                e.preventDefault();
-
-                if (status !== "ready") {
-                  toast.error(
-                    "Please wait for the model to finish its response!",
-                  );
-                } else if (input.trim()) {
-                  sendMessage({ text: input });
-                  setInput("");
-                }
-              }
-            }}
-          />
-          <Button
-            type="submit"
-            size="icon"
-            disabled={status === "streaming" || !input.trim()}
-            className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full"
+      <div className={cn("p-4", isExpanded && "sm:px-6")}>
+        <form onSubmit={handleSubmit}>
+          <div
+            className={cn("relative", isExpanded && "mx-auto w-full max-w-3xl")}
           >
-            <Send className="h-4 w-4" />
-            <span className="sr-only">Send message</span>
-          </Button>
+            <Textarea
+              ref={inputRef}
+              rows={1}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask me anything..."
+              className={cn(
+                "max-h-32 min-h-12 resize-none border-2 py-3 pr-12 focus-visible:ring-0 focus-visible:ring-offset-0",
+                isExpanded ? "rounded-2xl" : "rounded-full",
+              )}
+              disabled={status === "streaming"}
+              onKeyDown={(e) => {
+                if (
+                  e.key === "Enter" &&
+                  !e.shiftKey &&
+                  !e.nativeEvent.isComposing
+                ) {
+                  e.preventDefault();
+
+                  if (status !== "ready") {
+                    toast.error(
+                      "Please wait for the model to finish its response!",
+                    );
+                  } else if (input.trim()) {
+                    sendMessage({ text: input });
+                    setInput("");
+                  }
+                }
+              }}
+            />
+            <Button
+              type="submit"
+              size="icon"
+              disabled={status === "streaming" || !input.trim()}
+              className="absolute right-2 top-1/2 h-8 w-8 -translate-y-1/2 rounded-full"
+            >
+              <Send className="h-4 w-4" />
+              <span className="sr-only">Send message</span>
+            </Button>
+          </div>
         </form>
       </div>
 
       {/* Footer */}
-      <div className="px-4 pb-3 pt-2 border-t bg-muted/30">
-        <div className="flex items-center justify-between text-xs">
+      <div className="border-t bg-muted/30 px-4 pb-3 pt-2">
+        <div
+          className={cn(
+            "flex items-center justify-between text-xs",
+            isExpanded && "mx-auto max-w-3xl",
+          )}
+        >
           <div className="flex items-center gap-1.5 text-muted-foreground">
             <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
             <span>Ready to help</span>
