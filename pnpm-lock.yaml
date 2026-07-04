@@ -67,7 +67,7 @@ dependencies:
     specifier: ^0.7.1
     version: 0.7.1
   clsx:
-    specifier: ^2.0.0
+    specifier: ^2.1.1
     version: 2.1.1
   contentlayer2:
     specifier: ^0.5.3
