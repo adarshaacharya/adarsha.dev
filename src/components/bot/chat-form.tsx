@@ -46,11 +46,14 @@ export function ChatForm({
   };
 
   return (
-    <div className="border-t">
-      <div className={cn("p-4", isExpanded && "sm:px-6")}>
+    <div className={cn("border-t", isExpanded && "bg-muted/20")}>
+      <div className={cn("p-4", isExpanded && "px-6 pb-5 pt-4")}>
         <form onSubmit={handleSubmit}>
           <div
-            className={cn("relative", isExpanded && "mx-auto w-full max-w-3xl")}
+            className={cn(
+              "relative",
+              isExpanded && "mx-auto w-full max-w-2xl",
+            )}
           >
             <Textarea
               ref={inputRef}

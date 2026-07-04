@@ -140,12 +140,17 @@ export const Messages = ({
           <MessageScrollerContent
             className={cn(
               "gap-4 py-4",
-              isExpanded && "mx-auto w-full max-w-3xl gap-5 py-6",
+              isExpanded && "mx-auto w-full max-w-2xl gap-5",
+              isExpanded && !hasMessages && "min-h-full justify-center py-8",
+              isExpanded && hasMessages && "py-6",
             )}
           >
             {!hasMessages && (
-              <MessageScrollerItem>
-                <Greeting onPromptClick={onPromptClick} />
+              <MessageScrollerItem className={cn(isExpanded && "w-full")}>
+                <Greeting
+                  onPromptClick={onPromptClick}
+                  isExpanded={isExpanded}
+                />
               </MessageScrollerItem>
             )}
 

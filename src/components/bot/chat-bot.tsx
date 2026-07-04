@@ -39,6 +39,17 @@ export function ChatBot() {
   return (
     <>
       <AnimatePresence mode="wait">
+        {open && isExpanded && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-40 bg-background/60 backdrop-blur-[2px]"
+            onClick={() => setIsExpanded(false)}
+            aria-hidden
+          />
+        )}
         {open && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -48,7 +59,7 @@ export function ChatBot() {
             className={cn(
               "fixed z-50 transition-[inset,width,max-width] duration-300",
               isExpanded
-                ? "inset-x-3 bottom-20 top-4 mx-auto w-auto max-w-5xl sm:inset-x-6 sm:top-6 lg:left-auto lg:right-8 lg:w-[min(920px,calc(100vw-4rem))]"
+                ? "inset-x-4 bottom-24 top-[max(1rem,env(safe-area-inset-top))] mx-auto w-auto max-w-2xl sm:inset-x-auto sm:bottom-28 sm:left-1/2 sm:top-[max(1.5rem,env(safe-area-inset-top))] sm:w-[min(680px,calc(100vw-2rem))] sm:-translate-x-1/2"
                 : "bottom-24 right-4 w-[calc(100vw-2rem)] sm:right-8 sm:w-[420px]",
             )}
           >
@@ -130,7 +141,10 @@ export function ChatBot() {
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      onClick={() => setOpen(false)}
+                      onClick={() => {
+                        setOpen(false);
+                        setIsExpanded(false);
+                      }}
                       title="Close"
                     >
                       <X className="h-3.5 w-3.5" />
