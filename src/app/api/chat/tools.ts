@@ -25,6 +25,15 @@ const remoteContentCache = new Map<
   }
 >();
 
+const githubContentCache = new Map<
+  string,
+  {
+    expiresAt: number;
+    fetchedAt: string;
+    content: string;
+  }
+>();
+
 type BlogFile = {
   slug: string;
   title: string;
@@ -37,11 +46,17 @@ type BlogFile = {
 
 type PortfolioCorpusFile = {
   path: string;
-  type: "blog" | "project" | "tool" | "metadata" | "resume";
+  type: "blog" | "project" | "tool" | "metadata" | "resume" | "github";
   title: string;
   summary: string;
   url?: string;
   content: string;
+};
+
+type GitHubRepoRef = {
+  owner: string;
+  name: string;
+  url: string;
 };
 
 function parseFrontmatter(raw: string) {
@@ -152,29 +167,6 @@ function resolveAllowedRemoteUrl(url: string) {
   };
 }
 
-function decodeHtmlEntities(content: string) {
-  return content
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'");
-}
-
-function extractRemoteText(content: string, contentType: string | null) {
-  if (!contentType?.includes("text/html")) {
-    return compactContent(content, MAX_REMOTE_CONTENT_CHARS);
-  }
-
-  const text = content
-    .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<[^>]+>/g, " ");
-
-  return compactContent(decodeHtmlEntities(text), MAX_REMOTE_CONTENT_CHARS);
-}
-
 async function fetchAllowedRemoteContent(url: string) {
   const { requestedUrl, fetchUrl } = resolveAllowedRemoteUrl(url);
   const cacheKey = normalizeUrl(fetchUrl);
@@ -201,8 +193,10 @@ async function fetchAllowedRemoteContent(url: string) {
       throw new Error(`Remote URL returned HTTP ${response.status}.`);
     }
 
-    const contentType = response.headers.get("content-type");
-    const content = extractRemoteText(await response.text(), contentType);
+    const content = compactContent(
+      await response.text(),
+      MAX_REMOTE_CONTENT_CHARS,
+    );
     const fetchedAt = new Date().toISOString();
     const result = {
       expiresAt: Date.now() + REMOTE_CONTENT_CACHE_MS,
@@ -217,6 +211,154 @@ async function fetchAllowedRemoteContent(url: string) {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+function getGitHubUsername() {
+  try {
+    return new URL(siteMetadata.social.githubLink).pathname
+      .split("/")
+      .filter(Boolean)[0];
+  } catch {
+    return null;
+  }
+}
+
+function parseGitHubRepoUrl(url: string | undefined) {
+  if (!url) return null;
+
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname !== "github.com") return null;
+
+    const [owner, rawName] = parsed.pathname.split("/").filter(Boolean);
+    if (!owner || !rawName) return null;
+
+    return {
+      owner,
+      name: rawName.replace(/\.git$/, ""),
+      url: `https://github.com/${owner}/${rawName.replace(/\.git$/, "")}`,
+    } satisfies GitHubRepoRef;
+  } catch {
+    return null;
+  }
+}
+
+function getConfiguredGitHubRepos() {
+  const repos = [
+    parseGitHubRepoUrl(siteMetadata.repo),
+    ...WEB_APPS.map((project) => parseGitHubRepoUrl(project.repo)),
+    ...TOOLS.map((item) => parseGitHubRepoUrl(item.repo)),
+  ].filter((repo): repo is GitHubRepoRef => Boolean(repo));
+
+  const deduped = new Map<string, GitHubRepoRef>();
+  for (const repo of repos) {
+    deduped.set(`${repo.owner}/${repo.name}`.toLowerCase(), repo);
+  }
+
+  return Array.from(deduped.values());
+}
+
+async function fetchGitHubText(cacheKey: string, url: string, accept: string) {
+  const cached = githubContentCache.get(cacheKey);
+
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached;
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        accept,
+        "user-agent": "adarsha.dev portfolio assistant",
+      },
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      throw new Error(`GitHub returned HTTP ${response.status}.`);
+    }
+
+    const content = compactContent(await response.text(), MAX_REMOTE_CONTENT_CHARS);
+    const result = {
+      expiresAt: Date.now() + REMOTE_CONTENT_CACHE_MS,
+      fetchedAt: new Date().toISOString(),
+      content,
+    };
+
+    githubContentCache.set(cacheKey, result);
+    return result;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function fetchGitHubJson(cacheKey: string, apiPath: string) {
+  const result = await fetchGitHubText(
+    cacheKey,
+    `https://api.github.com${apiPath}`,
+    "application/vnd.github+json",
+  );
+
+  return {
+    ...result,
+    data: JSON.parse(result.content) as Record<string, unknown>,
+  };
+}
+
+async function buildGitHubCorpusFiles() {
+  const username = getGitHubUsername();
+  const repos = getConfiguredGitHubRepos();
+  const files: PortfolioCorpusFile[] = [];
+
+  if (username) {
+    const profile = await fetchGitHubJson(
+      `github:user:${username}`,
+      `/users/${username}`,
+    ).catch(() => null);
+
+    if (profile) {
+      files.push({
+        path: "github/profile",
+        type: "github",
+        title: "GitHub profile",
+        summary: `Public GitHub profile for ${username}.`,
+        url: siteMetadata.social.githubLink,
+        content: profile.content,
+      });
+    }
+  }
+
+  const repoResults = await Promise.allSettled(
+    repos.map(async (repo) => {
+      const result = await fetchGitHubJson(
+        `github:repo:${repo.owner}/${repo.name}`,
+        `/repos/${repo.owner}/${repo.name}`,
+      );
+
+      return {
+        path: `github/repo/${repo.name.toLowerCase()}`,
+        type: "github" as const,
+        title: `GitHub repo: ${repo.name}`,
+        summary:
+          typeof result.data.description === "string"
+            ? result.data.description
+            : `Public GitHub metadata for ${repo.owner}/${repo.name}.`,
+        url: repo.url,
+        content: result.content,
+      } satisfies PortfolioCorpusFile;
+    }),
+  );
+
+  for (const result of repoResults) {
+    if (result.status === "fulfilled") {
+      files.push(result.value);
+    }
+  }
+
+  return files;
 }
 
 function normalizeCodeResult(value: unknown) {
@@ -245,6 +387,7 @@ function assertSafePortfolioCode(code: string) {
 
 async function buildPortfolioCorpus() {
   const blogs = await readBlogFiles();
+  const githubFiles = await buildGitHubCorpusFiles();
   const remoteResume = await fetchAllowedRemoteContent(LINKS.RESUME).catch(
     (error) => ({
       fetchedAt: null,
@@ -294,6 +437,7 @@ async function buildPortfolioCorpus() {
         .filter(Boolean)
         .join("\n"),
     })),
+    ...githubFiles,
     {
       path: "resume",
       type: "resume",
@@ -361,19 +505,90 @@ function executePortfolioCodeInSandbox(code: string, corpus: unknown) {
       summary: file.summary,
       url: file.url,
     });
-    const portfolio = Object.freeze({
-      listFiles: () => corpus.files.map(compactFile),
-      readFile: (filePath) => {
-        const file = corpus.files.find((item) => item.path === filePath);
-        if (!file) return null;
-        return { ...file, content: String(file.content ?? "").slice(0, 16000) };
+    const readFile = (filePath, maxChars = 16000) => {
+      const file = corpus.files.find((item) => item.path === filePath);
+      if (!file) return null;
+      return {
+        ...file,
+        content: String(file.content ?? "").slice(
+          0,
+          Math.max(1, Math.min(Number(maxChars) || 16000, 30000))
+        ),
+      };
+    };
+    const apiDescription = {
+      idea: "Write normal synchronous JavaScript to inspect the portfolio corpus and return the exact evidence needed for the final answer.",
+      dataModel: {
+        file: {
+          path: "stable id such as blog/my-post, project/cedular, resume, github/profile, github/repo/name",
+          type: "blog | project | tool | metadata | resume | github",
+          title: "human title",
+          summary: "short host-provided index text",
+          url: "public URL when available",
+          content: "full local/remote content slice; GitHub entries are raw public GitHub API JSON text",
+        },
       },
+      api: [
+        "portfolio.describe()",
+        "portfolio.files.list(type?)",
+        "portfolio.files.read(path, maxChars?)",
+        "portfolio.files.readMany(paths, maxChars?)",
+        "portfolio.files.search(query, limit?)",
+        "portfolio.resume.link()",
+        "portfolio.resume.read(maxChars?)",
+        "portfolio.github.profile(maxChars?)",
+        "portfolio.github.listRepos()",
+        "portfolio.github.readRepo(repoName, maxChars?)",
+      ],
+      note: "Search is only a convenience. For better answers, list/read files and write your own filtering, JSON.parse, ranking, grouping, or extraction logic.",
+    };
+    const portfolio = Object.freeze({
+      describe: () => apiDescription,
+      files: Object.freeze({
+        list: (type) => corpus.files
+          .filter((file) => !type || file.type === type)
+          .map(compactFile),
+        read: readFile,
+        readMany: (paths, maxChars = 12000) => (Array.isArray(paths) ? paths : [])
+          .map((filePath) => readFile(filePath, maxChars))
+          .filter(Boolean),
+        search: (query, limit = 8) => corpus.files
+          .map((file) => ({ ...compactFile(file), score: scoreFile(query, file) }))
+          .filter((file) => file.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, Math.max(1, Math.min(Number(limit) || 8, 12))),
+      }),
+      listFiles: () => corpus.files.map(compactFile),
+      readFile,
       search: (query, limit = 8) => corpus.files
         .map((file) => ({ ...compactFile(file), score: scoreFile(query, file) }))
         .filter((file) => file.score > 0)
         .sort((a, b) => b.score - a.score)
         .slice(0, Math.max(1, Math.min(Number(limit) || 8, 12))),
       getResumeLink: () => corpus.resume,
+      listGitHubRepos: () => corpus.files
+        .filter((file) => file.type === "github" && file.path.startsWith("github/repo/"))
+        .map(compactFile),
+      resume: Object.freeze({
+        link: () => corpus.resume,
+        read: (maxChars) => readFile("resume", maxChars),
+      }),
+      github: Object.freeze({
+        profile: (maxChars) => readFile("github/profile", maxChars),
+        listRepos: () => corpus.files
+          .filter((file) => file.type === "github" && file.path.startsWith("github/repo/"))
+          .map(compactFile),
+        readRepo: (repoName, maxChars) => {
+          const normalizedName = normalize(repoName).replace(/^.*\\//, "");
+          const file = corpus.files.find((item) =>
+            item.type === "github" &&
+            item.path.startsWith("github/repo/") &&
+            item.path.split("/").pop() === normalizedName
+          );
+          if (!file) return null;
+          return readFile(file.path, maxChars);
+        },
+      }),
     });
 
     (function () {
@@ -401,39 +616,9 @@ function executePortfolioCodeInSandbox(code: string, corpus: unknown) {
 }
 
 export const portfolioTools = {
-  fetchPortfolioUrlContent: tool({
-    description:
-      "Fetch readable text from a configured portfolio URL. Only URLs already present in portfolio configuration/data are allowed, including the public resume link and future configured project/tool/contact links. Use this when live remote content may be newer than local metadata.",
-    inputSchema: z.object({
-      url: z
-        .string()
-        .url()
-        .describe("A URL from the configured portfolio allowlist."),
-      maxChars: z.number().int().min(500).max(12000).default(6000),
-    }),
-    execute: async ({ url, maxChars }) => {
-      try {
-        const result = await fetchAllowedRemoteContent(url);
-
-        return {
-          ok: true,
-          requestedUrl: result.requestedUrl,
-          fetchUrl: result.fetchUrl,
-          fetchedAt: result.fetchedAt,
-          content: result.content.slice(0, maxChars),
-        };
-      } catch (error) {
-        return {
-          ok: false,
-          url,
-          error: error instanceof Error ? error.message : "Unknown error",
-        };
-      }
-    },
-  }),
   executePortfolioCode: tool({
     description:
-      "CodeAct-style tool for all portfolio lookups. Write a small synchronous JavaScript function body to inspect Adarsha's allowlisted portfolio corpus. Use it to search content, list blog posts/projects/tools, read a blog/project/tool/metadata file by path, get contact links from metadata/contact, or get the resume link. Available API: portfolio.listFiles(), portfolio.readFile(path), portfolio.search(query, limit), portfolio.getResumeLink(). Return only serializable data. No imports, network, filesystem, process, async, eval, or shell access.",
+      "CodeAct-style tool for portfolio lookups. Write a small synchronous JavaScript function body that inspects Adarsha's allowlisted portfolio corpus and returns evidence for the final answer. Start with portfolio.describe() if you need the runtime API. Prefer list/read/JSON.parse/custom filtering when useful; portfolio.files.search(query, limit) is only a convenience. Return only serializable data. No imports, network, filesystem, process, async, eval, or shell access.",
     inputSchema: z.object({
       task: z
         .string()
@@ -444,7 +629,7 @@ export const portfolioTools = {
         .min(1)
         .max(MAX_CODE_CHARS)
         .describe(
-          "Synchronous JavaScript function body. Example: return portfolio.search('AI SDK', 5);",
+          "Synchronous JavaScript function body. Example: const files = portfolio.files.list(); return files.filter(f => f.type === 'project');",
         ),
     }),
     execute: async ({ task, code }) => {
