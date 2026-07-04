@@ -5,7 +5,7 @@ import { useChat } from "@ai-sdk/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Messages } from "./messages";
-import { MessageSquare, X, Minimize2, Maximize2 } from "lucide-react";
+import { MessageSquare, X, Minimize2, Maximize2, Plus } from "lucide-react";
 import { ChatForm } from "./chat-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +16,7 @@ export function ChatBot() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, setMessages, status } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/chat",
     }),
@@ -28,6 +28,13 @@ export function ChatBot() {
   const handlePromptClick = (prompt: string) => {
     sendMessage({ text: prompt });
   };
+
+  const handleNewChat = () => {
+    setMessages([]);
+    setInput("");
+  };
+
+  const isBusy = status === "submitted" || status === "streaming";
 
   return (
     <>
@@ -95,6 +102,16 @@ export function ChatBot() {
                   </div>
 
                   <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={handleNewChat}
+                      disabled={messages.length === 0 || isBusy}
+                      title="New chat"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      <span className="sr-only">New chat</span>
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon-sm"

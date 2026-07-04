@@ -3,45 +3,30 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Code2, Briefcase, Lightbulb } from "lucide-react";
+import { Bot } from "lucide-react";
 
 interface QuickActionProps {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
+  label: string;
   onClick: (text: string) => void;
   prompt: string;
 }
 
 function QuickAction({
-  icon,
-  title,
-  description,
+  label,
   onClick,
   prompt,
 }: QuickActionProps) {
   return (
-    <motion.div
+    <motion.button
+      className="rounded-full border border-border bg-background px-3 py-1.5 text-left text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      onClick={() => onClick(prompt)}
+      type="button"
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       transition={{ duration: 0.2 }}
     >
-      <Card
-        className="p-4 cursor-pointer hover:bg-muted/50 transition-colors border"
-        onClick={() => onClick(prompt)}
-      >
-        <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            {icon}
-          </div>
-          <div className="flex-1 text-left">
-            <h3 className="font-semibold text-sm mb-0.5">{title}</h3>
-            <p className="text-xs text-muted-foreground">{description}</p>
-          </div>
-        </div>
-      </Card>
-    </motion.div>
+      {label}
+    </motion.button>
   );
 }
 
@@ -55,62 +40,45 @@ export function Greeting({ onPromptClick = () => {} }: GreetingProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="flex flex-col px-5 py-2 space-y-6"
+      className="flex flex-col px-5 py-2 space-y-5"
     >
-      {/* Welcome message */}
-      <div className="space-y-2">
+      <div className="space-y-3">
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground">
+          <Bot className="h-4 w-4" />
+        </div>
         <p className="text-sm text-muted-foreground leading-relaxed">
           Hi! I&apos;m Adarsha&apos;s AI Assistant. Ask me about projects,
           skills, experience, or anything else you&apos;d like to know.
         </p>
       </div>
 
-      {/* Quick Actions */}
-      <div className="space-y-3">
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-          Quick Actions
-        </h3>
-        <div className="space-y-2.5">
+      <div className="space-y-2">
+        <p className="text-xs font-medium text-muted-foreground">
+          Try asking
+        </p>
+        <div className="flex flex-wrap gap-2">
           <QuickAction
-            icon={<Code2 className="h-5 w-5 text-primary" />}
-            title="Tech Stack"
-            description="Technologies and tools I work with"
+            label="Best projects"
             onClick={onPromptClick}
-            prompt="What technologies do you work with?"
+            prompt="What are your best projects?"
           />
           <QuickAction
-            icon={<Briefcase className="h-5 w-5 text-primary" />}
-            title="Notable Projects"
-            description="Explore my project portfolio"
+            label="Tech stack"
             onClick={onPromptClick}
-            prompt="What are your notable projects?"
+            prompt="What do you work with?"
           />
           <QuickAction
-            icon={<Code2 className="h-5 w-5 text-primary" />}
-            title="Experience"
-            description="My fullstack development journey"
+            label="AI work"
             onClick={onPromptClick}
-            prompt="Tell me about your fullstack experience"
+            prompt="Tell me about your AI work"
+          />
+          <QuickAction
+            label="Contact"
+            onClick={onPromptClick}
+            prompt="Where can I contact you?"
           />
         </div>
       </div>
-
-      {/* Pro Tip */}
-      <Card className="bg-muted/30 border-muted p-4">
-        <div className="flex items-start gap-3">
-          <div className="flex-shrink-0">
-            <Lightbulb className="h-4 w-4 text-primary" />
-          </div>
-          <div className="flex-1">
-            <h4 className="text-xs font-semibold mb-1">Pro Tip</h4>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Be specific in your questions! Try &quot;What&apos;s your
-              experience with Next.js?&quot; instead of just
-              &quot;Next.js&quot;.
-            </p>
-          </div>
-        </div>
-      </Card>
     </motion.div>
   );
 }

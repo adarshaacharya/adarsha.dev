@@ -7,6 +7,7 @@ import {
   MarkerContent,
   MarkerIcon,
 } from "@/components/ui/marker";
+import { Shimmer } from "@/components/ai-elements/shimmer";
 
 const dotVariants: Variants = {
   initial: { opacity: 0.4, scale: 0.8 },
@@ -28,7 +29,7 @@ export function ThinkingMessage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
     >
-      <Marker role="status" className="px-1">
+      <Marker role="status" className="px-0 py-0 text-xs text-muted-foreground">
         <MarkerIcon className="flex items-center gap-1">
           <motion.span
             className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50"
@@ -51,7 +52,9 @@ export function ThinkingMessage() {
             transition={{ delay: 0.4 }}
           />
         </MarkerIcon>
-        <MarkerContent>Thinking</MarkerContent>
+        <MarkerContent>
+          <Shimmer>Checking portfolio sources</Shimmer>
+        </MarkerContent>
       </Marker>
     </motion.div>
   );
