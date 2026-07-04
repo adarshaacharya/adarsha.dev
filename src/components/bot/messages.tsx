@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { Greeting } from "./greeting";
 import { Message } from "./message";
 import { ThinkingMessage } from "./thinking-message";

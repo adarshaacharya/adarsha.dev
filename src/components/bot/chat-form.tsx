@@ -94,22 +94,6 @@ export function ChatForm({
           </div>
         </form>
       </div>
-
-      {/* Footer */}
-      <div className="border-t bg-muted/30 px-4 pb-3 pt-2">
-        <div
-          className={cn(
-            "flex items-center justify-between text-xs",
-            isExpanded && "mx-auto max-w-3xl",
-          )}
-        >
-          <div className="flex items-center gap-1.5 text-muted-foreground">
-            <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-            <span>Ready to help</span>
-          </div>
-          <span className="text-muted-foreground">Powered by AI</span>
-        </div>
-      </div>
     </div>
   );
 }
