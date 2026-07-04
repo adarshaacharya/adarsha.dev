@@ -5,8 +5,11 @@ import {
   Bot,
   Brain,
   Code2,
+  FileQuestion,
   FolderOpen,
+  ListChecks,
   Mail,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 
@@ -34,6 +37,33 @@ const SUGGESTIONS = [
     prompt: "Where can I contact you?",
     description: "Email, socials, and availability",
     icon: Mail,
+  },
+] as const;
+
+const BLOG_SUGGESTIONS = [
+  {
+    label: "Summarize",
+    prompt: "Summarize this post in plain English.",
+    description: "Get the core idea quickly",
+    icon: Sparkles,
+  },
+  {
+    label: "Key takeaways",
+    prompt: "What are the key takeaways from this post?",
+    description: "Pull out the practical points",
+    icon: ListChecks,
+  },
+  {
+    label: "Explain deeper",
+    prompt: "Explain the main concept in this post more deeply.",
+    description: "Unpack the technical reasoning",
+    icon: Brain,
+  },
+  {
+    label: "Ask follow-up",
+    prompt: "What follow-up questions should I ask about this post?",
+    description: "Find useful next questions",
+    icon: FileQuestion,
   },
 ] as const;
 
@@ -98,12 +128,23 @@ function SuggestionCard({
 interface GreetingProps {
   onPromptClick?: (prompt: string) => void;
   isExpanded?: boolean;
+  isBlogContext?: boolean;
 }
 
 export function Greeting({
   onPromptClick = () => {},
   isExpanded = false,
+  isBlogContext = false,
 }: GreetingProps) {
+  const suggestions = isBlogContext ? BLOG_SUGGESTIONS : SUGGESTIONS;
+  const compactIntro = isBlogContext
+    ? "Ask me to summarize, explain, or expand on the post you are reading."
+    : "Hi! I'm Adarsha's AI Assistant. Ask me about projects, skills, experience, or anything else you'd like to know.";
+  const expandedTitle = isBlogContext ? "Ask about this post" : "How can I help?";
+  const expandedIntro = isBlogContext
+    ? "I can explain the article, extract takeaways, or answer follow-up questions using this post as the starting point."
+    : "I'm Adarsha's AI assistant. Ask about projects, skills, experience, or pick a topic below.";
+
   if (isExpanded) {
     return (
       <motion.div
@@ -117,16 +158,15 @@ export function Greeting({
             <Bot className="h-7 w-7" />
           </div>
           <h2 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
-            How can I help?
+            {expandedTitle}
           </h2>
           <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
-            I&apos;m Adarsha&apos;s AI assistant. Ask about projects, skills,
-            experience, or pick a topic below.
+            {expandedIntro}
           </p>
         </div>
 
         <div className="mt-8 grid w-full max-w-lg grid-cols-1 gap-3 sm:grid-cols-2">
-          {SUGGESTIONS.map((item) => (
+          {suggestions.map((item) => (
             <SuggestionCard
               key={item.label}
               {...item}
@@ -150,15 +190,14 @@ export function Greeting({
           <Bot className="h-4 w-4" />
         </div>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          Hi! I&apos;m Adarsha&apos;s AI Assistant. Ask me about projects,
-          skills, experience, or anything else you&apos;d like to know.
+          {compactIntro}
         </p>
       </div>
 
       <div className="space-y-2">
         <p className="text-xs font-medium text-muted-foreground">Try asking</p>
         <div className="flex flex-wrap gap-2">
-          {SUGGESTIONS.map((item) => (
+          {suggestions.map((item) => (
             <QuickAction
               key={item.label}
               label={item.label}

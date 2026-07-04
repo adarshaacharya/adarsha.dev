@@ -1,7 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "streamdown/styles.css";
 @config "../../tailwind.config.js";
+@source "../../node_modules/streamdown/dist";
 
 @layer base {
   :root {
@@ -229,10 +231,28 @@ h4 {
   margin-bottom: 1.25em !important;
 }
 
-/* Code highlighting */
-code[class*="language-"],
-pre[class*="language-"] {
+/* Legacy prism selectors — scoped to dark surfaces only */
+.dark code[class*="language-"],
+.dark pre[class*="language-"] {
   @apply text-neutral-50;
+}
+
+/* Streamdown / chat code blocks — Shiki token colors */
+[data-streamdown="code-block-body"] pre {
+  background-color: var(--background);
+}
+
+.dark [data-streamdown="code-block-body"] pre {
+  background-color: hsl(220 16% 14%);
+}
+
+[data-streamdown="code-block-body"] code span {
+  color: var(--sdm-c, inherit);
+  background-color: var(--sdm-tbg, transparent);
+}
+
+.dark [data-streamdown="code-block-body"] code span {
+  color: var(--shiki-dark, var(--sdm-c, inherit));
 }
 
 pre::-webkit-scrollbar {

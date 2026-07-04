@@ -16,6 +16,7 @@ type Props = {
   setInput: (value: string) => void;
   sendMessage: (message: { text: string }) => void;
   isExpanded?: boolean;
+  isBlogContext?: boolean;
 };
 
 export function ChatForm({
@@ -26,6 +27,7 @@ export function ChatForm({
   setInput,
   sendMessage,
   isExpanded = false,
+  isBlogContext = false,
 }: Props) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -60,7 +62,11 @@ export function ChatForm({
               rows={1}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask me anything..."
+              placeholder={
+                isBlogContext
+                  ? "Ask about this post..."
+                  : "Ask me anything..."
+              }
               className={cn(
                 "max-h-32 min-h-12 resize-none border-2 py-3 pr-12 focus-visible:ring-0 focus-visible:ring-offset-0",
                 isExpanded ? "rounded-2xl" : "rounded-full",

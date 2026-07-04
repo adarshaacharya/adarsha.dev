@@ -1,21 +1,26 @@
 "use client";
 
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { usePathname } from "next/navigation";
 import { Messages } from "./messages";
 import { MessageSquare, X, Minimize2, Maximize2, Plus } from "lucide-react";
 import { ChatForm } from "./chat-form";
+import { ASK_BOT_EVENT, type AskBotEventDetail } from "./chat-events";
+import { getBotPageContext } from "./page-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DefaultChatTransport } from "ai";
 import { cn } from "@/lib/utils";
 
 export function ChatBot() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
+  const pageContext = getBotPageContext(pathname);
   const { messages, sendMessage, setMessages, status } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/chat",
@@ -25,9 +30,36 @@ export function ChatBot() {
     },
   });
 
+  const sendContextualMessage = (message: { text: string }) =>
+    sendMessage(message, {
+      body: {
+        pageContext,
+      },
+    });
+
   const handlePromptClick = (prompt: string) => {
-    sendMessage({ text: prompt });
+    sendContextualMessage({ text: prompt });
   };
+
+  useEffect(() => {
+    const handleAskBot = (event: Event) => {
+      const { prompt } = (event as CustomEvent<AskBotEventDetail>).detail ?? {};
+
+      if (!prompt) return;
+
+      setOpen(true);
+
+      if (status === "submitted" || status === "streaming") {
+        toast.error("Please wait for the current response to finish.");
+        return;
+      }
+
+      sendContextualMessage({ text: prompt });
+    };
+
+    window.addEventListener(ASK_BOT_EVENT, handleAskBot);
+    return () => window.removeEventListener(ASK_BOT_EVENT, handleAskBot);
+  }, [sendContextualMessage, status]);
 
   const handleNewChat = () => {
     setMessages([]);
@@ -101,12 +133,13 @@ export function ChatBot() {
                       transition={{ delay: 0.1 }}
                     >
                       <CardTitle className="text-sm font-semibold">
-                        Chat with Adarsha
+                        {pageContext ? "Ask about this post" : "Chat with Adarsha"}
                       </CardTitle>
                       {isExpanded ? (
                         <p className="mt-0.5 text-xs text-muted-foreground">
-                          Portfolio assistant for projects, writing, and
-                          contact details
+                          {pageContext
+                            ? "Article-aware assistant for explanations and follow-ups"
+                            : "Portfolio assistant for projects, writing, and contact details"}
                         </p>
                       ) : null}
                     </motion.div>
@@ -160,6 +193,7 @@ export function ChatBot() {
                   status={status}
                   onPromptClick={handlePromptClick}
                   isExpanded={isExpanded}
+                  pageContext={pageContext}
                 />
                 <ChatForm
                   open={open}
@@ -167,8 +201,9 @@ export function ChatBot() {
                   status={status}
                   input={input}
                   setInput={setInput}
-                  sendMessage={sendMessage}
+                  sendMessage={sendContextualMessage}
                   isExpanded={isExpanded}
+                  isBlogContext={pageContext?.type === "blog"}
                 />
               </CardContent>
             </Card>

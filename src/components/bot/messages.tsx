@@ -15,6 +15,7 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from "@/components/ui/message-scroller";
+import type { BotPageContext } from "./page-context";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -22,6 +23,7 @@ type Props = {
   status: "submitted" | "streaming" | "ready" | "error";
   onPromptClick?: (prompt: string) => void;
   isExpanded?: boolean;
+  pageContext?: BotPageContext | null;
 };
 
 type MessagePart = NonNullable<UIMessage["parts"]>[number];
@@ -106,6 +108,7 @@ export const Messages = ({
   status,
   onPromptClick = () => {},
   isExpanded = false,
+  pageContext = null,
 }: Props) => {
   const hasMessages = messages.length > 0;
   const lastMessage = messages.at(-1);
@@ -150,6 +153,7 @@ export const Messages = ({
                 <Greeting
                   onPromptClick={onPromptClick}
                   isExpanded={isExpanded}
+                  isBlogContext={pageContext?.type === "blog"}
                 />
               </MessageScrollerItem>
             )}
