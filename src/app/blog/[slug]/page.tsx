@@ -10,6 +10,11 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft, Calendar, Clock } from "lucide-react";
+import { BlogPostAiMenu } from "@/components/blog/blog-post-ai-menu";
+import {
+  getBlogMarkdownUrl,
+  getBlogPostUrl,
+} from "@/lib/blog-markdown";
 
 export const generateStaticParams = async () =>
   allBlogs.map((blog) => ({ slug: blog._raw.flattenedPath }));
@@ -84,18 +89,26 @@ export default async function Blog(props: {
         <p className="text-base text-muted-foreground leading-relaxed max-w-2xl">
           {blog.summary}
         </p>
-        <div className="flex items-center gap-4 text-sm text-muted-foreground/70">
-          <div className="flex items-center gap-1.5">
-            <Calendar className="h-3.5 w-3.5" />
-            <time dateTime={blog.publishedAt}>
-              {formatDate(blog.publishedAt)}
-            </time>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-4 text-sm text-muted-foreground/70">
+            <div className="flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5" />
+              <time dateTime={blog.publishedAt}>
+                {formatDate(blog.publishedAt)}
+              </time>
+            </div>
+            <span>·</span>
+            <div className="flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5" />
+              <span>{blog.readingTime.text}</span>
+            </div>
           </div>
-          <span>·</span>
-          <div className="flex items-center gap-1.5">
-            <Clock className="h-3.5 w-3.5" />
-            <span>{blog.readingTime.text}</span>
-          </div>
+
+          <BlogPostAiMenu
+            title={blog.title}
+            markdownUrl={getBlogMarkdownUrl(blog.slug)}
+            postUrl={getBlogPostUrl(blog.slug)}
+          />
         </div>
       </header>
 

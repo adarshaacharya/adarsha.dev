@@ -16,6 +16,15 @@ const nextConfig = {
       },
     ];
   },
+
+  rewrites: async () => {
+    return [
+      {
+        source: "/blog/:slug.md",
+        destination: "/api/blog/:slug/markdown",
+      },
+    ];
+  },
 };
 
 export default withContentlayer(nextConfig);
