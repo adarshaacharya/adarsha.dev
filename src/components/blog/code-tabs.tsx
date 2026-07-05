@@ -61,10 +61,11 @@ export function CodeTabs({
               key={label}
               value={String(i)}
               className={cn(
-                "rounded-none border-b-2 border-transparent px-4 py-2 text-sm font-medium text-neutral-500 shadow-none transition-colors",
-                "hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-200",
-                "data-[state=active]:border-neutral-800 data-[state=active]:bg-transparent data-[state=active]:text-neutral-900 data-[state=active]:shadow-none",
-                "dark:data-[state=active]:border-amber-500 dark:data-[state=active]:text-neutral-100",
+                "rounded-none !border-0 px-4 py-2 text-sm font-medium shadow-none transition-colors",
+                "after:hidden -mb-px !bg-transparent",
+                "text-muted-foreground hover:text-foreground",
+                "data-[state=active]:!border-b-2 data-[state=active]:!border-b-primary data-[state=active]:!bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none",
+                "focus-visible:ring-0 focus-visible:outline-none",
               )}
             >
               {label}
