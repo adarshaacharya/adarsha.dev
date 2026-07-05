@@ -35,12 +35,22 @@ That runtime is the harness. Everything else is built on top of it.
 
 The harness is the orchestration layer that wraps the LLM. The model only sees text — it cannot execute code, touch files, or call APIs on its own. The harness bridges the model's text output into real system operations and feeds the results back.
 
-<Image
-  src={"/_static/blogs/coding-agent-harness/diagram-harness.png"}
-  width={450}
-  height={450}
-  alt="Coding agent harness architecture — data flow from user input through intent router, LLM loop, tool executor, permission policy, OS sandbox, compaction, and SQLite persistence"
-/>
+<BlogDiagram
+  title="Coding agent harness architecture"
+  description="Data flow from user input through routing, the LLM loop, tools, policy, sandbox, compaction, and persistence."
+>
+{`flowchart TB
+  User[User Input] --> Router[Intent Router]
+  Router --> Loop[LLM Loop]
+  Project[Project Files / AGENTS.md] --> Loop
+  Loop -->|tool calls| Tools[Tool Executor]
+  Tools --> Policy[Permission Policy]
+  Policy --> Sandbox[OS Sandbox]
+  Sandbox --> Results[Tool Results]
+  Results --> Loop
+  Loop --> Compaction[Context Compaction]
+  Loop --> Store[(SQLite Persistence)]`}
+</BlogDiagram>
 
 I think of the harness as an opinionated process manager. A minimal harness contains:
 
@@ -212,12 +222,20 @@ The policy is separate from the tool executor by design. You can swap in a stric
 
 ## The Sandbox: The Boundary Between Intent and Side Effects
 
-<Image
-  src={"/_static/blogs/coding-agent-harness/diagram-sandbox.png"}
-  width={1280}
-  height={720}
-  alt="Coding agent sandbox — permission policy at the app layer and OS sandbox at the kernel layer operating independently"
-/>
+<BlogDiagram
+  title="Two-layer sandbox model"
+  description="Permission policy checks intent before execution. The OS sandbox limits capability during execution."
+>
+{`flowchart TB
+  Call[Model Tool Call] --> Policy[Permission Policy]
+  Policy --> Decision{Allow / Ask / Deny}
+  Decision -->|deny| Stop[Blocked]
+  Decision -->|allow or approved| Exec[Execute Process]
+  Exec --> Sandbox[OS Execution Sandbox]
+  Sandbox --> Workspace[Writable Workspace]
+  Sandbox --> Protected[Protected Paths]
+  Sandbox --> Network[Network Restrictions]`}
+</BlogDiagram>
 
 The first Archer prototype treated approval as the safety system. If a command looked risky, ask the user. If they approved it, run the command. That felt reasonable until I noticed the obvious hole: approval controls intent, not capability.
 
@@ -248,12 +266,26 @@ That gap changed how I think about sandboxing. It is not an optional security fe
 
 "Memory" sounded like one feature when I started. It turned out to be three unrelated problems sharing a name.
 
-<Image
-  src={"/_static/blogs/coding-agent-harness/diagram-memory.png"}
-  width={450}
-  height={450}
-  alt="Coding agent memory layers — from volatile message array through compaction artifact to persistent SQLite and permanent project files"
-/>
+<BlogDiagram
+  title="Three memory layers"
+  description="Volatile in-session context, durable cross-session storage, and permanent project knowledge on disk."
+>
+{`flowchart TB
+  subgraph Session["In-Session (volatile)"]
+    Messages[Message Array]
+    Messages --> Compaction[Compaction Summary]
+    Compaction --> Messages
+  end
+  subgraph Restart["Cross-Session (persistent)"]
+    SQLite[(SQLite Storage)]
+    Messages --> SQLite
+    SQLite --> Messages
+  end
+  subgraph Project["Project Knowledge (permanent)"]
+    Files[CLAUDE.md / AGENTS.md]
+  end
+  Files --> Messages`}
+</BlogDiagram>
 
 ### 1. In-Session Context (The Message Array)
 
