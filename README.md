@@ -20,12 +20,16 @@ pnpm dev
 
 This repo is my personal site, not a starter template. Don't republish it as your portfolio or strip the attribution and call it yours.
 
-If you borrow code from here, link back to [this repo](https://github.com/adarshaacharya/adarsha.dev) in your README.
+The code is MIT — you can use it, but you must keep the [copyright notice](LICENSE). If you borrow anything from here, link back to [this repo](https://github.com/adarshaacharya/adarsha.dev) in your README.
+
+Blog posts in `src/content/` are my writing. Don't copy or republish them.
+
+## License
+
+Code: [MIT](LICENSE). Blog content: all rights reserved.
 
 ## Links
 
 - [adarsha.dev](https://adarsha.dev)
 - [GitHub](https://github.com/adarshaacharya)
 - [X](https://x.com/adarsha_ach)
-
-MIT. See [LICENSE](LICENSE).
