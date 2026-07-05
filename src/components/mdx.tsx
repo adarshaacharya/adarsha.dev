@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getMDXComponent } from "next-contentlayer2/hooks";
 import { BlogComments } from "./blog/blog-comments";
+import { BlogPostAuthor } from "./blog/blog-post-author";
 import { ApiResponse } from "./blog/api-response";
 import { BeforeAfter } from "./blog/before-after";
 import { BlogChart } from "./blog/chart";
@@ -72,6 +73,7 @@ export function Mdx({ code }: { code: string }) {
           <Content components={components} />
         </React.Suspense>
       </article>
+      <BlogPostAuthor />
       <BlogComments />
     </React.Fragment>
   );

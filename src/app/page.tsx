@@ -56,6 +56,15 @@ export default function Home() {
               className="font-medium text-foreground underline underline-offset-4 hover:text-primary transition-colors"
             >
               hi@adarsha.dev
+            </a>
+            , or{" "}
+            <a
+              href={LINKS.CAL_COM}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-foreground underline underline-offset-4 hover:text-primary transition-colors"
+            >
+              book a call
             </a>{" "}
             — always happy to talk about interesting problems.
           </p>

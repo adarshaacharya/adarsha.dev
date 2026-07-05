@@ -1,4 +1,5 @@
 "use client";
+import { LINKS } from "@/data/links";
 import { siteMetadata } from "@/data/siteMetadata";
 import { SOCIALS } from "@/data/socials";
 import { SocialLink } from "./social-link";
@@ -61,6 +62,14 @@ export function Footer() {
                 className="inline-block hover:text-foreground transition-colors underline underline-offset-4"
               >
                 Privacy Policy
+              </a>
+              <a
+                href={LINKS.CAL_COM}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block hover:text-foreground transition-colors underline underline-offset-4"
+              >
+                Book a call
               </a>
               <a
                 href={siteMetadata.repo}
