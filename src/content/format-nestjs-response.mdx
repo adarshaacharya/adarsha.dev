@@ -27,37 +27,37 @@ Controller :
 ```
  The above code will return the response like this:
 
-```json
- {
+<ApiResponse method="GET" status={200} path="/api/v1/users/:id" title="Before interceptor">
+{`{
+  "id": "2af04f53-d85a-4135-a5b3-ee8bfd150fbb",
+  "email": "user@gmail.com",
+  "password": "$2a$10$pi9qWbtwMp9yDryrshClN.crw0ZvyTNuk5.z2n1E10p0uCdxwsMZO",
+  "role": "Client",
+  "createdAt": "2024-04-28T07:29:55.450Z",
+  "updatedAt": "2024-04-28T07:29:55.450Z"
+}`}
+</ApiResponse>
+
+
+It will be better if we can convert above response in more structured way:
+
+<ApiResponse method="GET" status={200} path="/api/v1/users/:id" title="After interceptor">
+{`{
+  "status": true,
+  "path": "/api/v1/users/2af04f53-d85a-4135-a5b3-ee8bfd150fbb",
+  "message": "success",
+  "statusCode": 200,
+  "data": {
     "id": "2af04f53-d85a-4135-a5b3-ee8bfd150fbb",
     "email": "user@gmail.com",
     "password": "$2a$10$pi9qWbtwMp9yDryrshClN.crw0ZvyTNuk5.z2n1E10p0uCdxwsMZO",
     "role": "Client",
     "createdAt": "2024-04-28T07:29:55.450Z",
-    "updatedAt": "2024-04-28T07:29:55.450Z",
- }
-```
-
-
-It will be better if we can convert above response in more structured way:
-
-```json
-{
-    "status": true,
-    "path": "/api/v1/users/2af04f53-d85a-4135-a5b3-ee8bfd150fbb",
-    "message": "success",
-    "statusCode": 200,
-    "data": {
-        "id": "2af04f53-d85a-4135-a5b3-ee8bfd150fbb",
-        "email": "user@gmail.com",
-        "password": "$2a$10$pi9qWbtwMp9yDryrshClN.crw0ZvyTNuk5.z2n1E10p0uCdxwsMZO",
-        "role": "Client",
-        "createdAt": "2024-04-28T07:29:55.450Z",
-        "updatedAt": "2024-04-28T07:29:55.450Z",
-    },
-    "timestamp": "2024-04-28 17:50:37"
-}
-```
+    "updatedAt": "2024-04-28T07:29:55.450Z"
+  },
+  "timestamp": "2024-04-28 17:50:37"
+}`}
+</ApiResponse>
 
 The above response is more structured and contains metadata like status, path, message, statusCode, and timestamp. This is more readable and informative than the previous response.
 

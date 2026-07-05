@@ -3,8 +3,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { getMDXComponent } from "next-contentlayer2/hooks";
 import { BlogComments } from "./blog/blog-comments";
+import { ApiResponse } from "./blog/api-response";
 import { BeforeAfter } from "./blog/before-after";
 import { BlogChart } from "./blog/chart";
+import { BlogDiagram } from "./blog/diagram";
 import { Callout } from "./blog/callout";
 import { CodeCompare } from "./blog/code-compare";
 import { CodeBlock } from "./blog/code-block";
@@ -40,8 +42,10 @@ function RoundedImage(props: { alt: string; src: string }) {
 const components = {
   Image: RoundedImage,
   a: CustomLink,
+  ApiResponse,
   BeforeAfter,
   BlogChart,
+  BlogDiagram,
   Callout,
   CodeCompare,
   CollapsibleSection,

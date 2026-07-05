@@ -298,6 +298,10 @@ input[type="email"] {
   .blog-editorial-surface {
     @apply rounded-lg border border-border bg-muted/60;
   }
+
+  .blog-diagram svg {
+    @apply h-auto max-w-full;
+  }
 }
 
 /* Rehype pretty code */

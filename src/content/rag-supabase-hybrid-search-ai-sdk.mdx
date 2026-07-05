@@ -66,13 +66,18 @@ The same pattern works in any PostgreSQL setup with `pgvector` - you just need t
 
 ## Architecture Overview
 
-<Image 
- src={"/_static/blogs/rag-supabase-hybrid-search-ai-sdk/flow-diagram.png"}
-  width={1280}
-  height={720}
-  alt="data-cache-nextjs"
-/>
-<p className="text-center">Image: Supabase Hybrid Search Architecture</p>
+<BlogDiagram
+  title="Supabase hybrid search architecture"
+  description="Query runs keyword and vector search in parallel, then fuses results before generation."
+>
+{`flowchart LR
+  Q[User Query] --> FTS[Keyword Search]
+  Q --> VS[Vector Search]
+  FTS --> RRF[RRF Fusion]
+  VS --> RRF
+  RRF --> Ctx[Retrieved Context]
+  Ctx --> LLM[AI SDK Generation]`}
+</BlogDiagram>
 
 ## Database Schema
 

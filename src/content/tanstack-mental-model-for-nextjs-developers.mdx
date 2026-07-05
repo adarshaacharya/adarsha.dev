@@ -660,42 +660,49 @@ Functionally identical. The distinction: TanStack server routes and server funct
 
 ## Metadata and SEO
 
-Next.js has a built-in Metadata API — you export `metadata` or `generateMetadata` from any page or layout. TanStack Start uses `@unhead/react` (or `react-helmet-async`) for document head management:
+Next.js has a built-in Metadata API — you export `metadata` or `generateMetadata` from any page or layout. TanStack Start has its own built-in SEO path too, but it is route-first instead of file-convention-first. You define a `head` function on the route, and that route can generate titles, descriptions, Open Graph tags, canonical links, and structured data from params or loader data.
 
 <CodeCompare labels={["Next.js", "TanStack Start"]}>
 
 ```tsx
 // Next.js — built-in metadata API
 export const metadata = {
-  title: 'My Post',
-  description: 'Post description',
-  openGraph: { images: ['/og.png'] },
-}
+  title: "My Post",
+  description: "Post description",
+  openGraph: { images: ["/og.png"] },
+};
 
 // Or dynamic:
 export async function generateMetadata({ params }) {
-  const post = await fetchPost(params.slug)
-  return { title: post.title }
+  const post = await fetchPost(params.slug);
+  return { title: post.title };
 }
 ```
 
 ```tsx
-// TanStack Start — useHead from @unhead/react
-import { useHead } from '@unhead/react'
+// TanStack Start — route-level head API
+import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute('/blog/$slug')({
+export const Route = createFileRoute("/blog/$slug")({
   loader: ({ params }) => fetchPost(params.slug),
-  component: function BlogPost() {
-    const post = Route.useLoaderData()
-    useHead({ title: post.title, meta: [{ name: 'description', content: post.summary }] })
-    return <article>{post.content}</article>
-  },
-})
+  head: ({ loaderData }) => ({
+    meta: [
+      { title: loaderData.title },
+      { name: "description", content: loaderData.summary },
+      { property: "og:title", content: loaderData.title },
+      { property: "og:image", content: loaderData.coverImage },
+    ],
+    links: [
+      { rel: "canonical", href: `https://example.com/blog/${loaderData.slug}` },
+    ],
+  }),
+  component: BlogPost,
+});
 ```
 
 </CodeCompare>
 
-Not as tightly integrated as Next.js — `@unhead/react` is a third-party library rather than a framework primitive. That said, TanStack Start does have dedicated SEO docs, so this is more "bring your own head management primitive" than "figure it out yourself from scratch."
+So the better comparison is not "Next.js has metadata and TanStack Start makes you bring a head library." TanStack Start provides technical SEO primitives directly: SSR by default, route-level document head management, static prerendering, JSON-LD via route head scripts, robots.txt through static files or server routes, and built-in sitemap generation when prerendering/link crawling is enabled. It is still more explicit than Next.js, but SEO is a documented framework capability, not an afterthought.
 
 ---
 
