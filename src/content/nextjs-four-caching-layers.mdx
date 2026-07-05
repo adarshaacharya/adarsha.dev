@@ -18,6 +18,23 @@ In this article we will understand the four mechanisms of caching in Next.js in 
 - [Full Route Cache](#3-full-route-cache)
 - [Router Cache](#4-router-cache)
 
+<BlogChart
+  type="bar"
+  title="Where each cache layer lives"
+  description="1 = active on that runtime, 0 = not applicable"
+  xKey="layer"
+  data={[
+    { layer: "Request Memo", server: 1, client: 0 },
+    { layer: "Data Cache", server: 1, client: 0 },
+    { layer: "Full Route", server: 1, client: 0 },
+    { layer: "Router Cache", server: 0, client: 1 },
+  ]}
+  series={[
+    { key: "server", label: "Server" },
+    { key: "client", label: "Browser" },
+  ]}
+/>
+
 ## 1. Request Memoization
 
 Typically, when we need the same data in multiple components of app, previously we  need to fetch the data at the top of the component tree and 

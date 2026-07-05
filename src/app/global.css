@@ -288,6 +288,18 @@ table {
   margin: 0 !important;
 }
 
+/* Blog MDX surfaces */
+@layer components {
+  .blog-code-surface {
+    @apply overflow-hidden rounded-lg border border-neutral-200 bg-neutral-50
+           dark:border-[hsl(220,16%,18%)] dark:bg-[hsl(220,16%,12%)];
+  }
+
+  .blog-editorial-surface {
+    @apply rounded-lg border border-border bg-muted/60;
+  }
+}
+
 /* Rehype pretty code */
 [data-rehype-pretty-code-figure] code {
   @apply grid min-w-full break-words rounded-none border-0 p-3 text-sm;

@@ -724,15 +724,23 @@ TanStack Start is still in Release Candidate status. It is serious enough to eva
 
 Not "which is better." What does your app actually need.
 
-👉 **Your data fetching pattern determines a lot.** If your pages are mostly server-rendered with minimal client interactivity — content sites, marketing pages, documentation — Next.js's server-first model will feel more natural. TanStack's RSC story is still experimental, so this is not where I would start if that rendering style is central to the app.
-
-👉 If your app is a SaaS dashboard, an admin panel, an authenticated product — heavy client interactivity, user-specific data, mutations everywhere — TanStack Start's model makes more sense. The explicit server boundary and simpler client-side mental model line up better with that kind of app.
-
-👉 **TypeScript discipline matters.** In Next.js, `useParams()` returns `Record<string, string | string[]>` — you cast or trust the filename. `useSearchParams()` returns `ReadonlyURLSearchParams` with no schema. TanStack Router generates a complete type-safe contract from your route tree — path params, search params, loader return types, all inferred. If you have ever written `const { id } = params as { id: string }` and felt bad about it, TanStack's routing is a meaningful upgrade, not a preference.
-
-👉 **The caching story is genuinely different.** Next.js's cache has historically had multiple layers with different invalidation rules, which is why so many App Router caching bugs feel harder than they should. TanStack Start is simpler: the router has a loader cache, and TanStack Query is optional for richer client-side cache behavior. Fewer moving parts, fewer places for stale data to hide.
-
-👉 **Deployment target is a real constraint.** If you run on Vercel, Next.js has first-class support for edge functions, ISR, and incremental deploys with no configuration. If you are deploying to Cloudflare Workers, self-hosted Node, or a Docker container, TanStack Start's adapter model will probably feel more neutral.
+<Takeaways>
+  <Takeaway title="Your data fetching pattern determines a lot">
+    If your pages are mostly server-rendered with minimal client interactivity — content sites, marketing pages, documentation — Next.js's server-first model will feel more natural. TanStack's RSC story is still experimental, so this is not where I would start if that rendering style is central to the app.
+  </Takeaway>
+  <Takeaway title="Client-heavy apps favor TanStack Start">
+    If your app is a SaaS dashboard, an admin panel, an authenticated product — heavy client interactivity, user-specific data, mutations everywhere — TanStack Start's model makes more sense. The explicit server boundary and simpler client-side mental model line up better with that kind of app.
+  </Takeaway>
+  <Takeaway title="TypeScript discipline matters">
+    In Next.js, `useParams()` returns `Record<string, string | string[]>` — you cast or trust the filename. `useSearchParams()` returns `ReadonlyURLSearchParams` with no schema. TanStack Router generates a complete type-safe contract from your route tree — path params, search params, loader return types, all inferred. If you have ever written `const { id } = params as { id: string }` and felt bad about it, TanStack's routing is a meaningful upgrade, not a preference.
+  </Takeaway>
+  <Takeaway title="The caching story is genuinely different">
+    Next.js's cache has historically had multiple layers with different invalidation rules, which is why so many App Router caching bugs feel harder than they should. TanStack Start is simpler: the router has a loader cache, and TanStack Query is optional for richer client-side cache behavior. Fewer moving parts, fewer places for stale data to hide.
+  </Takeaway>
+  <Takeaway title="Deployment target is a real constraint">
+    If you run on Vercel, Next.js has first-class support for edge functions, ISR, and incremental deploys with no configuration. If you are deploying to Cloudflare Workers, self-hosted Node, or a Docker container, TanStack Start's adapter model will probably feel more neutral.
+  </Takeaway>
+</Takeaways>
 
 
 ---
