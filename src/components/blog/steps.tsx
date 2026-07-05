@@ -18,7 +18,7 @@ export function Steps({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="not-prose blog-editorial-surface my-8 p-4 sm:p-5">
+    <div className="not-prose blog-editorial-surface my-8 w-full p-4 sm:p-5">
       <ol className="relative m-0 list-none space-y-0 p-0">
         {steps.map((step, index) => {
           if (!React.isValidElement<{ title?: string; children?: React.ReactNode }>(step))

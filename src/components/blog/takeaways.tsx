@@ -17,7 +17,7 @@ export function Takeaways({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <Card className="not-prose blog-editorial-surface my-8 rounded-lg shadow-none">
+    <Card className="not-prose blog-editorial-surface my-8 w-full rounded-lg shadow-none">
       <CardContent className="p-0">
         {items.map((item, index) => (
           <React.Fragment key={index}>

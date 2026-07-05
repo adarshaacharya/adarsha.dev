@@ -37,7 +37,7 @@ export function Callout({
   return (
     <Alert
       className={cn(
-        "not-prose my-8 grid-cols-[auto_1fr] gap-x-3 rounded-lg px-4 py-3",
+        "not-prose my-8 w-full grid-cols-[auto_1fr] gap-x-3 rounded-lg px-4 py-3",
         variantClassName[variant],
         !emoji && "grid-cols-1",
       )}

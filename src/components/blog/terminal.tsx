@@ -23,7 +23,7 @@ export function Terminal({
   );
 
   return (
-    <div className="not-prose blog-code-surface my-8 overflow-hidden">
+    <div className="not-prose blog-code-surface my-8 w-full overflow-hidden">
       <div className="flex items-center gap-2 border-b border-neutral-200 bg-neutral-100 px-3 py-2.5 dark:border-[hsl(220,16%,16%)] dark:bg-[#111111]">
         <span className="size-2.5 rounded-full bg-neutral-300 dark:bg-neutral-600" aria-hidden="true" />
         <span className="size-2.5 rounded-full bg-neutral-300 dark:bg-neutral-600" aria-hidden="true" />

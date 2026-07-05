@@ -33,7 +33,7 @@ export function CollapsibleSection({
     <Collapsible
       open={open}
       onOpenChange={setOpen}
-      className="not-prose blog-editorial-surface my-6 overflow-hidden rounded-lg"
+      className="not-prose blog-editorial-surface my-6 w-full overflow-hidden rounded-lg"
     >
       <CollapsibleTrigger className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium text-foreground transition-colors hover:bg-muted/50">
         <span>{title}</span>

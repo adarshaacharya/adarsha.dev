@@ -98,7 +98,7 @@ export function BlogChart({
   }
 
   return (
-    <figure className={cn("not-prose blog-editorial-surface my-8 overflow-hidden", className)}>
+    <figure className={cn("not-prose blog-editorial-surface my-8 w-full overflow-hidden", className)}>
       {title || description ? (
         <figcaption className="border-b border-border/60 px-4 py-3 sm:px-5">
           {title ? (

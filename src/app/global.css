@@ -277,7 +277,7 @@ input[type="email"] {
   font-weight: 500;
 }
 
-table {
+.prose table {
   display: block;
   max-width: fit-content;
   overflow-x: auto;

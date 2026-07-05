@@ -46,7 +46,7 @@ export function CodeTabs({
     <Tabs
       value={active}
       onValueChange={setActive}
-      className="group blog-code-surface my-8 gap-0"
+      className="group blog-code-surface my-8 w-full gap-0"
     >
       <div
         className="flex items-center border-b border-neutral-200 bg-neutral-50 dark:border-[hsl(220,16%,16%)] dark:bg-[hsl(220,16%,12%)]"

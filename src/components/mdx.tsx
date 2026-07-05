@@ -12,6 +12,7 @@ import { CollapsibleSection } from "./blog/collapsible-section";
 import { FileTree } from "./blog/file-tree";
 import { Step, Steps } from "./blog/steps";
 import { Takeaway, Takeaways } from "./blog/takeaways";
+import { ScopeTable } from "./blog/scope-table";
 import { Command, Output, Terminal } from "./blog/terminal";
 
 function CustomLink(props: { href: string; children: React.ReactNode }) {
@@ -49,6 +50,7 @@ const components = {
   Output,
   Step,
   Steps,
+  ScopeTable,
   Takeaway,
   Takeaways,
   Terminal,

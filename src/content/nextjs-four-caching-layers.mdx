@@ -18,20 +18,15 @@ In this article we will understand the four mechanisms of caching in Next.js in 
 - [Full Route Cache](#3-full-route-cache)
 - [Router Cache](#4-router-cache)
 
-<BlogChart
-  type="bar"
+<ScopeTable
   title="Where each cache layer lives"
-  description="1 = active on that runtime, 0 = not applicable"
-  xKey="layer"
-  data={[
-    { layer: "Request Memo", server: 1, client: 0 },
-    { layer: "Data Cache", server: 1, client: 0 },
-    { layer: "Full Route", server: 1, client: 0 },
-    { layer: "Router Cache", server: 0, client: 1 },
-  ]}
-  series={[
-    { key: "server", label: "Server" },
-    { key: "client", label: "Browser" },
+  description="Three layers run on the server during rendering. Router Cache is the only client-side layer."
+  columns={["Server", "Client"]}
+  rows={[
+    { label: "Request Memoization", values: [true, false] },
+    { label: "Data Cache", values: [true, false] },
+    { label: "Full Route Cache", values: [true, false] },
+    { label: "Router Cache", values: [false, true] },
   ]}
 />
 
