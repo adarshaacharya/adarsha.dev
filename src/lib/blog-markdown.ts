@@ -1,6 +1,7 @@
 import { allBlogs, type Blog } from "contentlayer/generated";
 import { siteMetadata } from "@/data/siteMetadata";
 import { ENV } from "@/lib/env";
+export { buildAiPrompt } from "@/lib/blog-ai-prompt";
 
 const isProd = ENV.NODE_ENV === "production";
 
@@ -21,12 +22,16 @@ export function getBlogPostUrl(slug: string) {
 
 export function formatBlogMarkdown(blog: Blog) {
   const postUrl = getBlogPostUrl(blog.slug);
+  const metadata = [
+    `title: ${JSON.stringify(blog.title)}`,
+    `url: ${postUrl}`,
+    `publishedAt: ${blog.publishedAt}`,
+    blog.updatedAt ? `updatedAt: ${blog.updatedAt}` : null,
+    `summary: ${JSON.stringify(blog.summary)}`,
+  ].filter(Boolean);
 
   return `---
-title: ${JSON.stringify(blog.title)}
-url: ${postUrl}
-publishedAt: ${blog.publishedAt}
-summary: ${JSON.stringify(blog.summary)}
+${metadata.join("\n")}
 ---
 
 # ${blog.title}
@@ -37,30 +42,4 @@ Source: ${postUrl}
 
 ${blog.body.raw.trim()}
 `;
-}
-
-export function buildAiPrompt({
-  title,
-  markdown,
-  markdownUrl,
-  postUrl,
-  maxChars = 24000,
-}: {
-  title: string;
-  markdown: string;
-  markdownUrl: string;
-  postUrl: string;
-  maxChars?: number;
-}) {
-  const truncated =
-    markdown.length > maxChars
-      ? `${markdown.slice(0, maxChars).trimEnd()}\n\n...[truncated]`
-      : markdown;
-
-  return `Please read and help me understand this article titled "${title}".
-
-${truncated}
-
-Full markdown: ${markdownUrl}
-Original post: ${postUrl}`;
 }

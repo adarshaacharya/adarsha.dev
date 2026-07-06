@@ -1,6 +1,6 @@
 "use client";
 
-import { Blog } from "contentlayer/generated";
+import type { Blog } from "contentlayer/generated";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -8,7 +8,10 @@ import { BlogListItem } from "./blog-list-item";
 
 type AnimatedBlogListProps = {
   posts: Array<
-    Pick<Blog, "readingTime" | "slug" | "title" | "summary" | "publishedAt">
+    Pick<
+      Blog,
+      "readingTime" | "slug" | "title" | "summary" | "publishedAt" | "updatedAt"
+    >
   >;
 };
 

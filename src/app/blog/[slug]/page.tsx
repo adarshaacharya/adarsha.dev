@@ -5,16 +5,12 @@ import { Mdx } from "@/components/mdx";
 import { siteMetadata } from "@/data/siteMetadata";
 import NotFound from "@/app/not-found";
 import { formatDate } from "@/lib/utils";
-import { getMDXComponent } from "next-contentlayer2/hooks";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowLeft, Calendar, Clock } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, RefreshCw } from "lucide-react";
 import { BlogPostAiMenu } from "@/components/blog/blog-post-ai-menu";
-import {
-  getBlogMarkdownUrl,
-  getBlogPostUrl,
-} from "@/lib/blog-markdown";
+import { getBlogMarkdownUrl, getBlogPostUrl } from "@/lib/blog-markdown";
 
 export const generateStaticParams = async () =>
   allBlogs.map((blog) => ({ slug: blog._raw.flattenedPath }));
@@ -41,6 +37,7 @@ export async function generateMetadata(props: {
       locale: "en_US",
       type: "article",
       publishedTime: blog.publishedAt,
+      modifiedTime: blog.updatedAt ?? blog.publishedAt,
       url: `${siteMetadata.siteUrl}/blog/${blog.slug}`,
       authors: siteMetadata.author,
       images: [
@@ -71,8 +68,6 @@ export default async function Blog(props: {
     return <NotFound />;
   }
 
-  const Content = getMDXComponent(blog.body.code);
-
   return (
     <article className="space-y-8">
       <Button variant="ghost" size="sm" asChild className="-ml-2">
@@ -94,9 +89,20 @@ export default async function Blog(props: {
             <div className="flex items-center gap-1.5">
               <Calendar className="h-3.5 w-3.5" />
               <time dateTime={blog.publishedAt}>
-                {formatDate(blog.publishedAt)}
+                Published {formatDate(blog.publishedAt)}
               </time>
             </div>
+            {blog.updatedAt ? (
+              <>
+                <span>·</span>
+                <div className="flex items-center gap-1.5 text-foreground/80">
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  <time dateTime={blog.updatedAt}>
+                    Last updated {formatDate(blog.updatedAt)}
+                  </time>
+                </div>
+              </>
+            ) : null}
             <span>·</span>
             <div className="flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5" />

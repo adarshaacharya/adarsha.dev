@@ -1,7 +1,6 @@
 import { siteMetadata } from "@/data/siteMetadata";
 import { getPublishedBlogs } from "@/lib/blog";
 
-
 function escapeXml(value: string) {
   return value
     .replaceAll("&", "&amp;")
@@ -14,7 +13,10 @@ function escapeXml(value: string) {
 export function GET() {
   const blogs = getPublishedBlogs();
   const siteUrl = siteMetadata.siteUrl.replace(/\/$/, "");
-  const lastBuildDate = blogs[0]?.publishedAt ?? new Date().toISOString();
+  const lastBuildDate =
+    blogs
+      .map((blog) => blog.updatedAt ?? blog.publishedAt)
+      .sort((a, b) => b.localeCompare(a))[0] ?? new Date().toISOString();
 
   const items = blogs
     .map((blog) => {

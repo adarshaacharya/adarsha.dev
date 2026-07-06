@@ -1,5 +1,5 @@
 import { formatDate } from "@/lib/utils";
-import { Blog } from "contentlayer/generated";
+import type { Blog } from "contentlayer/generated";
 import {
   Card,
   CardContent,
@@ -7,12 +7,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock } from "lucide-react";
 
 type BlogCardProps = Pick<
   Blog,
-  "readingTime" | "slug" | "title" | "summary" | "publishedAt"
+  "readingTime" | "slug" | "title" | "summary" | "publishedAt" | "updatedAt"
 >;
 
 export function BlogCard({ blog }: { blog: BlogCardProps }) {
@@ -26,6 +25,13 @@ export function BlogCard({ blog }: { blog: BlogCardProps }) {
               {formatDate(blog.publishedAt)}
             </time>
           </div>
+          {blog.updatedAt ? (
+            <div className="flex items-center gap-1">
+              <time dateTime={blog.updatedAt}>
+                Updated {formatDate(blog.updatedAt)}
+              </time>
+            </div>
+          ) : null}
           <div className="flex items-center gap-1">
             <Clock className="h-4 w-4" />
             <span>{blog.readingTime.text}</span>

@@ -13,7 +13,7 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { buildAiPrompt } from "@/lib/blog-markdown";
+import { buildAiPrompt } from "@/lib/blog-ai-prompt";
 import { askBot } from "@/components/bot/chat-events";
 
 type Props = {
@@ -66,11 +66,7 @@ function openAiApp(url: string) {
   return window.open(url, "_blank", "noopener,noreferrer");
 }
 
-export function BlogPostAiMenu({
-  title,
-  markdownUrl,
-  postUrl,
-}: Props) {
+export function BlogPostAiMenu({ title, markdownUrl, postUrl }: Props) {
   const menuId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
@@ -127,7 +123,11 @@ export function BlogPostAiMenu({
     await navigator.clipboard.writeText(prompt);
   };
 
-  const openExternalAi = (actionId: string, appName: string, appUrl: string) => {
+  const openExternalAi = (
+    actionId: string,
+    appName: string,
+    appUrl: string,
+  ) => {
     const openedWindow = openAiApp(appUrl);
 
     runAction(actionId, async (markdown) => {
@@ -136,9 +136,7 @@ export function BlogPostAiMenu({
       if (openedWindow) {
         toast.success(`Prompt copied. Paste it into ${appName}.`);
       } else {
-        toast.success(
-          `Prompt copied. Open ${appName} and paste it there.`,
-        );
+        toast.success(`Prompt copied. Open ${appName} and paste it there.`);
       }
     });
   };

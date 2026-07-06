@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next";
-import { allBlogs, Blog } from "contentlayer/generated";
+import { allBlogs } from "contentlayer/generated";
 import { siteMetadata } from "@/data/siteMetadata";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -8,7 +8,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const undraftedBlogs = allBlogs.filter((blog) => !blog.draft);
   const blogRoutes = undraftedBlogs.map((post) => ({
     url: `${siteUrl}/blog/${post.slug}`,
-    lastModified: post.publishedAt,
+    lastModified: post.updatedAt ?? post.publishedAt,
   }));
 
   const routes = ["", "blog", "projects", "privacy"].map((route) => ({

@@ -1,9 +1,9 @@
 import { formatDate } from "@/lib/utils";
-import { Blog } from "contentlayer/generated";
+import type { Blog } from "contentlayer/generated";
 
 type BlogListItemProps = Pick<
   Blog,
-  "readingTime" | "slug" | "title" | "summary" | "publishedAt"
+  "readingTime" | "slug" | "title" | "summary" | "publishedAt" | "updatedAt"
 >;
 
 export function BlogListItem({ blog }: { blog: BlogListItemProps }) {
@@ -17,7 +17,17 @@ export function BlogListItem({ blog }: { blog: BlogListItemProps }) {
           {blog.summary}
         </p>
         <div className="flex items-center gap-2 text-xs text-muted-foreground/60 pt-1">
-          <time dateTime={blog.publishedAt}>{formatDate(blog.publishedAt)}</time>
+          <time dateTime={blog.publishedAt}>
+            {formatDate(blog.publishedAt)}
+          </time>
+          {blog.updatedAt ? (
+            <>
+              <span aria-hidden>·</span>
+              <time dateTime={blog.updatedAt}>
+                Updated {formatDate(blog.updatedAt)}
+              </time>
+            </>
+          ) : null}
           <span aria-hidden>·</span>
           <span>{blog.readingTime.text}</span>
         </div>
