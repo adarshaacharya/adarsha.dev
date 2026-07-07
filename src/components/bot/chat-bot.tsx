@@ -15,9 +15,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DefaultChatTransport } from "ai";
 import { cn } from "@/lib/utils";
 
+const TEASER_DISMISSED_KEY = "chatbot-teaser-dismissed";
+const TEASER_DELAY_MS = 2500;
+
+function getTeaserMessage(pageContext: ReturnType<typeof getBotPageContext>) {
+  return pageContext
+    ? "Questions about this post? I can help."
+    : "Hi! Ask me about Adarsha's work.";
+}
+
 export function ChatBot() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [showTeaser, setShowTeaser] = useState(false);
   const [input, setInput] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
   const pageContext = getBotPageContext(pathname);
@@ -41,12 +51,44 @@ export function ChatBot() {
     sendContextualMessage({ text: prompt });
   };
 
+  const dismissTeaser = () => {
+    setShowTeaser(false);
+    sessionStorage.setItem(TEASER_DISMISSED_KEY, "1");
+  };
+
+  const hideTeaser = () => {
+    setShowTeaser(false);
+  };
+
+  const openChat = () => {
+    hideTeaser();
+    setOpen(true);
+  };
+
+  useEffect(() => {
+    if (open) {
+      setShowTeaser(false);
+      return;
+    }
+
+    if (sessionStorage.getItem(TEASER_DISMISSED_KEY) === "1") {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setShowTeaser(true);
+    }, TEASER_DELAY_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [open]);
+
   useEffect(() => {
     const handleAskBot = (event: Event) => {
       const { prompt } = (event as CustomEvent<AskBotEventDetail>).detail ?? {};
 
       if (!prompt) return;
 
+      hideTeaser();
       setOpen(true);
 
       if (status === "submitted" || status === "streaming") {
@@ -223,45 +265,93 @@ export function ChatBot() {
         }}
       >
         <motion.div
-          animate={{
-            y: [0, -4, 0],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: [0.4, 0, 0.2, 1],
-          }}
+          animate={
+            open
+              ? { y: 0, scale: 1 }
+              : {
+                  y: [0, -5, 0],
+                  scale: [1, 1.06, 1],
+                }
+          }
+          transition={
+            open
+              ? { duration: 0.2, ease: [0.4, 0, 0.2, 1] }
+              : {
+                  duration: 2.4,
+                  repeat: Infinity,
+                  ease: [0.34, 1.25, 0.64, 1],
+                  repeatDelay: 2,
+                }
+          }
           className="relative"
         >
-          <motion.div
-            className="absolute inset-0 rounded-full border-2 border-primary/30"
-            animate={{
-              scale: [1, 1.4, 1],
-              opacity: [0.8, 0.2, 0.8],
-            }}
-            transition={{
-              duration: 2.5,
-              repeat: Infinity,
-              ease: [0.4, 0, 0.2, 1],
-            }}
-          />
-          <motion.div
-            className="absolute inset-0 rounded-full border border-primary/50"
-            animate={{
-              scale: [1, 1.6, 1],
-              opacity: [0.6, 0, 0.6],
-            }}
-            transition={{
-              duration: 2.5,
-              repeat: Infinity,
-              ease: [0.4, 0, 0.2, 1],
-              delay: 0.5,
-            }}
-          />
+          <AnimatePresence>
+            {showTeaser && !open ? (
+              <motion.div
+                initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+                className="absolute bottom-full right-0 z-10 mb-3 w-[min(260px,calc(100vw-5rem))]"
+              >
+                <div className="relative rounded-xl border border-border bg-popover px-3.5 py-2.5 pr-8 text-sm leading-snug text-popover-foreground shadow-lg">
+                  <button
+                    type="button"
+                    onClick={openChat}
+                    className="text-left transition-opacity hover:opacity-80"
+                  >
+                    {getTeaserMessage(pageContext)}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={dismissTeaser}
+                    className="absolute top-2 right-2 rounded-sm p-0.5 text-muted-foreground transition-colors hover:text-foreground"
+                    aria-label="Dismiss message"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                  <div
+                    aria-hidden
+                    className="absolute -bottom-1.5 right-5 h-3 w-3 rotate-45 border-r border-b border-border bg-popover"
+                  />
+                </div>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+
+          {!open ? (
+            <>
+              <motion.div
+                className="absolute inset-0 rounded-full border-2 border-primary/30"
+                animate={{
+                  scale: [1, 1.45, 1],
+                  opacity: [0.7, 0.15, 0.7],
+                }}
+                transition={{
+                  duration: 2.5,
+                  repeat: Infinity,
+                  ease: [0.4, 0, 0.2, 1],
+                }}
+              />
+              <motion.div
+                className="absolute inset-0 rounded-full border border-primary/50"
+                animate={{
+                  scale: [1, 1.65, 1],
+                  opacity: [0.5, 0, 0.5],
+                }}
+                transition={{
+                  duration: 2.5,
+                  repeat: Infinity,
+                  ease: [0.4, 0, 0.2, 1],
+                  delay: 0.5,
+                }}
+              />
+            </>
+          ) : null}
 
           <motion.button
-            onClick={() => setOpen((o) => !o)}
-            className="h-12 w-12 rounded-full shadow-lg hover:shadow-xl transition-shadow duration-300 relative overflow-hidden bg-primary text-primary-foreground flex items-center justify-center"
+            onClick={() => (open ? setOpen(false) : openChat())}
+            className="h-12 w-12 rounded-full shadow-lg hover:shadow-xl transition-shadow duration-300 relative overflow-hidden bg-primary text-white flex items-center justify-center"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -282,9 +372,9 @@ export function ChatBot() {
               className="relative z-10"
             >
               {open ? (
-                <X className="h-5 w-5" />
+                <X className="h-5 w-5 stroke-[2.25]" />
               ) : (
-                <MessageSquare className="h-5 w-5" />
+                <MessageSquare className="h-5 w-5 stroke-[2.25]" />
               )}
             </motion.div>
             <span className="sr-only">Toggle chat</span>
