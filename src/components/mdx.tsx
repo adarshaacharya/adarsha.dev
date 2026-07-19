@@ -12,10 +12,21 @@ import { Callout } from "./blog/callout";
 import { CodeCompare } from "./blog/code-compare";
 import { CodeBlock } from "./blog/code-block";
 import { CollapsibleSection } from "./blog/collapsible-section";
+import { DecisionOption, DecisionSplit } from "./blog/decision-split";
 import { FileTree } from "./blog/file-tree";
+import { MappingRow, MappingTable } from "./blog/mapping-table";
 import { Step, Steps } from "./blog/steps";
 import { Takeaway, Takeaways } from "./blog/takeaways";
+import { ReRenderScope } from "./blog/rerender-scope";
 import { ScopeTable } from "./blog/scope-table";
+import {
+  FormStateLocationDiagram,
+  StateLocationDiagram,
+  StateLocationFlow,
+  StateLocationNode,
+  StateLocationPanel,
+  StateLocationScope,
+} from "./blog/state-location-diagram";
 import { Command, Output, Terminal } from "./blog/terminal";
 import { TweetEmbed } from "./blog/tweet-embed";
 
@@ -52,11 +63,22 @@ const components = {
   CodeCompare,
   CollapsibleSection,
   Command,
+  DecisionOption,
+  DecisionSplit,
   FileTree,
+  MappingRow,
+  MappingTable,
   Output,
+  ReRenderScope,
   Step,
   Steps,
   ScopeTable,
+  FormStateLocationDiagram,
+  StateLocationDiagram,
+  StateLocationFlow,
+  StateLocationNode,
+  StateLocationPanel,
+  StateLocationScope,
   Takeaway,
   Takeaways,
   Terminal,

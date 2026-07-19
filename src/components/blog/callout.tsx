@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Lightbulb, TriangleAlert, OctagonAlert, Info } from "lucide-react";
 import {
   Alert,
   AlertDescription,
@@ -9,14 +10,31 @@ import { cn } from "@/lib/utils";
 type CalloutVariant = "default" | "tip" | "warning" | "destructive";
 
 const variantClassName: Record<CalloutVariant, string> = {
-  default: "border-border bg-muted/60 text-foreground",
-  tip: "border-primary/20 bg-primary/5 text-foreground",
-  warning: "border-amber-500/30 bg-amber-500/5 text-foreground",
-  destructive: "border-destructive/30 bg-destructive/5 text-foreground",
+  default: "border-border border-l-border bg-muted/60 text-foreground",
+  tip: "border-border border-l-primary bg-primary/5 text-foreground",
+  warning: "border-border border-l-amber-500 bg-amber-500/5 text-foreground",
+  destructive:
+    "border-border border-l-destructive bg-destructive/5 text-foreground",
+};
+
+const variantIconClassName: Record<CalloutVariant, string> = {
+  default: "text-muted-foreground",
+  tip: "text-primary",
+  warning: "text-amber-500",
+  destructive: "text-destructive",
+};
+
+const variantIcon: Record<CalloutVariant, React.ComponentType<{ className?: string }>> = {
+  default: Info,
+  tip: Lightbulb,
+  warning: TriangleAlert,
+  destructive: OctagonAlert,
 };
 
 /**
  * Editorial callout for MDX posts. Backward-compatible with the emoji prop.
+ * Without an emoji, each variant falls back to its own icon so tip/warning/
+ * destructive stay distinguishable even at a glance.
  *
  * ```mdx
  * <Callout emoji="💡">Tip text here.</Callout>
@@ -34,24 +52,35 @@ export function Callout({
   variant?: CalloutVariant;
   children: React.ReactNode;
 }) {
+  const Icon = variantIcon[variant];
+
   return (
     <Alert
       className={cn(
-        "not-prose my-8 w-full grid-cols-[auto_1fr] gap-x-3 rounded-lg px-4 py-3",
+        "not-prose my-8 w-full grid-cols-[auto_1fr] gap-x-3 rounded-lg border-l-[3px] px-4 py-3.5",
         variantClassName[variant],
-        !emoji && "grid-cols-1",
       )}
     >
-      {emoji ? (
-        <span className="row-span-2 mt-0.5 flex w-4 shrink-0 items-start text-base leading-none">
-          {emoji}
-        </span>
+      <span
+        className={cn(
+          "row-span-2 mt-0.5 flex w-4 shrink-0 items-start leading-none",
+          variantIconClassName[variant],
+        )}
+      >
+        {emoji ? (
+          <span className="text-base leading-none">{emoji}</span>
+        ) : (
+          <Icon className="size-4" />
+        )}
+      </span>
+      {title ? (
+        <AlertTitle className="col-start-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+          {title}
+        </AlertTitle>
       ) : null}
-      {title ? <AlertTitle className="col-start-2">{title}</AlertTitle> : null}
       <AlertDescription
         className={cn(
-          "callout text-sm text-foreground [&_p]:m-0",
-          title ? "col-start-2" : emoji ? "col-start-2" : undefined,
+          "callout col-start-2 mt-1 text-sm text-foreground [&_p]:m-0",
         )}
       >
         {children}

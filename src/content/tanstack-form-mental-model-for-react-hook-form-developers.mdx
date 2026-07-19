@@ -1,0 +1,327 @@
+---
+title: "React Hook Form Avoids State. TanStack Form Scopes It."
+summary: "React Hook Form begins with registered inputs. TanStack Form begins with controlled fields backed by a store. That difference changes some code paths, but not as many as the APIs suggest."
+publishedAt: 2026-07-20
+---
+
+React Hook Form has been my default for a long time. Most forms start with `register`. Native inputs stay native, the browser holds their values, and the form component does not re-render on every keystroke. It is a very good default.
+
+TanStack Form feels more elaborate at first. Every input lives inside `form.Field`. You pass `value`, `onChange`, and `onBlur` yourself. Coming from RHF, I read that as the old controlled-input pattern with more ceremony.
+
+I was only partly right.
+
+RHF starts with registered inputs, then adds React subscriptions when another part of the UI needs form state. TanStack Form starts with fields backed by a store. Its inputs are controlled, but the field and the UI that subscribes to it are the only parts that need to update.
+
+The performance split is simple: RHF keeps ordinary keystrokes out of React's render loop. TanStack Form stores them and keeps each React subscription narrow. Both can stay fast, but they start in different places.
+
+A working RHF form is rarely worth rewriting. The two libraries overlap more than a quick API comparison suggests. This post focuses on the places where their defaults lead to different code.
+
+<Callout variant="warning" title="Version note">
+  The examples were checked against <code>@tanstack/react-form</code> 1.33.1 and <code>react-hook-form</code> 7.82.0 on July 20, 2026. TanStack Form v1 is stable, but its newer composition APIs, including <code>createFormHook</code> and <code>AppField</code>, can evolve. Check the current documentation and changelog before copying an example into a newer release.
+</Callout>
+
+---
+
+## Start with an ordinary field
+
+Most RHF forms do not begin with `watch`. They begin with `register`. For a component that owns its value, such as a select from a UI library, they use `Controller` or `useController`.
+
+They are both field-binding APIs. They connect an input to the form and give it the pieces it needs: value, events, focus, and validation state.
+
+<CodeCompare labels={["React Hook Form", "TanStack Form"]}>
+
+```tsx
+// Native input: RHF attaches a ref and event handlers.
+<input {...register("email")} />
+
+// Controlled widget: Controller adapts its value and callbacks.
+<Controller
+  control={control}
+  name="plan"
+  render={({ field }) => (
+    <PlanSelect
+      value={field.value}
+      onValueChange={field.onChange}
+      onBlur={field.onBlur}
+    />
+  )}
+/>
+```
+
+```tsx
+// Every TanStack field is a controlled field boundary.
+<form.Field name="email">
+  {(field) => (
+    <input
+      name={field.name}
+      value={field.state.value}
+      onBlur={field.handleBlur}
+      onChange={(event) => field.handleChange(event.target.value)}
+    />
+  )}
+</form.Field>
+```
+
+</CodeCompare>
+
+`form.Field` lands somewhere between `register` and `Controller`. It gives an input its name, value, event handlers, validation state, and metadata. The field updates when its value changes. Nothing unusual there.
+
+The difference is where the field's state lives. RHF uses the DOM as the normal source of truth for native inputs, with an internal form control behind it. TanStack Form keeps the value in its store and renders it into the input.
+
+<FormStateLocationDiagram />
+
+This is why controlled components feel different in the two libraries. In RHF, `Controller` adapts a component that cannot follow the usual ref-based path. In TanStack Form, controlled binding is where every field begins.
+
+`Controller` is not free of React updates. Its field subtree updates as its value changes, but `useController` keeps that work at the field boundary instead of making the entire form controlled. The cheap path in RHF is still a registered native input.
+
+One practical consequence: initialize TanStack Form fields with `defaultValues`. A field that first renders with `undefined` and later receives a value produces React's uncontrolled-to-controlled warning. RHF can often defer that concern because a registered native input owns its initial value.
+
+---
+
+## Validation has a different shape
+
+The reactivity APIs are closer than their names make them sound. Validation is where I notice the larger difference.
+
+RHF usually establishes validation timing at the form level with `mode` and `reValidateMode`. You can add field rules through `register` or `Controller`, or put the form behind a schema resolver. This works well when the form has a consistent policy, such as validating on blur and then re-validating on change.
+
+TanStack Form names validation work by the event that causes it. A field can have an `onChange` check, a different `onBlur` check, and a debounced `onChangeAsync` check. Form-level validators use the same event names. The timing sits next to the rule rather than in a separate form-wide mode.
+
+<CodeCompare labels={["React Hook Form", "TanStack Form"]}>
+
+```tsx
+const form = useForm({
+  mode: "onBlur",
+  reValidateMode: "onChange",
+  resolver: zodResolver(schema),
+})
+
+<input
+  {...register("username", {
+    required: "Choose a username",
+  })}
+/>
+```
+
+```tsx
+<form.Field
+  name="username"
+  validators={{
+    onChange: ({ value }) =>
+      value.length < 3 ? "Use at least 3 characters" : undefined,
+    onBlur: ({ value }) =>
+      value.includes(" ") ? "Spaces are not allowed" : undefined,
+    onChangeAsyncDebounceMs: 400,
+    onChangeAsync: async ({ value }) =>
+      (await usernameTaken(value)) ? "That name is taken" : undefined,
+  }}
+>
+  {(field) => <UsernameInput field={field} />}
+</form.Field>
+```
+
+</CodeCompare>
+
+RHF can produce the same behavior. TanStack Form puts the lifecycle in the validator API itself, including async debounce and pending state. I find that easier to follow once a form has cheap local checks, slower server checks, and a few rules that only make sense after blur.
+
+The example uses functions to show the timing clearly. Both libraries also work with schemas. TanStack Form accepts Standard Schema validators, including current Zod and Valibot schemas; place the schema under the event where it should run. A schema does not remove the difference in lifecycle policy, it just moves the rules out of the component.
+
+TanStack can also keep errors by source in an `errorMap` when a field opts out of the default flattened error array with `disableErrorFlat`. A UI can then tell an `onChange` error from an `onBlur` or `onSubmit` error. That helps when feedback should be gentler before the first submit and stricter afterward.
+
+---
+
+## Linked validation has a direct mapping
+
+Password confirmation is a useful example because the APIs line up almost exactly.
+
+In RHF, `deps` tells a field which changes should re-run its validation. In TanStack Form, `onChangeListenTo` does the same job. The APIs map directly.
+
+<CodeCompare labels={["React Hook Form", "TanStack Form"]}>
+
+```tsx
+<input
+  {...register("confirmPassword", {
+    validate: (value) =>
+      value === getValues("password") || "Passwords do not match",
+  })}
+/>
+
+<input {...register("password", { deps: ["confirmPassword"] })} />
+```
+
+```tsx
+<form.Field
+  name="confirmPassword"
+  validators={{
+    onChangeListenTo: ["password"],
+    onChange: ({ value, fieldApi }) =>
+      value === fieldApi.form.getFieldValue("password")
+        ? undefined
+        : "Passwords do not match",
+  }}
+>
+  {(field) => <PasswordInput field={field} />}
+</form.Field>
+```
+
+</CodeCompare>
+
+TanStack keeps the validator and its dependency in the same object, which I like when the form gets busy. RHF is still explicit here, and it does not need the `useWatch` plus `trigger` workaround that turns up in older examples.
+
+---
+
+## Reading state is mostly a translation problem
+
+It is easy to overstate `watch` as the difference between these libraries. It is not.
+
+RHF has `useWatch` for narrow value subscriptions, `useFormState` for narrow form-state subscriptions, and `useController` for a controlled field with isolated state. TanStack Form has `form.Subscribe` for a reactive JSX region and `useSelector` when a whole component needs selected form state.
+
+This is the mapping I keep in my head:
+
+<MappingTable columns={["React Hook Form", "TanStack Form", "Use it when"]}>
+  <MappingRow left={'watch()'} right={'useSelector(form.store, (s) => s.values)'}>
+    A broad form-root read. Keep it narrow unless the component really needs the whole form.
+  </MappingRow>
+  <MappingRow left={'useWatch'} right={'form.Subscribe or useSelector'}>
+    A value affects another part of the UI.
+  </MappingRow>
+  <MappingRow left={'useFormState'} right={'form.Subscribe or useSelector over form state'}>
+    A component needs errors, submission state, or validity.
+  </MappingRow>
+  <MappingRow left={'getValues'} right={'form.getFieldValue'}>
+    You need a current value in an event handler without subscribing to it.
+  </MappingRow>
+  <MappingRow left={'useFieldArray'} right={'<form.Field name="items" mode="array">'}>
+    RHF exposes an array helper with stable row IDs. TanStack Form makes the array itself a field, then renders subfields from its value.
+  </MappingRow>
+</MappingTable>
+
+The difference is mostly ergonomic. RHF gives you a few hooks with different scopes. TanStack Form asks for a selector, then asks whether the reactive unit should be a JSX region or a component. That distinction matters: `useSelector` re-renders the component that calls it, while `form.Subscribe` only re-renders its subscribed JSX region.
+
+<ReRenderScope />
+
+The demo shows a broad root read on the left and narrow subscriptions on the right. RHF does not force the left side. Put `useWatch` in the right component and it can isolate the same work.
+
+
+
+---
+
+## Side effects live in different places
+
+Validation answers whether a value is acceptable. A side effect changes something because the value changed. Resetting a province when the country changes is a side effect, not validation.
+
+RHF usually handles that with `useWatch` and `useEffect`. TanStack Form has field and form listeners, including built-in debounce. The effect is visible next to the field that triggers it.
+
+<CodeCompare labels={["React Hook Form", "TanStack Form"]}>
+
+```tsx
+const country = useWatch({ control, name: "country" })
+
+useEffect(() => {
+  setValue("province", "")
+}, [country, setValue])
+```
+
+```tsx
+<form.Field
+  name="country"
+  listeners={{
+    onChange: () => form.setFieldValue("province", ""),
+  }}
+>
+  {(field) => <CountrySelect field={field} />}
+</form.Field>
+```
+
+</CodeCompare>
+
+For a simple form, the RHF effect is plain and familiar. Listeners help when a form has a pile of these reactions, or when an async side effect needs debounce at the field level.
+
+---
+
+## Do not stop at the render prop
+
+The examples use `<form.Field>` because it exposes the moving parts. I would not repeat that render-prop shape across an entire application.
+
+RHF applications normally wrap `register` or `useController` in shared input components and use `FormProvider` to avoid passing the form control through every layer. TanStack Form has the same destination through `createFormHook`. Define a typed `TextField` against `useFieldContext`, register it once, then render `<form.AppField>` in application code.
+
+In practice, application code renders a small, domain-level field component in both cases.
+
+<CodeCompare labels={["React Hook Form", "TanStack Form"]}>
+
+```tsx
+type Values = { email: string }
+
+function TextField({ name, label }: { name: "email"; label: string }) {
+  const { register } = useFormContext<Values>()
+
+  return (
+    <label>
+      {label}
+      <input {...register(name)} />
+    </label>
+  )
+}
+
+function ProfileForm() {
+  const form = useForm<Values>()
+  return <FormProvider {...form}><TextField name="email" label="Email" /></FormProvider>
+}
+```
+
+```tsx
+const { fieldContext, formContext, useFieldContext } =
+  createFormHookContexts()
+
+function TextField({ label }: { label: string }) {
+  const field = useFieldContext<string>()
+
+  return (
+    <label>
+      {label}
+      <input
+        value={field.state.value}
+        onChange={(event) => field.handleChange(event.target.value)}
+      />
+    </label>
+  )
+}
+
+const { useAppForm } = createFormHook({
+  fieldComponents: { TextField },
+  formComponents: {},
+  fieldContext,
+  formContext,
+})
+
+function ProfileForm() {
+  const form = useAppForm({ defaultValues: { email: "" } })
+  return <form.AppField name="email">{(field) => <field.TextField label="Email" />}</form.AppField>
+}
+```
+
+</CodeCompare>
+
+The cost shows up in a different place. RHF makes the first form quick to write. TanStack Form asks for setup before it pays off. For a login form, that is hard to justify. For a product with several large, dynamic forms, shared typed field primitives and field groups can earn their keep.
+
+---
+
+## Where I would use the state-machine model
+
+<DecisionSplit note={<>If your existing RHF forms work, keep them. These are maintenance tradeoffs, not a reason to rewrite stable code.</>}>
+  <DecisionOption
+    label="Stay with React Hook Form"
+    headline="Mostly native, independent fields and one straightforward validation policy."
+  >
+    <code>register</code> keeps the code short, the browser does most of the input work, and form-wide validation timing is often enough.
+  </DecisionOption>
+  <DecisionOption
+    side="right"
+    tone="primary"
+    label="Reach for TanStack Form"
+    headline="Several validation lifecycles or shared, typed form sections."
+  >
+    It gives change, blur, async, and submit checks explicit names, then provides field groups and typed primitives when the form surface grows.
+  </DecisionOption>
+</DecisionSplit>
+
+RHF stays close to the platform. Register an input, validate it, submit it. TanStack Form puts a typed field state machine in front of the input. That adds API surface, but it also gives validation, derived state, and composition names that hold up when the form grows past a handful of inputs.
