@@ -17,6 +17,7 @@ import { Step, Steps } from "./blog/steps";
 import { Takeaway, Takeaways } from "./blog/takeaways";
 import { ScopeTable } from "./blog/scope-table";
 import { Command, Output, Terminal } from "./blog/terminal";
+import { TweetEmbed } from "./blog/tweet-embed";
 
 function CustomLink(props: { href: string; children: React.ReactNode }) {
   const { href, ...rest } = props;
@@ -59,6 +60,7 @@ const components = {
   Takeaway,
   Takeaways,
   Terminal,
+  TweetEmbed,
   figure: CodeBlock,
 };
 

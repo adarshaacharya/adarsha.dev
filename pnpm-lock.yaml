@@ -108,6 +108,9 @@ dependencies:
   react-dom:
     specifier: ^19.2.0
     version: 19.2.4(react@19.2.4)
+  react-tweet:
+    specifier: ^3.3.1
+    version: 3.3.1(react-dom@19.2.4)(react@19.2.4)
   react-wrap-balancer:
     specifier: ^1.1.0
     version: 1.1.1(react@19.2.4)
@@ -9731,6 +9734,19 @@ packages:
       get-nonce: 1.0.1
       react: 19.2.4
       tslib: 2.8.1
+    dev: false
+
+  /react-tweet@3.3.1(react-dom@19.2.4)(react@19.2.4):
+    resolution: {integrity: sha512-0Gj1YgBTe1K85NBMoWBlUc17Rdc67gIJLlacrVgj+3jWIoXpFfxPdZ1U5OnWkkF9zxhphqs2pY1i//JBfP3Qog==}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+    dependencies:
+      '@swc/helpers': 0.5.15
+      clsx: 2.1.1
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
+      swr: 2.4.2(react@19.2.4)
     dev: false
 
   /react-wrap-balancer@1.1.1(react@19.2.4):
