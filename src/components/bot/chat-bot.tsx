@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { usePathname } from "next/navigation";
 import { Messages } from "./messages";
-import { MessageSquare, X, Minimize2, Maximize2, Plus } from "lucide-react";
+import { X, Minimize2, Maximize2, Plus } from "lucide-react";
 import { ChatForm } from "./chat-form";
+import { ChatMascot } from "./chat-mascot";
 import { ASK_BOT_EVENT, type AskBotEventDetail } from "./chat-events";
 import { getBotPageContext } from "./page-context";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,7 @@ export function ChatBot() {
   const [showTeaser, setShowTeaser] = useState(false);
   const [input, setInput] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
-  const pageContext = getBotPageContext(pathname);
+  const pageContext = useMemo(() => getBotPageContext(pathname), [pathname]);
   const { messages, sendMessage, setMessages, status } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/chat",
@@ -40,12 +41,15 @@ export function ChatBot() {
     },
   });
 
-  const sendContextualMessage = (message: { text: string }) =>
-    sendMessage(message, {
-      body: {
-        pageContext,
-      },
-    });
+  const sendContextualMessage = useCallback(
+    (message: { text: string }) =>
+      sendMessage(message, {
+        body: {
+          pageContext,
+        },
+      }),
+    [pageContext, sendMessage],
+  );
 
   const handlePromptClick = (prompt: string) => {
     sendContextualMessage({ text: prompt });
@@ -67,7 +71,6 @@ export function ChatBot() {
 
   useEffect(() => {
     if (open) {
-      setShowTeaser(false);
       return;
     }
 
@@ -175,7 +178,9 @@ export function ChatBot() {
                       transition={{ delay: 0.1 }}
                     >
                       <CardTitle className="text-sm font-semibold">
-                        {pageContext ? "Ask about this post" : "Chat with Adarsha"}
+                        {pageContext
+                          ? "Ask about this post"
+                          : "Chat with Adarsha"}
                       </CardTitle>
                       {isExpanded ? (
                         <p className="mt-0.5 text-xs text-muted-foreground">
@@ -319,65 +324,15 @@ export function ChatBot() {
             ) : null}
           </AnimatePresence>
 
-          {!open ? (
-            <>
-              <motion.div
-                className="absolute inset-0 rounded-full border-2 border-primary/30"
-                animate={{
-                  scale: [1, 1.45, 1],
-                  opacity: [0.7, 0.15, 0.7],
-                }}
-                transition={{
-                  duration: 2.5,
-                  repeat: Infinity,
-                  ease: [0.4, 0, 0.2, 1],
-                }}
-              />
-              <motion.div
-                className="absolute inset-0 rounded-full border border-primary/50"
-                animate={{
-                  scale: [1, 1.65, 1],
-                  opacity: [0.5, 0, 0.5],
-                }}
-                transition={{
-                  duration: 2.5,
-                  repeat: Infinity,
-                  ease: [0.4, 0, 0.2, 1],
-                  delay: 0.5,
-                }}
-              />
-            </>
-          ) : null}
-
           <motion.button
             onClick={() => (open ? setOpen(false) : openChat())}
-            className="h-12 w-12 rounded-full shadow-lg hover:shadow-xl transition-shadow duration-300 relative overflow-hidden bg-primary text-white flex items-center justify-center"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            className="relative flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-2xl focus-visible:outline-offset-2"
+            whileHover={{ scale: 1.04, y: -2 }}
+            whileTap={{ scale: 0.96, y: 0 }}
+            aria-label={open ? "Close chat" : "Chat with Adarsha"}
+            aria-expanded={open}
           >
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-primary/20 to-primary/40 rounded-full"
-              animate={{
-                rotate: [0, 360],
-              }}
-              transition={{
-                duration: 8,
-                repeat: Infinity,
-                ease: "linear",
-              }}
-            />
-            <motion.div
-              animate={{ rotate: open ? 180 : 0 }}
-              transition={{ duration: 0.3 }}
-              className="relative z-10"
-            >
-              {open ? (
-                <X className="h-5 w-5 stroke-[2.25]" />
-              ) : (
-                <MessageSquare className="h-5 w-5 stroke-[2.25]" />
-              )}
-            </motion.div>
-            <span className="sr-only">Toggle chat</span>
+            <ChatMascot open={open} />
           </motion.button>
         </motion.div>
       </motion.div>
