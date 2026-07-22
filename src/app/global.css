@@ -311,7 +311,7 @@ input[type="email"] {
 /* Rehype pretty code */
 [data-rehype-pretty-code-figure] code {
   @apply grid min-w-full break-words rounded-none border-0 p-3 text-sm;
-  @apply bg-neutral-100 dark:bg-[hsl(220,16%,14%)];
+  @apply bg-neutral-100 text-foreground dark:bg-[hsl(220,16%,14%)];
   counter-reset: line;
   box-decoration-break: clone;
 }
@@ -319,11 +319,11 @@ input[type="email"] {
 /* Dual-theme token color switching via Shiki CSS variables */
 code[data-theme*=' '],
 code[data-theme*=' '] span {
-  color: var(--shiki-light);
+  color: var(--shiki-light, var(--foreground));
 }
 .dark code[data-theme*=' '],
 .dark code[data-theme*=' '] span {
-  color: var(--shiki-dark);
+  color: var(--shiki-dark, var(--foreground));
 }
 [data-rehype-pretty-code-figure] .line {
   @apply py-1;

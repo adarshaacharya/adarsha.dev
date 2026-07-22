@@ -14,6 +14,7 @@ import { CodeBlock } from "./blog/code-block";
 import { CollapsibleSection } from "./blog/collapsible-section";
 import { DecisionOption, DecisionSplit } from "./blog/decision-split";
 import { FileTree } from "./blog/file-tree";
+import { FlowStep, FlowSteps, FlowStepsCompare } from "./blog/flow-steps";
 import { MappingRow, MappingTable } from "./blog/mapping-table";
 import { Step, Steps } from "./blog/steps";
 import { Takeaway, Takeaways } from "./blog/takeaways";
@@ -66,6 +67,9 @@ const components = {
   DecisionOption,
   DecisionSplit,
   FileTree,
+  FlowStep,
+  FlowSteps,
+  FlowStepsCompare,
   MappingRow,
   MappingTable,
   Output,
