@@ -1,7 +1,7 @@
 ---
 title: "MCP Over 10,000 Tools: The Case for Code Mode"
 summary: "At 10,000 tools, MCP catalogs eat your context before the task even starts. Here's where lazy loading stops helping, and how Code Mode runs the workflow in a sandbox instead."
-publishedAt: 2026-07-22
+publishedAt: 2026-07-23
 ---
 
 > "Just expose another tool."
@@ -12,13 +12,13 @@ A tool-calling agent receives a list of functions, each with a name, a descripti
 
 The loop looks like this:
 
-<FlowSteps loop>
-  <FlowStep actor="Model">chooses a tool</FlowStep>
-  <FlowStep actor="Tool">runs</FlowStep>
-  <FlowStep actor="Host">result enters the conversation</FlowStep>
-  <FlowStep actor="Model">reads the result</FlowStep>
-  <FlowStep actor="Model">chooses another tool</FlowStep>
-</FlowSteps>
+<Loop>
+  <LoopStep actor="Model">chooses a tool</LoopStep>
+  <LoopStep actor="Tool">runs</LoopStep>
+  <LoopStep actor="Host">result enters the conversation</LoopStep>
+  <LoopStep actor="Model">reads the result</LoopStep>
+  <LoopStep actor="Model">chooses another tool</LoopStep>
+</Loop>
 
 The problem begins when we expose hundreds or even thousands of tools to the model. Every tool comes with a name, a description, and an input schema. If the client loads the full catalog up front, those definitions take up context before the task begins.
 
@@ -28,7 +28,7 @@ Modern models are good at writing code, but conventional tool calling makes litt
 
 Code Mode lets the model write that program directly. In an MCP setup, one common design exposes an `execute` tool that accepts a short TypeScript or Python program. A sandbox runs the program against approved capabilities and returns a compact result. MCP still connects the agent to the underlying services, while the sandbox handles the orchestration and intermediate data.
 
-One point causes most of the confusion around Code Mode, so it is worth stating early. The model does not write the tools. Engineers still implement each capability, with its authentication and its API calls, exactly as they would for an ordinary tool. The model only writes the glue: the loop, the filter, and the calls to those pre-built functions. Code Mode changes who runs the orchestration, not who builds the tools.
+One point causes most of the confusion around Code Mode, so it is worth stating early. The model does not write the tools. Developers still implement each capability, with its authentication and its API calls, exactly as they would for an ordinary tool. The model only writes the glue: the loop, the filter, and the calls to those pre-built functions. Code Mode changes who runs the orchestration, not who builds the tools.
 
 ## What the model receives when you add a tool
 
@@ -141,7 +141,7 @@ Consider this request:
 
 > Find my open pull requests whose CI is failing, and return each one with the checks that failed.
 
-The agent loads type definitions for two capabilities. These are the function signatures only. The bodies, including authentication and the actual network calls, are already written and secured by engineers. The model reads these types the way you read a library's documentation before calling it.
+The agent loads type definitions for two capabilities. These are the function signatures only. The bodies, including authentication and the actual network calls, are already written and secured by developers. The model reads these types the way you read a library's documentation before calling it.
 
 ```typescript
 declare const github: {
@@ -185,26 +185,28 @@ return checked
   }))
 ```
 
+*The program above is exactly what the model would write for this request: it is the kind of short, disposable script an agent generates and runs once, not a function a person checks in.*
+
 The program still makes the same backend requests. The full check lists, the passing checks, and the pull requests with green CI all stay inside the sandbox. The model receives only the failing pull requests and the names of the checks that failed.
 
-<FlowStepsCompare labels={["One tool at a time", "Code Mode"]}>
-  <FlowSteps>
-    <FlowStep actor="Model">lists open pull requests</FlowStep>
-    <FlowStep actor="Model">reads every pull request</FlowStep>
-    <FlowStep actor="Model">fetches checks for each one</FlowStep>
-    <FlowStep actor="Model">reads every check result</FlowStep>
-    <FlowStep actor="Model">filters to the failing ones</FlowStep>
-    <FlowStep actor="Model">writes the answer</FlowStep>
-  </FlowSteps>
-  <FlowSteps>
-    <FlowStep actor="Model">discovers two capabilities</FlowStep>
-    <FlowStep actor="Model">writes one program</FlowStep>
-    <FlowStep actor="Sandbox">fetches checks for every PR</FlowStep>
-    <FlowStep actor="Sandbox">filters to the failing ones</FlowStep>
-    <FlowStep actor="Model">receives only failing PRs</FlowStep>
-    <FlowStep actor="Model">writes the answer</FlowStep>
-  </FlowSteps>
-</FlowStepsCompare>
+<WorkflowCompare labels={["One tool at a time", "Code Mode"]}>
+  <Workflow>
+    <WorkflowStep actor="Model">lists open pull requests</WorkflowStep>
+    <WorkflowStep actor="Model">reads every pull request</WorkflowStep>
+    <WorkflowStep actor="Model">fetches checks for each one</WorkflowStep>
+    <WorkflowStep actor="Model">reads every check result</WorkflowStep>
+    <WorkflowStep actor="Model">filters to the failing ones</WorkflowStep>
+    <WorkflowStep actor="Model">writes the answer</WorkflowStep>
+  </Workflow>
+  <Workflow>
+    <WorkflowStep actor="Model">discovers two capabilities</WorkflowStep>
+    <WorkflowStep actor="Model">writes one program</WorkflowStep>
+    <WorkflowStep actor="Sandbox">fetches checks for every PR</WorkflowStep>
+    <WorkflowStep actor="Sandbox">filters to the failing ones</WorkflowStep>
+    <WorkflowStep actor="Model">receives only failing PRs</WorkflowStep>
+    <WorkflowStep actor="Model">writes the answer</WorkflowStep>
+  </Workflow>
+</WorkflowCompare>
 
 Put numbers on it. Say you have 30 open pull requests. One tool at a time, that is 1 call to list them, then 1 check lookup per pull request, so 31 tool calls. Each one is a separate model turn: the model waits for the result, reads it into a context that keeps growing, and only then decides the next call. Code Mode runs the same 31 backend requests as a plain loop inside the sandbox. The model writes the program once and reads the result once, so it wakes up twice instead of 31 times.
 
@@ -212,9 +214,9 @@ Code Mode does not eliminate backend requests. The system still has to ask GitHu
 
 Anthropic calls this [programmatic tool calling](https://platform.claude.com/docs/en/agents-and-tools/tool-use/programmatic-tool-calling). In its published agentic-search evaluations, programmatic calls improved performance by an average of 11 percent and used 24 percent fewer input tokens. Those numbers come from specific benchmarks, but they show the effect of processing intermediate data before the next inference.
 
-## Engineers build the tools; the model writes the workflow
+## Developers build the tools; the model writes the workflow
 
-This division is worth restating, because it is the part most people get wrong. Engineers provide `github.getChecks()`, its type definition, and its authorization rules. The model does not receive an API token or guess an internal endpoint. It writes a short program against the function the host provides, and that program is thrown away after the request. Nothing the model wrote becomes a permanent tool.
+This division is worth restating, because it is the part most people get wrong. Developers provide `github.getChecks()`, its type definition, and its authorization rules. The model does not receive an API token or guess an internal endpoint. It writes a short program against the function the host provides, and that program is thrown away after the request. Nothing the model wrote becomes a permanent tool.
 
 The host decides which capabilities the model can access and enforces policy on every call. The model chooses how to combine those capabilities for the request. The sandbox handles the resulting control flow and data processing.
 
@@ -237,19 +239,19 @@ gh issue list --repo acme/checkout --state open --json number,labels,author \
 
 With a shell, the model can complete multi-step repository work without a separate tool definition for every command. It can inspect commands, chain them, and filter their output before returning a result.
 
-You may have seen the same pattern when using a coding agent like Claude, Cursor, or Codex with a database. If `psql` or `sqlite3` is available, the agent can inspect the schema, write the SQL needed for the current question, run it, and check the result. It does not need a separate tool such as `count_failed_orders` or `list_customers_with_overdue_invoices` for every possible query.
+The same pattern shows up with databases. Ask a coding agent like Claude, Cursor, or Codex to read something from a database, and it will not wait for a dedicated tool for that question. It will read the connection details straight out of the environment, such as `DATABASE_URL` or `PGHOST`, and use them without being told the connection string. If `psql` or `sqlite3` is on the machine, it inspects the schema, writes the SQL the question needs, runs it, and reads the result. It does not need a separate tool such as `count_flaky_tests` or `list_authors_with_broken_builds` for every possible query.
 
 ```sql
 select
-  customer_id,
-  count(*) as failed_orders,
-  max(created_at) as latest_failure
-from orders
+  author,
+  count(*) as failed_runs,
+  max(started_at) as latest_failure
+from ci_runs
 where status = 'failed'
-  and created_at >= current_date - interval '7 days'
-group by customer_id
+  and started_at >= current_date - interval '7 days'
+group by author
 having count(*) >= 3
-order by failed_orders desc;
+order by failed_runs desc;
 ```
 
 This follows the same execution-layer pattern as Code Mode. The model generates a task-specific query, the database performs the filtering and aggregation, and the model receives the result. If the agent runs the query through a shell command that connects directly to the database, MCP is not involved. It is Code Mode-like execution, not Code Mode over MCP. It becomes Code Mode over MCP when the generated program reaches the database through MCP-backed functions inside the sandbox.
@@ -281,7 +283,7 @@ The model produces code as untrusted text. Do not pass it to `eval()`, `new Func
 
 A prompt cannot prevent the program from reading files, making network calls, accessing secrets, or running forever when the runtime permits those actions.
 
-The sandbox can use an isolate, a WebAssembly runtime, a separate process, or a container. The correct choice depends on the threat model. In every case, the program should receive only the capabilities required for the task.
+A few things can act as the sandbox: an isolate, WebAssembly, a separate process, or a container. The faster ones isolate less. Pick based on how much you trust the code and how often it runs. Either way, give the program only the capabilities it needs for the task, nothing more.
 
 <BlogDiagram
   title="The sandbox receives functions, not credentials"
@@ -353,7 +355,9 @@ A general code interpreter lets the model write arbitrary code from scratch, inc
   </DecisionOption>
 </DecisionSplit>
 
-That last condition is easy to miss. Code Mode works when the whole plan can be written before anything runs, since the model can specify every fetch, join, and filter upfront. It does not work as well when the model needs to read an intermediate result and decide what to do next by judgment, not by a fixed rule, such as reading one file before deciding which file to open next. When that happens, the program either stops and hands control back to the model, which gives back the round trips Code Mode was supposed to save, or the model gets live capabilities inside the sandbox, which puts the same approval and authorization questions back in a place that is harder to audit.
+That condition is easy to miss. Code Mode works when the whole plan can be written before anything runs. It struggles when the model needs to look at a result and decide what to do next by judgment, not by a fixed rule, such as reading one file before deciding which file to open next.
+
+When that happens, you have two options, and neither is free. Stop the program and hand control back to the model: you lose the round trips Code Mode was supposed to save. Or give the model live capabilities inside the sandbox: now the same approval questions are back, just harder to audit.
 
 Code Mode can replace direct MCP calls at the model-facing layer. It does not replace authentication, schemas, authorization, retries, or the connection to the underlying service. MCP can continue to provide that connection beneath the sandbox.
 
@@ -379,7 +383,7 @@ Direct tool calling is still simpler for one clear operation. Code Mode is usefu
     An execution layer can chain calls and filter intermediate results without another model turn after every operation.
   </Takeaway>
   <Takeaway title="The model writes orchestration">
-    Engineers still implement authenticated, permission-aware capabilities. The model writes a temporary program against that surface.
+    Developers still implement authenticated, permission-aware capabilities. The model writes a temporary program against that surface.
   </Takeaway>
   <Takeaway title="Sandboxing does not replace policy">
     Generated code needs isolation, while every exposed capability still needs validation, authorization, limits, and approval rules.
@@ -390,11 +394,6 @@ Direct tool calling is still simpler for one clear operation. Code Mode is usefu
 
 - [Cloudflare: Code Mode, give agents an entire API in 1,000 tokens](https://blog.cloudflare.com/code-mode-mcp/)
 - [Cloudflare: Code Mode MCP server patterns](https://developers.cloudflare.com/agents/model-context-protocol/codemode/)
-- [Anthropic: Tool search](https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool)
 - [Anthropic: Programmatic tool calling](https://platform.claude.com/docs/en/agents-and-tools/tool-use/programmatic-tool-calling)
-- [Anthropic: Code execution tool](https://platform.claude.com/docs/en/agents-and-tools/tool-use/code-execution-tool)
-- [Executor: A protocol-agnostic Code Mode gateway](https://executor.sh/)
 - [Rhys Sullivan: Thoughts on why MCP did not work and what comes next](https://x.com/RhysSullivan/status/2070311929038680262)
 - [Rhys Sullivan: Code Mode, what you need to know](https://x.com/RhysSullivan/status/2079019474053927105)
-- [Node.js: VM execution is not a security mechanism](https://nodejs.org/api/vm.html)
-- [OpenAI: Configure MCP servers in Codex](https://learn.chatgpt.com/docs/extend/mcp)
