@@ -105,10 +105,10 @@ export function ChatMascot({ open }: ChatMascotProps) {
         }}
         style={{ transformOrigin: "57px 17px" }}
       >
-        <circle cx="57" cy="17" r="11" fill="var(--foreground)" />
+        <circle cx="57" cy="17" r="11" fill="var(--primary-foreground)" />
         <path
           d="m53.5 13.5 7 7m0-7-7 7"
-          stroke="var(--background)"
+          stroke="var(--primary)"
           strokeWidth="2"
           strokeLinecap="round"
         />
@@ -123,11 +123,11 @@ export function ChatMascot({ open }: ChatMascotProps) {
         }}
         style={{ transformOrigin: "57px 17px" }}
       >
-        <circle cx="57" cy="17" r="11" fill="var(--foreground)" />
+        <circle cx="57" cy="17" r="11" fill="var(--primary-foreground)" />
         <path
           d="M52.8 13.8h8.4v6.1h-4.8l-2.7 2v-2h-.9v-6.1Z"
           fill="none"
-          stroke="var(--background)"
+          stroke="var(--primary)"
           strokeWidth="1.7"
           strokeLinejoin="round"
         />

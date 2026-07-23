@@ -1,0 +1,399 @@
+---
+title: "MCP Over 10,000 Tools: The Case for Code Mode"
+summary: "At 10,000 tools, MCP catalogs eat your context before the task even starts. Here's where lazy loading stops helping, and how Code Mode runs the workflow in a sandbox instead."
+publishedAt: 2026-07-23
+---
+
+> "Just expose another tool."
+
+For a small agent, that works.
+
+A tool-calling agent receives a list of functions, each with a name, a description, and an input schema. The model reads the list, picks a function, waits for the result, then decides what to call next.
+
+The loop looks like this:
+
+<Loop>
+  <LoopStep actor="Model">chooses a tool</LoopStep>
+  <LoopStep actor="Tool">runs</LoopStep>
+  <LoopStep actor="Host">result enters the conversation</LoopStep>
+  <LoopStep actor="Model">reads the result</LoopStep>
+  <LoopStep actor="Model">chooses another tool</LoopStep>
+</Loop>
+
+The problem begins when we expose hundreds or even thousands of tools to the model. Every tool comes with a name, a description, and an input schema. If the client loads the full catalog up front, those definitions take up context before the task begins.
+
+The context keeps growing after execution starts. Each result comes back to the model, which has to read it, carry the relevant values forward, and decide on the next call. A long workflow can spend more model turns moving IDs and records between tools than reasoning about the user's request.
+
+Modern models are good at writing code, but conventional tool calling makes little use of that ability. A model can write a loop, handle a failed request, run calls concurrently, and filter a result. With direct tool calls, it has to express the same plan one operation at a time, with another inference between each step.
+
+Code Mode lets the model write that program directly. In an MCP setup, one common design exposes an `execute` tool that accepts a short TypeScript or Python program. A sandbox runs the program against approved capabilities and returns a compact result. MCP still connects the agent to the underlying services, while the sandbox handles the orchestration and intermediate data.
+
+One point causes most of the confusion around Code Mode, so it is worth stating early. The model does not write the tools. Developers still implement each capability, with its authentication and its API calls, exactly as they would for an ordinary tool. The model only writes the glue: the loop, the filter, and the calls to those pre-built functions. Code Mode changes who runs the orchestration, not who builds the tools.
+
+## What the model receives when you add a tool
+
+A tool-capable model does not receive an API client. It receives text describing a callable function, including the arguments the host will accept.
+
+```json
+{
+  "name": "list_pull_requests",
+  "description": "List pull requests by state and author",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "state": { "type": "string" },
+      "author": { "type": "array", "items": { "type": "string" } }
+    },
+    "required": ["state"]
+  }
+}
+```
+
+The model reads the definition and emits a structured call. Application code validates the arguments, checks authorization, and sends the request. A GitHub integration may define separate tools for pull requests, issues, comments, reviews, checks, and releases. Connecting deployment or incident tooling adds another set of definitions.
+
+MCP did not require clients to place the entire catalog in the prompt. That is a client design choice. The [MCP architecture documentation](https://modelcontextprotocol.io/docs/learn/architecture) defines how clients and servers exchange context and invoke tools, but it leaves context management to the host application.
+
+<BlogDiagram
+  title="The ordinary tool loop"
+  description="Schemas enter before the first decision. Raw results return to the model before every subsequent call."
+>
+{`flowchart LR
+  S[Tool names, descriptions, schemas] --> M1[Model step 1]
+  U[User request] --> M1
+  M1 --> C1[Tool call]
+  C1 --> R1[Raw result]
+  R1 --> M2[Model step 2]
+  S --> M2
+  M2 --> C2[Tool call]
+  C2 --> R2[Raw result]
+  R2 --> M3[Model step 3]
+  S --> M3`}
+</BlogDiagram>
+
+## How tool catalogs consume context
+
+Anthropic documents one example in its [tool search documentation](https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool). A setup with GitHub, Slack, Sentry, Grafana, and Splunk can spend about 55,000 input tokens on tool definitions before the model begins the task. Anthropic reports that loading three to five relevant tools on demand often reduces that cost by more than 85 percent.
+
+Cloudflare provides a larger example. Its API has more than 2,500 endpoints. Cloudflare calculated that converting the complete API into a flat MCP tool catalog would require roughly 1.17 million tokens. Its alternative MCP interface starts with `search` and `execute`, which use roughly 1,000 tokens. The company explains the calculation in its [implementation write-up](https://blog.cloudflare.com/code-mode-mcp/).
+
+<Callout variant="warning" title="One tool call does not cost a million tokens">
+The 1.17 million figure describes a hypothetical schema for Cloudflare's complete API. It is not the cost of one normal MCP call, and it is not representative of every MCP server.
+</Callout>
+
+Prompt caching can reduce the price of repeatedly sending stable schemas. It does not remove those schemas from the context window. It also does not help the model choose among thousands of similarly named operations.
+
+Progressive discovery addresses the schema cost. The host keeps the complete catalog outside the prompt. The model searches the catalog and loads only the definitions needed for the current task.
+
+## Lazy loading does not solve orchestration
+
+Suppose the agent discovers the two operations it needs:
+
+```typescript
+github.listMyPullRequests(...)
+github.getChecks(...)
+```
+
+A `search_tools` function can load these two schemas instead of the full catalog. The schema cost falls, but the workflow is unchanged. The agent still has to make the calls.
+
+It lists open pull requests. The result returns to the model. For each pull request, it fetches the check results. Those records return to the conversation. The model tracks which checks belong to which pull request and drops the ones where every check is passing.
+
+These steps are deterministic. They do not need another model inference after every network request.
+
+Discovery tells the model which functions are available. It does not run a multi-step workflow. An execution layer can combine those calls and process their results before the model runs again.
+
+## Execute the workflow in a sandbox
+
+Code Mode exposes a program runner to the model. It can execute TypeScript, Python, restricted Bash, or another scripting language inside a controlled environment. The runner receives approved functions, not raw credentials or unrestricted access to the host.
+
+The model writes a short program with the control flow needed for the task. The sandbox runs it and sends only its return value to the next model turn.
+
+<BlogDiagram
+  title="The Code Mode loop"
+  description="The model loads relevant types, writes one program, and receives a filtered result."
+>
+{`flowchart LR
+  U[User request] --> D[Search capability catalog]
+  D --> T[Load relevant types]
+  T --> M[Model writes program]
+  M --> X[Sandbox executes]
+  X --> C[Approved capabilities]
+  C --> X
+  X --> F[Join, sort, and filter]
+  F --> R[Compact result]
+  R --> A[Model explains answer]`}
+</BlogDiagram>
+
+Code Mode over MCP can expose a small surface such as:
+
+```text
+search(query)
+getSchemas(names)  // optional inspection step
+execute(program)
+```
+
+The exact interface varies. Cloudflare exposes `search` and `execute`. Other implementations add a schema inspection tool such as `getSchemas`. In both cases, the model is still using MCP. It sends a program through `execute` instead of making one low-level call per model turn. A typed SDK inside the sandbox provides the selected operations.
+
+The agent host can provide the same interface without putting `execute` in an MCP server. Its sandbox may combine MCP tools with REST APIs, GraphQL, CLIs, or internal functions. Code Mode does not require a specific transport.
+
+## A complete example: finding failing pull requests
+
+Consider this request:
+
+> Find my open pull requests whose CI is failing, and return each one with the checks that failed.
+
+The agent loads type definitions for two capabilities. These are the function signatures only. The bodies, including authentication and the actual network calls, are already written and secured by developers. The model reads these types the way you read a library's documentation before calling it.
+
+```typescript
+declare const github: {
+  listMyPullRequests(input: {
+    state: "open" | "closed"
+  }): Promise<Array<{
+    number: number
+    title: string
+    author: string
+  }>>
+
+  getChecks(input: {
+    prNumber: number
+  }): Promise<Array<{
+    name: string
+    status: "passed" | "failed" | "pending"
+  }>>
+}
+```
+
+The agent never sees an API token or a network client. It writes only the code that calls those functions and shapes their results:
+
+```typescript
+const prs = await github.listMyPullRequests({ state: "open" })
+
+const checked = await Promise.all(
+  prs.map(async (pr) => {
+    const checks = await github.getChecks({ prNumber: pr.number })
+    return { pr, checks }
+  }),
+)
+
+return checked
+  .filter(({ checks }) => checks.some((check) => check.status === "failed"))
+  .map(({ pr, checks }) => ({
+    number: pr.number,
+    title: pr.title,
+    failing: checks
+      .filter((check) => check.status === "failed")
+      .map((check) => check.name),
+  }))
+```
+
+*The program above is exactly what the model would write for this request: it is the kind of short, disposable script an agent generates and runs once, not a function a person checks in.*
+
+The program still makes the same backend requests. The full check lists, the passing checks, and the pull requests with green CI all stay inside the sandbox. The model receives only the failing pull requests and the names of the checks that failed.
+
+<WorkflowCompare labels={["One tool at a time", "Code Mode"]}>
+  <Workflow>
+    <WorkflowStep actor="Model">lists open pull requests</WorkflowStep>
+    <WorkflowStep actor="Model">reads every pull request</WorkflowStep>
+    <WorkflowStep actor="Model">fetches checks for each one</WorkflowStep>
+    <WorkflowStep actor="Model">reads every check result</WorkflowStep>
+    <WorkflowStep actor="Model">filters to the failing ones</WorkflowStep>
+    <WorkflowStep actor="Model">writes the answer</WorkflowStep>
+  </Workflow>
+  <Workflow>
+    <WorkflowStep actor="Model">discovers two capabilities</WorkflowStep>
+    <WorkflowStep actor="Model">writes one program</WorkflowStep>
+    <WorkflowStep actor="Sandbox">fetches checks for every PR</WorkflowStep>
+    <WorkflowStep actor="Sandbox">filters to the failing ones</WorkflowStep>
+    <WorkflowStep actor="Model">receives only failing PRs</WorkflowStep>
+    <WorkflowStep actor="Model">writes the answer</WorkflowStep>
+  </Workflow>
+</WorkflowCompare>
+
+Put numbers on it. Say you have 30 open pull requests. One tool at a time, that is 1 call to list them, then 1 check lookup per pull request, so 31 tool calls. Each one is a separate model turn: the model waits for the result, reads it into a context that keeps growing, and only then decides the next call. Code Mode runs the same 31 backend requests as a plain loop inside the sandbox. The model writes the program once and reads the result once, so it wakes up twice instead of 31 times.
+
+Code Mode does not eliminate backend requests. The system still has to ask GitHub about every pull request. What changes is the model's involvement: fewer round trips, and none of the passing checks or green pull requests passing through its context on the way to the answer.
+
+Anthropic calls this [programmatic tool calling](https://platform.claude.com/docs/en/agents-and-tools/tool-use/programmatic-tool-calling). In its published agentic-search evaluations, programmatic calls improved performance by an average of 11 percent and used 24 percent fewer input tokens. Those numbers come from specific benchmarks, but they show the effect of processing intermediate data before the next inference.
+
+## Developers build the tools; the model writes the workflow
+
+This division is worth restating, because it is the part most people get wrong. Developers provide `github.getChecks()`, its type definition, and its authorization rules. The model does not receive an API token or guess an internal endpoint. It writes a short program against the function the host provides, and that program is thrown away after the request. Nothing the model wrote becomes a permanent tool.
+
+The host decides which capabilities the model can access and enforces policy on every call. The model chooses how to combine those capabilities for the request. The sandbox handles the resulting control flow and data processing.
+
+The SDK should use the concepts the task requires, such as pull requests, checks, and reviews. The model should not need to understand internal table names or undocumented request sequences.
+
+The SDK can also change with the task. A read-only CI review should not receive branch-merging or PR-closing functions. A later remediation step may add one narrow write capability after the user approves the plan.
+
+## Bash provides the same execution pattern
+
+Give an agent Bash and it can inspect `--help`, call CLIs, connect commands with pipes, keep temporary files, and filter output with tools such as `jq`. A shell is presented as one tool, but it opens access to every command installed in the environment.
+
+This is not a hypothetical. Coding agents already default to it. Claude Code will reach for `grep` or `sed` over its own built-in search and edit tools often enough that people write hooks just to stop it. The habit comes from training data thick with shell one-liners, not from an instruction to behave this way. Code Mode does not teach a model a new trick. It puts a sandbox and a policy around something the model already wants to do on its own.
+
+```bash
+gh issue list --repo acme/checkout --state open --json number,labels,author \
+  | jq '[.[]
+      | select(.labels | any(.name == "checkout"))
+      | {number, author: .author.login}]'
+```
+
+With a shell, the model can complete multi-step repository work without a separate tool definition for every command. It can inspect commands, chain them, and filter their output before returning a result.
+
+The same pattern shows up with databases. Ask a coding agent like Claude, Cursor, or Codex to read something from a database, and it will not wait for a dedicated tool for that question. It will read the connection details straight out of the environment, such as `DATABASE_URL` or `PGHOST`, and use them without being told the connection string. If `psql` or `sqlite3` is on the machine, it inspects the schema, writes the SQL the question needs, runs it, and reads the result. It does not need a separate tool such as `count_flaky_tests` or `list_authors_with_broken_builds` for every possible query.
+
+```sql
+select
+  author,
+  count(*) as failed_runs,
+  max(started_at) as latest_failure
+from ci_runs
+where status = 'failed'
+  and started_at >= current_date - interval '7 days'
+group by author
+having count(*) >= 3
+order by failed_runs desc;
+```
+
+This follows the same execution-layer pattern as Code Mode. The model generates a task-specific query, the database performs the filtering and aggregation, and the model receives the result. If the agent runs the query through a shell command that connects directly to the database, MCP is not involved. It is Code Mode-like execution, not Code Mode over MCP. It becomes Code Mode over MCP when the generated program reaches the database through MCP-backed functions inside the sandbox.
+
+Running Bash on the host can expose files, processes, environment variables, credentials, and unrestricted networking. Shell quoting is also fragile, and structured objects often have to pass through JSON or text streams.
+
+[just-bash](https://github.com/vercel-labs/just-bash) provides a narrower environment. It is a Bash interpreter written in TypeScript with a virtual filesystem and no network access by default. The host chooses which commands, files, and network routes are available, so the interpreter does not automatically inherit access from the host machine.
+
+<Callout variant="warning" title="A virtual shell is not a complete security boundary">
+The just-bash project notes that its core interpreter does not provide VM isolation. Workloads that execute arbitrary binaries or need a stronger boundary still require a hardened sandbox.
+</Callout>
+
+## Choosing Bash vs. TypeScript
+
+| Concern | Bash | TypeScript Code Mode |
+| --- | --- | --- |
+| Discovery | Command names and help text | Searchable functions and declarations |
+| Values between calls | Text, JSON, files, exit codes | Objects and promises |
+| Composition | Pipes, loops, redirection | Functions, loops, array methods |
+| Concurrency | Shell jobs and process control | `Promise.all` and async functions |
+| Capability boundary | Installed commands | Functions injected by the host |
+| Strongest use case | Files, CLIs, builds, tests | APIs, data joins, product workflows |
+
+Python can provide the same execution model as TypeScript. The language is an implementation choice. What matters is that the runtime processes intermediate values without sending each one back to the model.
+
+## Generated code needs a real sandbox
+
+The model produces code as untrusted text. Do not pass it to `eval()`, `new Function()`, or the main application process.
+
+A prompt cannot prevent the program from reading files, making network calls, accessing secrets, or running forever when the runtime permits those actions.
+
+A few things can act as the sandbox: an isolate, WebAssembly, a separate process, or a container. The faster ones isolate less. Pick based on how much you trust the code and how often it runs. Either way, give the program only the capabilities it needs for the task, nothing more.
+
+<BlogDiagram
+  title="The sandbox receives functions, not credentials"
+  description="A generated function call crosses into trusted host code, where policy and authentication are enforced."
+>
+{`sequenceDiagram
+  participant M as Model
+  participant H as Agent host
+  participant S as Sandbox
+  participant P as Trusted capability broker
+  participant A as MCP server or API
+
+  M->>H: Generated program
+  H->>S: Start execution with approved functions
+  S->>P: github.getChecks(args)
+  P->>P: Validate args, identity, permission, limits
+  P->>A: Authenticated request
+  A-->>P: Raw result
+  P-->>S: Approved data
+  S->>S: Join and filter
+  S-->>H: Bounded return value
+  H-->>M: Compact result`}
+</BlogDiagram>
+
+The sandbox receives a proxy for `github.getChecks()`. The credential stays in the trusted broker. Every call crosses a boundary where the host can validate arguments, check the user's permissions, apply a rate limit, and record an audit event.
+
+At minimum, the runtime needs:
+
+- limits on execution time, memory, internal calls, and output size
+- no ambient credentials or unrestricted network client
+- runtime validation and authorization inside capability handlers
+- approval gates for consequential writes
+- an execution trace that records each capability call
+
+Isolation and authorization are separate controls. A sandbox may block access to `/etc/passwd` while still allowing the program to call `github.mergePullRequest()` 10,000 times. Isolation limits what the code can reach. Authorization determines whether each requested action is allowed.
+
+Node.js makes this distinction explicit: [`node:vm` is not a security mechanism](https://nodejs.org/api/vm.html). A separate JavaScript global object is not equivalent to a hardened boundary for untrusted code.
+
+## Where MCP fits
+
+MCP connects a client to tools and context. Code Mode runs model-generated orchestration. A system can use them together or independently.
+
+| Arrangement | What happens |
+| --- | --- |
+| Code Mode over MCP | The model sends a program through an MCP `execute` tool or calls MCP-backed functions inside a host sandbox. |
+| Code Mode without MCP | The sandbox calls functions backed directly by APIs, SDKs, GraphQL, CLIs, or internal code. |
+| MCP without Code Mode | The model invokes individual MCP tools through the ordinary tool loop. |
+
+The host can choose the execution path for each request. Codex's [MCP documentation](https://learn.chatgpt.com/docs/extend/mcp) describes direct server connections, tool allow lists, and per-tool approval policies. Its [changelog](https://learn.chatgpt.com/docs/changelog) also includes Code Mode work and shared MCP types. Reading GitHub issue 123 may need one direct `get_issue` call. Searching many issues and joining them with another system is a better fit for a program. Both paths can use the same MCP integration.
+
+<Callout variant="tip" title="Code Mode is not a code interpreter">
+A general code interpreter lets the model write arbitrary code from scratch, including logic that talks to the outside world however it likes. Code Mode is narrower. The model still writes and runs code, but only against the typed functions the host injects. It composes pre-built capabilities; it does not implement new ones or reach past the sandbox. If you pictured the model authoring its own tools, that is the code-interpreter model, not Code Mode over MCP.
+</Callout>
+
+<DecisionSplit note="Choose the execution path per task, not per integration.">
+  <DecisionOption
+    label="Call the tool directly"
+    headline="The task needs one clear operation."
+  >
+    Direct calls are compact, easy to approve, and easy to trace. A sandbox adds little value for a single lookup or mutation.
+  </DecisionOption>
+  <DecisionOption
+    side="right"
+    tone="primary"
+    label="Use Code Mode"
+    headline="The task needs a small program whose steps do not depend on judgment in between."
+  >
+    Code Mode is a better fit for loops, dependent calls, concurrency, joins, calculations, or large intermediate results, as long as the control flow can be decided upfront.
+  </DecisionOption>
+</DecisionSplit>
+
+That condition is easy to miss. Code Mode works when the whole plan can be written before anything runs. It struggles when the model needs to look at a result and decide what to do next by judgment, not by a fixed rule, such as reading one file before deciding which file to open next.
+
+When that happens, you have two options, and neither is free. Stop the program and hand control back to the model: you lose the round trips Code Mode was supposed to save. Or give the model live capabilities inside the sandbox: now the same approval questions are back, just harder to audit.
+
+Code Mode can replace direct MCP calls at the model-facing layer. It does not replace authentication, schemas, authorization, retries, or the connection to the underlying service. MCP can continue to provide that connection beneath the sandbox.
+
+It also changes what a human can approve. A direct tool call can get a per-call approval prompt before it runs. A program that makes twenty calls inside a sandbox does not offer twenty checkpoints. Any approval has to happen before the program runs or after it finishes, not in between, so a consequential action buried in step twelve of thirty gets the same review as the harmless steps around it unless the host adds its own gate for that specific call.
+
+The sandbox itself is not free. Starting an isolate, container, or subprocess per request adds latency and infrastructure that a single direct tool call does not need. For one clear operation, that cost buys little.
+
+## Code Mode adds execution after discovery
+
+Moving 10,000 tool definitions into TypeScript does not solve the context problem. The host still needs progressive discovery so the model loads only the relevant capabilities. The runtime also needs to filter output before it returns to the conversation.
+
+`search` and `call` help the model select tools, but they leave orchestration in the model loop. Code Mode lets the model load a small set of operations, write the task-specific control flow, and return only the data that requires another inference.
+
+Bash, TypeScript, and Python can all provide this execution layer. MCP can supply the functions underneath it.
+
+Direct tool calling is still simpler for one clear operation. Code Mode is useful when a task requires loops, dependent calls, concurrent requests, or large intermediate results. In those cases, the sandbox runs the workflow and the model handles the parts that require reasoning.
+
+<Takeaways>
+  <Takeaway title="Large catalogs need progressive discovery">
+    Keep the complete catalog outside the prompt and load only the types relevant to the current request.
+  </Takeaway>
+  <Takeaway title="Lazy loading is only half the design">
+    An execution layer can chain calls and filter intermediate results without another model turn after every operation.
+  </Takeaway>
+  <Takeaway title="The model writes orchestration">
+    Developers still implement authenticated, permission-aware capabilities. The model writes a temporary program against that surface.
+  </Takeaway>
+  <Takeaway title="Sandboxing does not replace policy">
+    Generated code needs isolation, while every exposed capability still needs validation, authorization, limits, and approval rules.
+  </Takeaway>
+</Takeaways>
+
+## References
+
+- [Cloudflare: Code Mode, give agents an entire API in 1,000 tokens](https://blog.cloudflare.com/code-mode-mcp/)
+- [Cloudflare: Code Mode MCP server patterns](https://developers.cloudflare.com/agents/model-context-protocol/codemode/)
+- [Anthropic: Programmatic tool calling](https://platform.claude.com/docs/en/agents-and-tools/tool-use/programmatic-tool-calling)
+- [Rhys Sullivan: Thoughts on why MCP did not work and what comes next](https://x.com/RhysSullivan/status/2070311929038680262)
+- [Rhys Sullivan: Code Mode, what you need to know](https://x.com/RhysSullivan/status/2079019474053927105)

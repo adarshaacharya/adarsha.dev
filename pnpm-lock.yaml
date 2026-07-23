@@ -145,8 +145,8 @@ dependencies:
     specifier: ^2.5.0
     version: 2.5.0(react-dom@19.2.4)(react@19.2.4)
   tailwind-merge:
-    specifier: ^1.14.0
-    version: 1.14.0
+    specifier: ^3.6.0
+    version: 3.6.0
   tw-animate-css:
     specifier: ^1.4.0
     version: 1.4.0
@@ -10775,10 +10775,6 @@ packages:
     engines: {node: '>=8.0.0'}
     os: [darwin, linux, win32, freebsd, openbsd, netbsd, sunos, android]
     hasBin: true
-    dev: false
-
-  /tailwind-merge@1.14.0:
-    resolution: {integrity: sha512-3mFKyCo/MBcgyOTlrY8T7odzZFx+w+qKSMAmdFzRvqBfLlSigU6TZnlFHK0lkMwj9Bj8OYU+9yW9lmGuS0QEnQ==}
     dev: false
 
   /tailwind-merge@3.6.0:
