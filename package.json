@@ -19,6 +19,7 @@
     "@ai-sdk/deepseek": "^3.0.5",
     "@ai-sdk/react": "4.0.15",
     "@giscus/react": "^2.4.0",
+    "@libsql/client": "^0.17.4",
     "@next/third-parties": "^16.0.0",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-separator": "^1.1.7",

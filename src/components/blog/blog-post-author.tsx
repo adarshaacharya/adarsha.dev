@@ -18,9 +18,7 @@ export function BlogPostAuthor() {
                 Need help turning this into production?
               </h2>
               <p className="max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-                I help teams ship full-stack TypeScript and AI features with
-                clean architecture, maintainable DX, and production-minded
-                delivery.
+              I help teams ship full-stack TypeScript apps with AI features.
               </p>
             </div>
 
