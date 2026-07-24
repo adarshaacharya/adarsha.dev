@@ -210,9 +210,9 @@ The program still makes the same backend requests. The full check lists, the pas
   </Workflow>
 </WorkflowCompare>
 
-Put numbers on it. Say you have 30 open pull requests. One tool at a time, that is 1 call to list them, then 1 check lookup per pull request, so 31 tool calls. Each one is a separate model turn: the model waits for the result, reads it into a context that keeps growing, and only then decides the next call. Code Mode runs the same 31 backend requests as a plain loop inside the sandbox. The model writes the program once and reads the result once, so it wakes up twice instead of 31 times.
+Say you have 30 open pull requests. The workflow needs one request to list them and up to 30 more to fetch their checks. Some agent runtimes can send those check requests in parallel, so this does not always mean 31 separate model turns. The results still come back through the agent loop and take up context, even though the model only cares about failures.
 
-Code Mode does not eliminate backend requests. The system still has to ask GitHub about every pull request. What changes is the model's involvement: fewer round trips, and no passing checks or green pull requests passing through its context on the way to the answer.
+Code Mode makes the same backend requests inside the sandbox. It removes passing checks and green pull requests there, then sends one short result back to the model. GitHub still does the same work. The model has much less to read.
 
 Anthropic calls this [programmatic tool calling](https://platform.claude.com/docs/en/agents-and-tools/tool-use/programmatic-tool-calling). In its published agentic-search evaluations, programmatic calls improved performance by an average of 11 percent and used 24 percent fewer input tokens. Those numbers come from specific benchmarks, but they show the effect of processing intermediate data before the next inference.
 
