@@ -45,6 +45,9 @@ dependencies:
   '@streamdown/mermaid':
     specifier: ^1.0.2
     version: 1.0.2(react@19.2.4)
+  '@tursodatabase/serverless':
+    specifier: ^1.3.1
+    version: 1.3.1
   '@types/node':
     specifier: 20.8.6
     version: 20.8.6
@@ -4184,6 +4187,10 @@ packages:
       fast-glob: 3.3.3
       minimatch: 10.2.5
       path-browserify: 1.0.1
+    dev: false
+
+  /@tursodatabase/serverless@1.3.1:
+    resolution: {integrity: sha512-z9ZG7vogknUKhMa/vHUZOnAdxdnpz/Najd5HfPI9yDgN1tkesTEk7tV9daUwY3cBPq7jzHYhgSe079Flll4Xvg==}
     dev: false
 
   /@tybys/wasm-util@0.10.1:
