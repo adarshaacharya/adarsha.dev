@@ -82,12 +82,12 @@ export default function Home() {
             />
           ))}
           <div className="w-px h-4 bg-border" />
-          <Button variant="outline" size="sm" asChild>
+          {/* <Button variant="outline" size="sm" asChild>
             <a href={LINKS.RESUME} target="_blank" rel="noopener noreferrer">
               <Download className="h-3.5 w-3.5 mr-1.5" />
               Resume
             </a>
-          </Button>
+          </Button> */}
           <Button size="sm" asChild>
             <Link href="/projects">
               Projects
