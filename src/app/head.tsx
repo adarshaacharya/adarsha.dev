@@ -1,6 +1,5 @@
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { ENV } from "@/lib/env";
-import Script from "next/script";
 import { GoogleAdsense } from "@/components/google-adsense";
 
 export default function Head() {
@@ -51,7 +50,7 @@ export default function Head() {
         name="google-adsense-account"
         content={`ca-pub-${ENV.ADSENSE_CLIENT_ID}`}
       />
-      {/* <GoogleAdsense pId={ENV.ADSENSE_CLIENT_ID} /> */}
+      <GoogleAdsense pId={ENV.ADSENSE_CLIENT_ID} />
     </>
   );
 }
