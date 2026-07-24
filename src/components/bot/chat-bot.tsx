@@ -136,7 +136,7 @@ export function ChatBot() {
             className={cn(
               "fixed z-50 transition-[inset,width,max-width] duration-300",
               isExpanded
-                ? "inset-x-4 bottom-24 top-[max(1rem,env(safe-area-inset-top))] mx-auto w-auto max-w-2xl sm:inset-x-auto sm:bottom-28 sm:left-1/2 sm:top-[max(1.5rem,env(safe-area-inset-top))] sm:w-[min(680px,calc(100vw-2rem))] sm:-translate-x-1/2"
+                ? "inset-x-4 bottom-24 top-[max(1rem,env(safe-area-inset-top))] mx-auto w-auto max-w-4xl sm:inset-x-auto sm:bottom-28 sm:left-1/2 sm:top-[max(1.5rem,env(safe-area-inset-top))] sm:w-[min(896px,calc(100vw-3rem))] sm:-translate-x-1/2"
                 : "bottom-24 right-4 w-[calc(100vw-2rem)] sm:right-8 sm:w-[420px]",
             )}
           >

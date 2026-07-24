@@ -54,7 +54,7 @@ export function ChatForm({
           <div
             className={cn(
               "relative",
-              isExpanded && "mx-auto w-full max-w-2xl",
+              isExpanded && "mx-auto w-full max-w-3xl",
             )}
           >
             <Textarea
