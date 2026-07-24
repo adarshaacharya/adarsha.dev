@@ -1,4 +1,4 @@
-import { createClient } from "@libsql/client";
+import { createClient } from "@tursodatabase/serverless/compat";
 
 function getTursoClient() {
   const url = process.env.TURSO_DATABASE_URL;
