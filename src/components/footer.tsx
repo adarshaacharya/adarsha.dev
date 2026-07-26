@@ -1,11 +1,20 @@
+"use client";
+
 import { LINKS } from "@/data/links";
 import { siteMetadata } from "@/data/siteMetadata";
 import { SOCIALS } from "@/data/socials";
 import { Separator } from "@/components/ui/separator";
 import { NewsletterForm } from "@/components/newsletter-form";
 import { SocialLink } from "./social-link";
+import { usePathname } from "next/navigation";
 
 export function Footer() {
+  const pathname = usePathname();
+
+  if (pathname === "/newsletter") {
+    return null;
+  }
+
   return (
     <footer className="mt-16 space-y-8 pb-8">
       <Separator />

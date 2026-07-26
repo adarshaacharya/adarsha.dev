@@ -113,6 +113,10 @@ export function ChatBot() {
 
   const isBusy = status === "submitted" || status === "streaming";
 
+  if (pathname === "/newsletter") {
+    return null;
+  }
+
   return (
     <>
       <AnimatePresence mode="wait">

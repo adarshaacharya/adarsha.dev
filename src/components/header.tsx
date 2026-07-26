@@ -21,6 +21,11 @@ const navItems = {
 
 export function Header() {
   let pathname = usePathname() || "/";
+
+  if (pathname === "/newsletter") {
+    return null;
+  }
+
   if (pathname.includes("/blog/")) {
     pathname = "/blog";
   }

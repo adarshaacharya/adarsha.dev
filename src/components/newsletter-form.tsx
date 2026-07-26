@@ -9,7 +9,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-export function NewsletterForm({ className }: { className?: string }) {
+type NewsletterFormProps = {
+  className?: string;
+  title?: string;
+  description?: string;
+};
+
+export function NewsletterForm({
+  className,
+  title = "Stay up to date",
+  description = "Get new articles in your inbox when I publish.",
+}: NewsletterFormProps) {
   const initialState: NewsletterFormState = { status: "idle" };
   const [state, formAction, isPending] = useActionState(
     subscribeToNewsletter,
@@ -20,10 +30,10 @@ export function NewsletterForm({ className }: { className?: string }) {
     <aside className={cn("not-prose max-w-md space-y-5", className)}>
       <div className="space-y-2">
         <h2 className="font-serif text-2xl tracking-tight text-foreground sm:text-3xl">
-          Stay up to date
+          {title}
         </h2>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          Get new articles in your inbox when I publish.
+          {description}
         </p>
       </div>
 
