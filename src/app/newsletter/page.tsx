@@ -5,7 +5,26 @@ import { NewsletterForm } from "@/components/newsletter-form";
 export const metadata: Metadata = {
   title: "Newsletter",
   description:
-    "Occasional notes on engineering, AI, and building on the web from Adarsha Acharya.",
+    "Occasional writing about TypeScript, AI, and building software from Adarsha Acharya.",
+  openGraph: {
+    title: "I write about building software.",
+    description:
+      "New articles and occasional notes from Adarsha Acharya.",
+    images: [
+      {
+        url: "/newsletter/og",
+        width: 1200,
+        height: 630,
+        alt: "Adarsha's newsletter: I write about building software.",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "I write about building software.",
+    description: "New articles and occasional notes from Adarsha Acharya.",
+    images: ["/newsletter/og"],
+  },
   robots: {
     index: false,
     follow: false,
@@ -28,34 +47,31 @@ export default function NewsletterPage() {
           </p>
 
           <div className="max-w-2xl py-14 lg:py-0">
-            <p className="mb-5 text-sm text-muted-foreground">
-              For people who build on the web.
-            </p>
+            <p className="mb-5 text-sm text-muted-foreground">Newsletter</p>
             <h1 className="text-balance font-serif text-5xl leading-[0.98] tracking-tight sm:text-7xl lg:text-8xl">
-              Useful notes for thoughtful builders.
+              I write about building software.
             </h1>
             <p className="mt-7 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
-              Occasional writing on TypeScript, AI, and the practical work of
-              shipping products—sent only when there’s something useful to say.
+              I send an email when I publish something new, usually about
+              TypeScript, AI, or the parts of product work that are harder to
+              fit into a post.
             </p>
           </div>
 
           <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
-            A quiet inbox, a sharper point of view, and no manufactured
-            urgency.
+            Usually a new article. Sometimes a note that did not become one.
           </p>
         </section>
 
         <section className="flex min-h-[46svh] items-center border-t border-border bg-muted/35 px-6 py-14 sm:px-10 lg:min-h-screen lg:border-l lg:border-t-0 lg:px-12">
           <div className="w-full max-w-md">
             <NewsletterForm
-              title="Get the next note"
-              description="New posts and useful ideas, delivered directly to you."
+              title="Want the next one?"
+              description="Leave your email and I will send it when it goes out."
             />
 
             <p className="mt-7 border-t border-border pt-5 text-sm leading-relaxed text-muted-foreground">
-              No spam. No schedule for the sake of a schedule. Unsubscribe
-              anytime.
+              No spam. You can unsubscribe whenever you want.
             </p>
           </div>
         </section>

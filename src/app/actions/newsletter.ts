@@ -24,7 +24,7 @@ export async function subscribeToNewsletter(
 
   try {
     await saveNewsletterSubscriber(result.data.email);
-    return { status: "success", message: "You’re subscribed — thank you!" };
+    return { status: "success", message: "You're on the list. Thanks." };
   } catch (error) {
     console.error("Newsletter subscription failed:", error);
     return {
