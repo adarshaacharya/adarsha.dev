@@ -52,35 +52,45 @@ export function NewsletterForm({
         </p>
       </div>
 
-      <form
-        className={cn(
-          "flex gap-3",
-          isLanding ? "items-end border-b border-border pb-1" : "gap-2",
-        )}
-        action={formAction}
-      >
-        <Input
-          type="email"
-          name="email"
-          autoComplete="email"
-          placeholder="you@example.com"
-          aria-label="Email address"
-          className={cn(
-            "min-w-0 flex-1",
-            isLanding &&
-              "h-10 rounded-none border-0 border-b border-transparent bg-transparent px-0 shadow-none focus-visible:ring-0",
-          )}
-          required
-          disabled={isPending}
-        />
-        <Button
-          type="submit"
-          className={cn("shrink-0", isLanding && "rounded-sm px-5")}
-          disabled={isPending}
-        >
-          {isPending ? "Subscribing…" : "Subscribe"}
-        </Button>
-      </form>
+      {isLanding ? (
+        <form className="space-y-5" action={formAction}>
+          <div className="border-b border-border">
+            <Input
+              type="email"
+              name="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              aria-label="Email address"
+              className="h-11 min-w-0 rounded-none border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
+              required
+              disabled={isPending}
+            />
+          </div>
+          <Button
+            type="submit"
+            className="h-10 w-full rounded-sm px-5"
+            disabled={isPending}
+          >
+            {isPending ? "Subscribing…" : "Subscribe"}
+          </Button>
+        </form>
+      ) : (
+        <form className="flex gap-2" action={formAction}>
+          <Input
+            type="email"
+            name="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            aria-label="Email address"
+            className="min-w-0 flex-1"
+            required
+            disabled={isPending}
+          />
+          <Button type="submit" className="shrink-0" disabled={isPending}>
+            {isPending ? "Subscribing…" : "Subscribe"}
+          </Button>
+        </form>
+      )}
       {state.message && (
         <p
           className={cn(

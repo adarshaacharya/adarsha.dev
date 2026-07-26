@@ -5,25 +5,24 @@ import { NewsletterForm } from "@/components/newsletter-form";
 export const metadata: Metadata = {
   title: "Newsletter",
   description:
-    "Occasional writing on TypeScript, AI, and the practical work of shipping products from Adarsha Acharya.",
+    "Occasional writing about TypeScript, AI, and building software from Adarsha Acharya.",
   openGraph: {
-    title: "Useful notes for thoughtful builders.",
+    title: "I write about building software.",
     description:
-      "Occasional writing on TypeScript, AI, and shipping products.",
+      "New articles and occasional notes from Adarsha Acharya.",
     images: [
       {
         url: "/newsletter/og",
         width: 1200,
         height: 630,
-        alt: "Adarsha's newsletter: Useful notes for thoughtful builders.",
+        alt: "Adarsha's newsletter: I write about building software.",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Useful notes for thoughtful builders.",
-    description:
-      "Occasional writing on TypeScript, AI, and shipping products.",
+    title: "I write about building software.",
+    description: "New articles and occasional notes from Adarsha Acharya.",
     images: ["/newsletter/og"],
   },
   robots: {
@@ -35,8 +34,8 @@ export const metadata: Metadata = {
 export default function NewsletterPage() {
   return (
     <article className="relative left-1/2 w-screen max-w-none -translate-x-1/2">
-      <div className="grid min-h-svh lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)] xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,460px)]">
-        <section className="flex min-h-svh flex-col px-6 py-8 sm:px-10 sm:py-10 lg:px-14 lg:py-12">
+      <div className="grid min-h-svh lg:grid-cols-[minmax(0,1fr)_minmax(400px,500px)] xl:grid-cols-[minmax(0,1fr)_minmax(480px,600px)]">
+        <section className="relative flex min-h-svh flex-col px-6 py-8 sm:px-10 sm:py-10 lg:px-16 lg:py-12">
           <p className="text-sm font-medium">
             <Link
               href="/"
@@ -47,38 +46,34 @@ export default function NewsletterPage() {
             <span className="text-muted-foreground">/ newsletter</span>
           </p>
 
-          <div className="flex flex-1 flex-col justify-center py-10 lg:py-16">
+          <div className="flex flex-1 items-center pt-10 lg:pt-0">
             <div className="max-w-2xl">
-              <p className="mb-4 text-sm text-muted-foreground">
-                For people who build on the web.
-              </p>
-              <h1 className="text-balance font-serif text-4xl leading-[1.02] tracking-[-0.03em] sm:text-5xl lg:text-6xl xl:text-[4.25rem]">
-                Useful notes for thoughtful builders.
+              <p className="mb-4 text-sm text-muted-foreground">Newsletter</p>
+              <h1 className="text-balance font-serif text-4xl leading-[1.05] tracking-[-0.03em] sm:text-5xl lg:text-[3.5rem] lg:leading-[1.02]">
+                I write about building software.
               </h1>
               <p className="mt-6 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
-                Occasional writing on TypeScript, AI, and the practical work of
-                shipping products—sent only when there&apos;s something useful to
-                say.
+                I send an email when I publish something new, usually about
+                TypeScript, AI, or the parts of product work that are harder to
+                fit into a post.
+              </p>
+              <p className="mt-10 max-w-md text-sm leading-relaxed text-muted-foreground lg:mt-12">
+                Usually a new article. Sometimes a note that did not become one.
               </p>
             </div>
           </div>
-
-          <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
-            A quiet inbox, a sharper point of view, and no manufactured urgency.
-          </p>
         </section>
 
-        <section className="flex min-h-[min(100%,28rem)] items-center border-t border-border bg-muted/25 px-6 py-12 sm:px-10 lg:min-h-svh lg:border-t-0 lg:border-l lg:px-12 xl:px-14">
-          <div className="w-full max-w-sm">
+        <section className="flex min-h-[min(100%,32rem)] items-center border-t border-border bg-muted/50 px-6 py-14 sm:px-10 lg:min-h-svh lg:border-t-0 lg:border-l lg:px-12 xl:px-16">
+          <div className="w-full max-w-sm lg:max-w-lg lg:py-8">
             <NewsletterForm
               variant="landing"
-              title="Get the next note"
-              description="New posts and useful ideas, delivered directly to you."
+              title="Want the next one?"
+              description="Leave your email and I will send it when it goes out."
             />
 
             <p className="mt-8 text-sm leading-relaxed text-muted-foreground">
-              No spam. No schedule for the sake of a schedule. Unsubscribe
-              anytime.
+              No spam. You can unsubscribe whenever you want.
             </p>
           </div>
         </section>
