@@ -5,24 +5,25 @@ import { NewsletterForm } from "@/components/newsletter-form";
 export const metadata: Metadata = {
   title: "Newsletter",
   description:
-    "Occasional writing about TypeScript, AI, and building software from Adarsha Acharya.",
+    "Occasional writing on TypeScript, AI, and the practical work of shipping products from Adarsha Acharya.",
   openGraph: {
-    title: "I write about building software.",
+    title: "Useful notes for thoughtful builders.",
     description:
-      "New articles and occasional notes from Adarsha Acharya.",
+      "Occasional writing on TypeScript, AI, and shipping products.",
     images: [
       {
         url: "/newsletter/og",
         width: 1200,
         height: 630,
-        alt: "Adarsha's newsletter: I write about building software.",
+        alt: "Adarsha's newsletter: Useful notes for thoughtful builders.",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "I write about building software.",
-    description: "New articles and occasional notes from Adarsha Acharya.",
+    title: "Useful notes for thoughtful builders.",
+    description:
+      "Occasional writing on TypeScript, AI, and shipping products.",
     images: ["/newsletter/og"],
   },
   robots: {
@@ -33,45 +34,51 @@ export const metadata: Metadata = {
 
 export default function NewsletterPage() {
   return (
-    <article className="-mx-4 flex min-h-screen sm:-mx-6">
-      <div className="grid w-full border-y border-border lg:grid-cols-[1.15fr_0.85fr]">
-        <section className="flex min-h-[54svh] flex-col justify-between px-6 py-7 sm:px-10 sm:py-10 lg:min-h-screen lg:px-14 lg:py-12">
-          <p className="text-sm font-medium text-primary">
+    <article className="relative left-1/2 w-screen max-w-none -translate-x-1/2">
+      <div className="grid min-h-svh lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)] xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,460px)]">
+        <section className="flex min-h-svh flex-col px-6 py-8 sm:px-10 sm:py-10 lg:px-14 lg:py-12">
+          <p className="text-sm font-medium">
             <Link
               href="/"
-              className="transition-colors hover:text-foreground focus-visible:text-foreground"
+              className="text-primary transition-colors hover:text-foreground focus-visible:text-foreground"
             >
               ← adarsha.dev
             </Link>{" "}
             <span className="text-muted-foreground">/ newsletter</span>
           </p>
 
-          <div className="max-w-2xl py-14 lg:py-0">
-            <p className="mb-5 text-sm text-muted-foreground">Newsletter</p>
-            <h1 className="text-balance font-serif text-5xl leading-[0.98] tracking-tight sm:text-7xl lg:text-8xl">
-              I write about building software.
-            </h1>
-            <p className="mt-7 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
-              I send an email when I publish something new, usually about
-              TypeScript, AI, or the parts of product work that are harder to
-              fit into a post.
-            </p>
+          <div className="flex flex-1 flex-col justify-center py-10 lg:py-16">
+            <div className="max-w-2xl">
+              <p className="mb-4 text-sm text-muted-foreground">
+                For people who build on the web.
+              </p>
+              <h1 className="text-balance font-serif text-4xl leading-[1.02] tracking-[-0.03em] sm:text-5xl lg:text-6xl xl:text-[4.25rem]">
+                Useful notes for thoughtful builders.
+              </h1>
+              <p className="mt-6 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
+                Occasional writing on TypeScript, AI, and the practical work of
+                shipping products—sent only when there&apos;s something useful to
+                say.
+              </p>
+            </div>
           </div>
 
-          <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
-            Usually a new article. Sometimes a note that did not become one.
+          <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
+            A quiet inbox, a sharper point of view, and no manufactured urgency.
           </p>
         </section>
 
-        <section className="flex min-h-[46svh] items-center border-t border-border bg-muted/35 px-6 py-14 sm:px-10 lg:min-h-screen lg:border-l lg:border-t-0 lg:px-12">
-          <div className="w-full max-w-md">
+        <section className="flex min-h-[min(100%,28rem)] items-center border-t border-border bg-muted/25 px-6 py-12 sm:px-10 lg:min-h-svh lg:border-t-0 lg:border-l lg:px-12 xl:px-14">
+          <div className="w-full max-w-sm">
             <NewsletterForm
-              title="Want the next one?"
-              description="Leave your email and I will send it when it goes out."
+              variant="landing"
+              title="Get the next note"
+              description="New posts and useful ideas, delivered directly to you."
             />
 
-            <p className="mt-7 border-t border-border pt-5 text-sm leading-relaxed text-muted-foreground">
-              No spam. You can unsubscribe whenever you want.
+            <p className="mt-8 text-sm leading-relaxed text-muted-foreground">
+              No spam. No schedule for the sake of a schedule. Unsubscribe
+              anytime.
             </p>
           </div>
         </section>

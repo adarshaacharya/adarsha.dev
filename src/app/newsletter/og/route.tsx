@@ -2,7 +2,6 @@ import { readFile } from "fs/promises";
 import { join } from "path";
 import { ImageResponse } from "next/og";
 
-export const runtime = "nodejs";
 
 export async function GET() {
   const [groteskRegular, instrumentSerifRegular] = await Promise.all([

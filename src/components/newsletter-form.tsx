@@ -13,12 +13,14 @@ type NewsletterFormProps = {
   className?: string;
   title?: string;
   description?: string;
+  variant?: "default" | "landing";
 };
 
 export function NewsletterForm({
   className,
   title = "Stay up to date",
   description = "Get new articles in your inbox when I publish.",
+  variant = "default",
 }: NewsletterFormProps) {
   const initialState: NewsletterFormState = { status: "idle" };
   const [state, formAction, isPending] = useActionState(
@@ -26,10 +28,23 @@ export function NewsletterForm({
     initialState,
   );
 
+  const isLanding = variant === "landing";
+
   return (
-    <aside className={cn("not-prose max-w-md space-y-5", className)}>
-      <div className="space-y-2">
-        <h2 className="font-serif text-2xl tracking-tight text-foreground sm:text-3xl">
+    <aside
+      className={cn(
+        "not-prose max-w-md",
+        isLanding ? "space-y-6" : "space-y-5",
+        className,
+      )}
+    >
+      <div className={cn(isLanding ? "space-y-2.5" : "space-y-2")}>
+        <h2
+          className={cn(
+            "font-serif tracking-tight text-foreground",
+            isLanding ? "text-2xl sm:text-[1.75rem]" : "text-2xl sm:text-3xl",
+          )}
+        >
           {title}
         </h2>
         <p className="text-sm leading-relaxed text-muted-foreground">
@@ -37,18 +52,32 @@ export function NewsletterForm({
         </p>
       </div>
 
-      <form className="flex gap-2" action={formAction}>
+      <form
+        className={cn(
+          "flex gap-3",
+          isLanding ? "items-end border-b border-border pb-1" : "gap-2",
+        )}
+        action={formAction}
+      >
         <Input
           type="email"
           name="email"
           autoComplete="email"
           placeholder="you@example.com"
           aria-label="Email address"
-          className="min-w-0 flex-1"
+          className={cn(
+            "min-w-0 flex-1",
+            isLanding &&
+              "h-10 rounded-none border-0 border-b border-transparent bg-transparent px-0 shadow-none focus-visible:ring-0",
+          )}
           required
           disabled={isPending}
         />
-        <Button type="submit" className="shrink-0" disabled={isPending}>
+        <Button
+          type="submit"
+          className={cn("shrink-0", isLanding && "rounded-sm px-5")}
+          disabled={isPending}
+        >
           {isPending ? "Subscribing…" : "Subscribe"}
         </Button>
       </form>
