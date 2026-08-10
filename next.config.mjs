@@ -14,6 +14,11 @@ const nextConfig = {
           "https://docs.google.com/document/d/1jVX1D--iSqTOtFp_wR7tGbtvLeZIu9AAiQSf3bc0-fY/edit?usp=sharing",
         permanent: true,
       },
+      {
+        source: "/call",
+        destination: "https://cal.com/adarshaacharya/book-a-call",
+        permanent: false,
+      },
     ];
   },
 
