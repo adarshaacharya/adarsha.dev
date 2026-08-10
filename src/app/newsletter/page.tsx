@@ -26,8 +26,8 @@ export const metadata: Metadata = {
     images: ["/newsletter/og"],
   },
   robots: {
-    index: false,
-    follow: false,
+    index: true,
+    follow: true,
   },
 };
 
