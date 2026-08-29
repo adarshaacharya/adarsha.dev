@@ -21,7 +21,7 @@
     "@giscus/react": "^2.4.0",
     "@next/third-parties": "^16.0.0",
     "@radix-ui/react-dialog": "^1.1.14",
-    "@radix-ui/react-separator": "^1.1.7",
+    "@radix-ui/react-separator": "^1.1.11",
     "@radix-ui/react-slot": "^1.2.3",
     "@shadcn/react": "^0.2.0",
     "@streamdown/cjk": "^1.0.3",
