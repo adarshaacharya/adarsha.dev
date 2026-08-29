@@ -9,6 +9,15 @@ export type WebApp = {
 
 export const WEB_APPS: WebApp[] = [
   {
+    title: "Sajilo",
+    repo: "https://github.com/adarshaacharya/sajilo",
+    demo: "https://sajilo.fyi",
+    description:
+      "All of Nepal, on your menu bar. A free and open source desktop app with an offline Bikram Sambat calendar, Nepali news, NEPSE and bazar rates, forex, rashifal, day plans and other Nepali daily essentials.",
+    tags: ["Tauri", "Rust", "React", "TypeScript", "Bun"],
+    thumbnail: "/_static/projects/sajilo.png",
+  },
+  {
     title: "Cedular",
     repo: "https://github.com/adarshaacharya/cedular",
     demo: "https://cedular.vercel.app/",
