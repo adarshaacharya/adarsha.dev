@@ -5,4 +5,5 @@ export const ENV = {
   NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL!,
   QDRANT_API_KEY: process.env.QDRANT_API_KEY!,
   QDRANT_URL: process.env.QDRANT_URL!,
+  CLARITY_PROJECT_ID: process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID!,
 };
