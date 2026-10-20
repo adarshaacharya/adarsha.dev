@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { cacheLife } from "next/cache";
 import { allBlogs } from "contentlayer/generated";
 import Balancer from "react-wrap-balancer";
 import { Mdx } from "@/components/mdx";
@@ -61,11 +63,19 @@ export async function generateMetadata(props: {
   };
 }
 
-export default async function Blog(props: {
-  params: Promise<{ slug: string }>;
-}) {
-  const params = await props.params;
-  const blog = allBlogs.find((blog) => blog._raw.flattenedPath === params.slug);
+export default function Blog(props: { params: Promise<{ slug: string }> }) {
+  return (
+    <Suspense fallback={null}>
+      <BlogPost params={props.params} />
+    </Suspense>
+  );
+}
+
+async function BlogPostBody({ slug }: { slug: string }) {
+  "use cache";
+  cacheLife("max");
+
+  const blog = allBlogs.find((blog) => blog._raw.flattenedPath === slug);
 
   if (!blog) {
     return <NotFound />;
@@ -126,4 +136,14 @@ export default async function Blog(props: {
       <Mdx code={blog.body.code} />
     </article>
   );
+}
+
+async function BlogPost({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+
+  return <BlogPostBody slug={slug} />;
 }
