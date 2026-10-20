@@ -13,6 +13,7 @@ import Link from "next/link";
 import { ArrowLeft, Calendar, Clock, RefreshCw } from "lucide-react";
 import { BlogPostAiMenu } from "@/components/blog/blog-post-ai-menu";
 import { getBlogMarkdownUrl, getBlogPostUrl } from "@/lib/blog-markdown";
+import BlogPostLoading from "./loading";
 
 export const generateStaticParams = async () =>
   allBlogs.map((blog) => ({ slug: blog._raw.flattenedPath }));
@@ -65,7 +66,7 @@ export async function generateMetadata(props: {
 
 export default function Blog(props: { params: Promise<{ slug: string }> }) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<BlogPostLoading />}>
       <BlogPost params={props.params} />
     </Suspense>
   );
